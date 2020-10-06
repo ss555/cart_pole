@@ -1,0 +1,2 @@
+activate pendule
+jupyter notebook
