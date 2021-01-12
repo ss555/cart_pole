@@ -208,7 +208,6 @@ class CartPoleCus(gym.Env):
             self.viewer.close()
             self.viewer = None
 
-
 def COST_1000(r1, r2, e1, e2, x, x_dot, theta, theta_dot):
     cost = np.sign(r2) * ((10 * r2) ** 2) - 4 * abs(x) ** 2
     return cost
@@ -439,8 +438,6 @@ class CartPoleCusBottomNoisy(gym.Env):
         if self.viewer:
             self.viewer.close()
             self.viewer = None
-
-
 
 class CartPoleCusBottom(gym.Env):
     """
