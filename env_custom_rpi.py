@@ -86,7 +86,7 @@ class CartPoleCusBottom(gym.Env):
         self.length = 0.5  # actually half the pole's length
         self.polemass_length = (self.masspole * self.length)
         self.force_mag = 20
-        self.tau = 0.02  # seconds between state updates
+        self.tau = 0.03  # seconds between state updates
         self.kinematics_integrator = 'friction'#'euler'
 
         # Angle at which to fail the episode

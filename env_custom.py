@@ -208,16 +208,13 @@ class CartPoleCus(gym.Env):
             self.viewer.close()
             self.viewer = None
 
-def COST_1000(r1, r2, e1, e2, x, x_dot, theta, theta_dot):
-    cost = np.sign(r2) * ((10 * r2) ** 2) - 4 * abs(x) ** 2
-    return cost
 def reward_fn(x,theta,action=0.0):
     cost=2+np.cos(theta)-x**2/25
-    if theta<math.pi/12 and theta>-math.pi/12:
-        cost+=3
     return cost
 def reward_fn01(x,theta,action=0.0):
     cost=2+np.cos(theta)-x**2/25
+    if theta<math.pi/12 and theta>-math.pi/12:
+        cost+=3
     return cost
 def reward_fn2(x,theta):
     cost=3
@@ -231,6 +228,20 @@ def reward_fn3(x,theta):
 def reward_fn4(x,theta):
     cost=4-abs(theta)-abs(x)
     return cost
+def _action_static_friction(action, threshold=0.03):
+    if abs(action)<threshold:
+        return 0
+    if action>0:
+        return action-threshold
+    else:
+        return action+threshold
+def _compensate_static_friction(action):
+    pass
+def _action_viscous_friction(action, speed, K): #not Used
+    if action-speed*K>0:
+        return action-speed*K
+    else:
+        return 0
 class CartPoleCusBottomNoisy(gym.Env):
     """
     Description:
@@ -324,20 +335,27 @@ class CartPoleCusBottomNoisy(gym.Env):
     def seed(self, seed=0):#fixing seed for reproducibility
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
-
+    def _action_static_friction(self,action, threshold=0.3):
+        if abs(action)<0.3:
+            return 0
+        if action>0:
+            return action-0.3
+        else:
+            return action+0.3
     def step(self, action):
         err_msg = "%r (%s) invalid" % (action, type(action))
         assert self.action_space.contains(action), err_msg
-
+        assert self.observation_space_space.contains(action), err_msg
         self.masscart = np.random.normal(self.masscart, self.std_masscart) #adding noise to the cart mass
         self.masspole = np.random.normal(self.masspole, self.std_masspole) #adding noise to the pole mass
         self.total_mass = (self.masspole + self.masscart)
-
+        action=_action_static_friction(action)
         x, x_dot, theta, theta_dot = self.state
         # theta = np.random.normal(theta_dot,self.std_theta)  # adding noise to the cart speed
         # x = np.random.normal(x, self.std_x)                 # adding noise to the cart speed
         x_dot = np.random.normal(x_dot,self.std_x_dot)      # adding noise to the cart speed
         theta_dot = np.random.normal(theta_dot, self.std_theta_dot) #adding noise to the pole angular speed
+
 
         force = self.force_mag*action #rescale from normalised
         costheta = math.cos(theta)
@@ -497,6 +515,7 @@ class CartPoleCusBottom(gym.Env):
 
         # Angle at which to fail the episode
         self.theta_threshold_radians = 180 * 2 * math.pi / 360
+        # self.theta_threshold_radians = 20 * 2 * math.pi / 360
         self.x_threshold = 5.0
         # self.v_max=1.5
         # self.w_max=1
@@ -524,6 +543,7 @@ class CartPoleCusBottom(gym.Env):
         return [seed]
 
     def step(self, action):
+        action=_action_static_friction(action)
         self.COUNTER+=1
         self.total_mass = (self.masspole + self.masscart)
         state = self.state
@@ -563,7 +583,7 @@ class CartPoleCusBottom(gym.Env):
             done = True
 
         #cost = reward_fn(x,x_dot,theta,theta_dot,self.x_threshold,self.observation_space.high[1],self.observation_space.high[-1],action)
-        cost=reward_fn01(x,theta)
+        cost=reward_fn(x,theta)
         if x < -self.x_threshold or x > self.x_threshold:
             cost=cost-100
         return self.state, cost, done, {}
@@ -683,13 +703,12 @@ class CartPoleCusBottomDiscrete(gym.Env):
         self.total_mass = (self.masspole + self.masscart)
         self.length = 0.5  # actually half the pole's length
         self.polemass_length = (self.masspole * self.length)
-        self.force_mag = 20
-        self.tau = 0.02  # seconds between state updates
+        self.force_mag = 0.2
+        self.tau = 0.05  # seconds between state updates
         self.kinematics_integrator = 'friction'#'euler'
 
         # Angle at which to fail the episode
         self.theta_threshold_radians = 180 * 2 * math.pi / 360
-        # self.theta_threshold_radians = 20 * 2 * math.pi / 360
         self.x_threshold = 5.0
         # self.v_max=1.5
         # self.w_max=1
@@ -721,11 +740,11 @@ class CartPoleCusBottomDiscrete(gym.Env):
         self.total_mass = (self.masspole + self.masscart)
         state = self.state
         x, x_dot, theta, theta_dot = state
-        if action==0:
+        if action == 0:
             force = 0
-        elif action==1:
+        elif action == 1:
             force = -self.force_mag
-        elif action==2:
+        elif action == 2:
             force = self.force_mag
         else:
             print('invalid action space asked')
@@ -832,3 +851,12 @@ class CartPoleCusBottomDiscrete(gym.Env):
             self.viewer.close()
             self.viewer = None
 
+
+
+'''
+with open('dqn_config.yml', 'r') as f:
+    hyperparams_dict = yaml.safe_load(f)
+    hyperparams = hyperparams_dict['CartPoleCusBottom']
+    print(hyperparams)
+model = DQN(env=env,**hyperparams)
+'''

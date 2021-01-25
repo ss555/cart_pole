@@ -2,15 +2,14 @@
 import gym
 import numpy as np
 from stable_baselines3.sac.policies import MlpPolicy
-from stable_baselines3 import SAC,DDPG,TD3
+from stable_baselines3 import SAC,DDPG,TD3, DQN
 from env_custom import CartPoleCus, CartPoleCusBottom,CartPoleCusBottomNoisy
 from custom_callbacks import ProgressBarManager
 from stable_baselines3.common.callbacks import EvalCallback
 import argparse
-# env=CartPoleCusBottomNoisy()
-env=CartPoleCusBottom()
-env=env.unwrapped
-env.MAX_STEPS_PER_EPISODE=5000
+env = CartPoleCusBottom()
+env = env.unwrapped
+env.MAX_STEPS_PER_EPISODE = 5000
 
 model = SAC.load("./logs/best_model", env=env)
 # model = DDPG.load("./logs/best_model", env=env)

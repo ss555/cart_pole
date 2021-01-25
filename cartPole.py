@@ -21,7 +21,7 @@ eval_callback = EvalCallback(env, best_model_save_path='./logs/',
 with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
     model.learn(total_timesteps=STEPS_TO_TRAIN, log_interval=100, tb_log_name="500K_bottom",callback=[cus_callback, eval_callback])
 # Don't forget to save the VecNormalize statistics when saving the agent
-log_dir = "tmp/"
+log_dir = "other/tmp/"
 model.save(log_dir + "ppo_cart")
 # To demonstrate loading del model, env
 # Load the agent model = PPO2.load(log_dir + "ppo_halfcheetah")

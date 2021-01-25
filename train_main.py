@@ -11,6 +11,7 @@ from stable_baselines3.common.noise import NormalActionNoise, OrnsteinUhlenbeckA
 #from stable_baselines3.common import make_vec_env
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 import argparse
+from typing import Callable
 #custom environement modified from gym
 # env=CartPoleCusBottomNoisy()
 env=CartPoleCusBottom()
@@ -29,20 +30,45 @@ parser.add_argument('--algo', metavar="SAC",type=str,
 parser.add_argument('--env', default="cartpole_bottom",type=str,
 					metavar="cartpole",
 					help='rl env: cartpole_bottom,cartpole_balance, ')
-parser.add_argument('--steps',default=100000,type=int,help='timesteps to train')
+parser.add_argument('--steps', default=150000, type=int, help='timesteps to train')
 args = parser.parse_args()
 if __name__ == '__main__':
+	#lr schedule
+	def linear_schedule(initial_value: float) -> Callable[[float], float]:
+		"""
+        Linear learning rate schedule.
 
+        :param initial_value: Initial learning rate.
+        :return: schedule that computes
+          current learning rate depending on remaining progress
+        """
+		def func(progress_remaining: float) -> float:
+			"""
+            Progress will decrease from 1 (beginning) to 0.
+
+            :param progress_remaining:
+            :return: current learning rate
+            """
+			return progress_remaining * initial_value
+
+		return func
 	RL_ALGO=args.algo
 
 	STEPS_TO_TRAIN = args.steps
 	update_freq = 1  # for the q-target network
-
+	#sac_kwargs={'gamma': 0.98, 'learning_rate': 0.00275211369549068, 'batch_size': 1024, 'buffer_size': 1000000, 'learning_starts': 10000, 'train_freq': 256, 'tau': 0.01, 'log_std_init': 0.5745995200274363, 'net_arch': 'medium'}
+	#sac_kwargs_rpi={'gamma': 0.9999, 'lr': 0.0031799594514052712, 'batch_size': 256, 'buffer_size': 1000000, 'learning_starts': 1000, 'train_freq': 256, 'tau': 0.02, 'log_std_init': 0.02923223989879857, 'net_arch': 'medium'}
 	if (RL_ALGO == 'SAC'):
-		from stable_baselines3.sac.policies import MlpPolicy
-		model = SAC(MlpPolicy, env=env, ent_coef='auto_0.2', learning_rate=0.003, verbose=2, batch_size=4096,
+		from stable_baselines3.sac.policies import MlpPolicy#learning_rate=0.0001,
+		#model = SAC(MlpPolicy, env=env, **sac_kwargs)
+		# model=SAC(MlpPolicy, env=env, gamma= 0.98, learning_rate= 0.00275211369549068,
+		# batch_size: 1024, buffer_size: 1000000, learning_starts: 10000, 'train_freq': 256, 'tau': 0.01, 'log_std_init': 0.5745995200274363, 'net_arch': 'medium')
+
+
+		model = SAC(MlpPolicy, env=env, gamma=0.9999, learning_rate=linear_schedule(0.01), ent_coef='auto_0.2', verbose=0, batch_size=256,#6000
 					learning_starts=30000, policy_kwargs=dict(net_arch=[256, 256]),
-					tensorboard_log="./sac_cartpole_tensorboard/", train_freq=update_freq,
+					tensorboard_log="./sac_cartpole_tensorboard/", train_freq=-1,
+					n_episodes_rollout=1, gradient_steps=-1,
 					target_update_interval=update_freq)
 
 	elif (RL_ALGO == 'DDPG'):
@@ -83,7 +109,7 @@ if __name__ == '__main__':
 	# Don't forget to save the VecNormalize statistics when saving the agent
 	log_dir = "/tmp/"
 	model.save(log_dir + "cartpole")
-
+	model.save_replay_buffer("sac_swingup")
 	obs = env.reset()
 	while True:
 		action, _states = model.predict(obs)
