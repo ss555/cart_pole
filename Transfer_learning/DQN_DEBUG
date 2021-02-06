@@ -1,0 +1,12 @@
+14:02:07,392 root ERROR Fatal error in main loop
+Traceback (most recent call last):
+  File "env_sac_rpi.py", line 237, in <module>
+    model = SAC.load("./best_model", env=env)
+  File "/home/pi/.local/lib/python3.7/site-packages/stable_baselines3/common/base_class.py", line 600, in load
+    data, params, pytorch_variables = load_from_zip_file(path, device=device)
+  File "/home/pi/.local/lib/python3.7/site-packages/stable_baselines3/common/save_util.py", line 395, in load_from_zip_file
+    data = json_to_data(json_data)
+  File "/home/pi/.local/lib/python3.7/site-packages/stable_baselines3/common/save_util.py", line 164, in json_to_data
+    deserialized_object = cloudpickle.loads(base64_object)
+TypeError: code() takes at most 15 arguments (16 given)
+14:02:07,395 root INFO smth went wrong

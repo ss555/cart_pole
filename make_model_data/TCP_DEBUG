@@ -1,0 +1,9 @@
+20:35:09,453 root INFO connecting
+20:40:13,646 root ERROR Fatal error in main loop
+Traceback (most recent call last):
+  File "tcp_env_interfaceV2.py", line 169, in <module>
+    data_action = float(s.recv(32).decode(FORMAT))
+ConnectionResetError: [Errno 104] Connection reset by peer
+20:40:13,648 root INFO got state: [0, 0.0, 3.141592653589793, 0.0]
+20:40:13,648 root INFO smth went wrong
+20:40:13,648 root INFO time passed: 304.19758892059326

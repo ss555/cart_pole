@@ -1,0 +1,6 @@
+#!/usr/bin/env python3
+#wifi latency aller-retour can go up to 0.1s, alors que par fil: moins de 1ms
+import socket
+import time
+HOST = '169.254.161.71'#'c0:3e:ba:6c:9e:eb'#'10.42.0.1'#wifi-hotspot  # The server's hostname or IP address
+PORT = 65432        # The port used by the server
