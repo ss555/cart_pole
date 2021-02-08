@@ -24,8 +24,8 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
         return progress_remaining * initial_value
 
     return func
-STEPS_TO_TRAIN = 30000
 
+STEPS_TO_TRAIN = 120000
 try:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind((HOST, PORT))
@@ -34,27 +34,34 @@ try:
 
         with conn:
             env = CartPoleRPI(pi_conn=conn)
-            # Load the saved statistics
-            env = DummyVecEnv([lambda: env])
-            env = VecNormalize.load('envNorm.pkl', env)
-            #  do not update them at test time
+            n_actions = env.action_space.shape[-1]
+            ## Automatically normalize the input features and reward
+            env1 = DummyVecEnv([lambda: env])
+            # env=env.unwrapped
+            env = VecNormalize(env1, norm_obs=True, norm_reward=True, clip_obs=10000, clip_reward=10000)
+            # Use deterministic actions for evaluation and SAVE the best model
+            eval_callback = EvalCallback(env, best_model_save_path='./logs/rpi/',
+                                         log_path='./logs/rpi/', eval_freq=30000, n_eval_episodes=2, # callback_on_new_best=callback_on_best,
+                                         deterministic=True, render=False)
+            model = SAC.load("./Transfer_learning/best_model", env=env)
+            model.learn(STEPS_TO_TRAIN, callback=[eval_callback])
+            # WHEN NORMALISING
+            env.save('envNorm.pkl')
             env.training = False
             # reward normalization is not needed at test time
             env.norm_reward = False
 
 
-            model = SAC.load("./logs/best_model", env=env)
             obs = env.reset()
             while True:
-                action, _states = model.predict(obs)
-                obs, rewards, dones, info = env.step(action)
-                time.sleep(0.03)
+                action, _states = model.predict(obs, deterministic=True)
+                obs, rewards, dones, _ = env.step(action)
                 if dones:
                     env.reset()
-
         conn.close()
 finally:
 
-    # model.save("cartpole_pi_sac")
-    # model.save_replay_buffer("sac_swingup_buffer")
-    pass
+    model.save("cartpole_pi_sac")
+    model.save_replay_buffer("sac_swingup_buffer")
+    # WHEN NORMALISING
+    env.save('envNorm.pkl')

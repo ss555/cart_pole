@@ -26,17 +26,15 @@ class CartPoleRPI(gym.Env):
 
         # Angle at which to fail the episode
         self.theta_threshold_radians = 180 * 2 * math.pi / 360
-        # self.theta_threshold_radians = 20 * 2 * math.pi / 360
         self.x_threshold = 5.0
-        self.v_max = 50
-        self.w_max = 50
+        self.v_max = 100
+        self.w_max = 100
         # Angle limit set to 2 * theta_threshold_radians so failing observation is still within bounds
         high = np.array([
-            self.x_threshold * 2,
+            self.x_threshold,
             self.v_max,
-            self.theta_threshold_radians * 2,
-            self.w_max,
-            1])
+            self.theta_threshold_radians,
+            self.w_max])
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(1,), dtype=np.float32)
         self.observation_space = spaces.Box(-high, high, dtype = np.float32)
         self.seed(seed)
@@ -63,6 +61,9 @@ class CartPoleRPI(gym.Env):
         cost = reward_fn(x, theta)
         if x < -self.x_threshold or x > self.x_threshold:
             cost = cost-100
+            self.state[0] = np.clip(x, -self.x_threshold, self.x_threshold)
+        print(self.state)
+        # print('done',done)
         return self.state, cost, done, {}
     def reset(self):
         self.conn.sendall('RESET'.encode(self.FORMAT))
