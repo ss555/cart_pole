@@ -1,4 +1,4 @@
-from tcp_envV2 import CartPoleRPI,CartPoleCosSinRPIv2
+from tcp_envV2 import CartPoleCosSinRPIv2
 from stable_baselines3 import SAC
 from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback, StopTrainingOnRewardThreshold
 from utils import linear_schedule, plot
@@ -55,15 +55,12 @@ try:
 
             # model.load_replay_buffer("sac_pi_swingup_buffer")
             # model=SAC.load("cartpole_pi_sac")
-            # model.load_replay_buffer("sac_pi_swingup_buffer")
+            # model.load_replay_buffefr("sac_pi_swingup_buffer")
 
-            env.seed(manual_seed)
             # model.learn(total_timesteps=STEPS_TO_TRAIN, log_interval=100, callback=[eval_callback, callbackSave])
             # # WHEN NORMALISING
             # env.save('envRpiNorm.pkl')
             env.training = False
-            # reward normalization is not needed at test time
-            env.norm_reward = False
             model = SAC.load("./logs/best_model", env=env)  # SAC.load(logdir+"/best_model.zip", env=env)
             obs = env.reset()
             obsArr=[env.get_original_obs()[0]]
@@ -71,7 +68,7 @@ try:
             timeArr=[0.0]
             start_time = time.time()
             for i in range(300):
-                action, _states = model.predict(obs, deterministic=True)
+                action, _states = model.predict(obs, deterministic=False)
                 obs, rewards, dones, _ = env.step(action)
                 obsArr.append(env.get_original_obs()[0])
                 actArr.append(action[0,0])

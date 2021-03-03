@@ -15,7 +15,7 @@ from utils import plot, plot_line
 import numpy as np
 Te = 5e-2
 # env = CartPoleCosSinDev()#CartPoleCusBottom()CartPoleCosSin() #
-env = CartPoleCosSinTension(Te=0.08)#CartPoleCosSinHistory() #CartPoleCusBottom()CartPoleCosSin() #
+env = CartPoleCosSinTension(Te=0.05)#CartPoleCosSinHistory() #CartPoleCusBottom()CartPoleCosSin() #
 env.MAX_STEPS_PER_EPISODE = 10000
 # Load the saved statistics
 env = DummyVecEnv([lambda: env])
@@ -26,7 +26,7 @@ env = VecNormalize.load('envNorm.pkl', env) #'./Transfer_learning/backup'
 env.training = False
 # reward normalization is not needed at test time
 env.norm_reward = False
-resumeDir='./Transfer_learning/backup'
+# resumeDir='./Transfer_learning/backup'
 # model=SAC.load(resumeDir+"/cartpole_pi_sac",env=env)
 model = SAC.load("./logs/best_model", env=env)
 # model = SAC.load("./logs/best_model_training.zip", env=env)
@@ -41,7 +41,7 @@ actArr=[0.0]
 timeArr=[0.0]
 
 for i in range(1000):
-    action, _states = model.predict(obs, deterministic=True)
+    action, _states = model.predict(obs, deterministic=False)
     obs, rewards, dones, _ = env.step(action)
     obsArr.append(env.get_original_obs()[0])
     actArr.append(action[0,0])

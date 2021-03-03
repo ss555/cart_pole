@@ -743,15 +743,14 @@ class CartPoleCosSinTension(gym.Env):
         assert self.observation_space.contains(self.state), 'obs_err'
         self.COUNTER+=1
         x, x_dot, costheta, sintheta, theta_dot = self.state
-
         n=2
         if self.kinematics_integrator=='euler':
             for i in range(n):
                 # xacc = 1 / self.tauMec * (-x_dot + self.gTension(action[0] * 8.47))
                 # xacc = 1 / self.tauMec * (-x_dot + self.gTension(action[0] * 8.47) - np.sign(x_dot)*0.0438725) # static friction 0.0438725
-                # xacc = 1 / self.tauMec * (-x_dot + self.gTension(action[0] * 8.47) - np.sign(x_dot)*0.0438725) # static friction 0.0438725
-                xacc = 1 / self.tauMec * (-x_dot + self.gTension(action[0] * 8.47)) # static friction 0.0438725
-                thetaacc = self.wAngular ** 2 * sintheta - xacc * costheta
+                xacc = 1 / self.tauMec * (-x_dot + self.gTension(action[0] * 8.47) - np.sign(x_dot)*0.0438725) # static friction 0.0438725
+                # xacc = 1 / self.tauMec * (-x_dot + self.gTension(action[0] * 8.47)) # static friction 0.0438725
+                thetaacc = self.wAngular ** 2 * sintheta - xacc * costheta - theta_dot * K2
                 x_dot+=self.tau/n*xacc
                 x+=x_dot*self.tau/n
                 theta_dot+=thetaacc*self.tau/n
@@ -764,6 +763,7 @@ class CartPoleCosSinTension(gym.Env):
             pass
         done=False
         if x < -self.x_threshold or x > self.x_threshold or self.COUNTER == self.MAX_STEPS_PER_EPISODE:
+            # print('out of bound')
             done = True
             x = np.clip(x, -self.x_threshold, self.x_threshold)
         self.state=np.array([x,x_dot, costheta, sintheta, theta_dot],dtype=np.float32)
