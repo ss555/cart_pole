@@ -5,7 +5,7 @@ import pandas as pd
 import time
 
 def data_received(data):
-    print('data received from the server')
+    print('data-old received from the server')
     print(data)
     global state
     state = "continue"

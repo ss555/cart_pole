@@ -1,74 +1,61 @@
 # Code adapted from https://github.com/araffin/rl-baselines-zoo
-# it requires stable-baselines to be installed
-# Colab Notebook: https://colab.research.google.com/drive/1nZkHO4QTYfAksm9ZTaZ5vXyC7szZxC3F
-# You can run it using: python -m pybullet_envs.stable_baselines3.train --algo td3 --env HalfCheetahBulletEnv-v0
-# Author: Antonin RAFFIN
-# MIT License
-import argparse
-
-import pybullet_envs
-
+#tensorboard --logdir ./sac_cartpole_tensorboard/
+import torch
 import gym
 import numpy as np
-from stable_baselines3 import SAC, TD3
-from stable_baselines3.common.noise import NormalActionNoise
-from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback
-from stable_baselines3.common.vec_env import DummyVecEnv
+import os
+from stable_baselines3 import SAC, DDPG, TD3, A2C
+from env_custom import CartPoleCusBottom, CartPoleCusBottomNoisy, CartPoleFriction, CartPoleCosSin
+from custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback
+from stable_baselines3.common.callbacks import EvalCallback
+from stable_baselines3.common.noise import NormalActionNoise, OrnsteinUhlenbeckActionNoise
+from stable_baselines3.common.monitor import Monitor
+from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
+import argparse
+from sb3_contrib.common.wrappers import TimeFeatureWrapper
+from typing import Callable
+from custom_callbacks import plot_results
+from stable_baselines3.sac.policies import MlpPolicy
 
-from pybullet_envs.stable_baselines.utils import TimeFeatureWrapper
+logdir='./logs/training'
+env0 = CartPoleCosSin(Te=0.05)#CartPoleCusBottom(Te=0.05) #CartPoleFriction()#
+env0 = Monitor(env0, logdir)
+## Automatically normalize the input features and reward
+env1=DummyVecEnv([lambda:env0])
+#env=env.unwrapped
+env=VecNormalize(env1,norm_obs=True,norm_reward=True,clip_obs=10000,clip_reward=10000)
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser("Train an RL agent using Stable Baselines")
-    parser.add_argument('--algo', help='RL Algorithm (Soft Actor-Critic by default)', default='sac',
-                        type=str, required=False, choices=['sac', 'td3'])
-    parser.add_argument('--env', type=str, default='HalfCheetahBulletEnv-v0', help='environment ID')
-    parser.add_argument('-n', '--n-timesteps', help='Number of training timesteps', default=int(1e6),
-                        type=int)
-    parser.add_argument('--save-freq', help='Save the model every n steps (if negative, no checkpoint)',
-                    default=-1, type=int)
-    args = parser.parse_args()
+callbackSave = SaveOnBestTrainingRewardCallback(check_freq=1000, log_dir=logdir)
 
-    env_id = args.env
-    n_timesteps = args.n_timesteps
-    save_path = '{}_{}'.format(args.algo, env_id)
+STEPS_TO_TRAIN = 150000
+# model = SAC(MlpPolicy, env=env, learning_rate=linear_schedule(0.0003), ent_coef='auto', #action_noise=action_noise,
+# 			batch_size=2048, use_sde=True, buffer_size=300000,
+# 			learning_starts=30000, tensorboard_log="./sac_cartpole_tensorboard",
+# 			policy_kwargs=dict(net_arch=[256, 256]), train_freq=-1, n_episodes_rollout=1, gradient_steps=-1)
 
-    # Instantiate and wrap the environment
-    env = TimeFeatureWrapper(gym.make(env_id))
+for manual_seed in range(25):
+	env = CartPoleCosSin(Te=0.05)  # CartPoleCusBottom(Te=0.05) #CartPoleFriction()#
+	env = Monitor(env, logdir)
+	## Automatically normalize the input features and reward
+	env1 = DummyVecEnv([lambda: env])
+	# env=env.unwrapped
+	env = VecNormalize(env1, norm_obs=True, norm_reward=False, clip_obs=10000, clip_reward=10000)
 
-    # Create the evaluation environment and callbacks
-    eval_env = DummyVecEnv([lambda: TimeFeatureWrapper(gym.make(env_id))])
+	# Stop training when the model reaches the reward threshold
+	# callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=-200, verbose=1)
 
-    callbacks = [EvalCallback(eval_env, best_model_save_path=save_path)]
+	# Use deterministic actions for evaluation and SAVE the best model
+	eval_callback = EvalCallback(env, best_model_save_path='./logs/',
+								 log_path=logdir, eval_freq=5000, seed=manual_seed, # callback_on_new_best=callback_on_best,
+								 deterministic=True, render=False)
 
-    # Save a checkpoint every n steps
-    if args.save_freq > 0:
-        callbacks.append(CheckpointCallback(save_freq=args.save_freq, save_path=save_path,
-                                            name_prefix='rl_model'))
-
-    algo = {
-        'sac': SAC,
-        'td3': TD3
-    }[args.algo]
-
-    n_actions = env.action_space.shape[0]
-
-    # Tuned hyperparameters from https://github.com/araffin/rl-baselines-zoo
-    hyperparams = {
-        'sac': dict(batch_size=256, gamma=0.98, policy_kwargs=dict(layers=[256, 256]),
-                    learning_starts=10000, buffer_size=int(2e5), tau=0.01),
-
-        'td3': dict(batch_size=100, policy_kwargs=dict(layers=[400, 300]),
-                    learning_rate=1e-3, learning_starts=10000, buffer_size=int(1e6),
-                    train_freq=1000, gradient_steps=1000,
-                    action_noise=NormalActionNoise(mean=np.zeros(n_actions), sigma=0.1 * np.ones(n_actions)))
-    }[args.algo]
-
-    model = algo('MlpPolicy', env, verbose=1, **hyperparams)
-    try:
-        model.learn(n_timesteps, callback=callbacks)
-    except KeyboardInterrupt:
-        pass
-
-    print("Saving to {}.zip".format(save_path))
-    model.save(save_path)
+	env.seed(manual_seed)
+	torch.manual_seed(manual_seed)
+	np.random.seed(manual_seed)
+	model = SAC(MlpPolicy, env=env, learning_rate=float(7.3e-4), buffer_size=300000,
+			batch_size= 256, ent_coef= 'auto', gamma= 0.98, tau=0.02, train_freq=64,  gradient_steps= 64,learning_starts= 10000,
+			use_sde= True, policy_kwargs= dict(log_std_init=-3, net_arch=[400, 300]))
+	model.learn(total_timesteps=STEPS_TO_TRAIN, log_interval=100,  # tb_log_name="normal",
+				callback=[eval_callback, callbackSave])
+	plot_results(logdir, title='Learning Curve'+manual_seed)

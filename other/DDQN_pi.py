@@ -165,7 +165,7 @@ def main(env, gamma=0.9999, lr=1e-2, min_episodes=20, eps=1, eps_decay=0.998, ep
     """
     :param gamma: reward discount factor
     :param lr: learning rate for the Q-Network
-    :param min_episodes: we wait "min_episodes" many episodes in order to aggregate enough data before starting to train
+    :param min_episodes: we wait "min_episodes" many episodes in order to aggregate enough data-old before starting to train
     :param eps: probability to take a random action during training
     :param eps_decay: after every episode "eps" is multiplied by "eps_decay" to reduces exploration over time
     :param eps_min: minimal value of "eps"
