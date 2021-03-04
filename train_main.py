@@ -6,8 +6,7 @@ import os
 from stable_baselines3 import SAC
 from env_custom import CartPoleCosSinDev, CartPoleCosSinTension #CartPoleCosSinT_10
 from custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback
-from stable_baselines3.common.callbacks import EvalCallback,StopTrainingOnRewardThreshold
-from stable_baselines3.common.noise import NormalActionNoise, OrnsteinUhlenbeckActionNoise
+from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 import argparse
@@ -78,9 +77,9 @@ if __name__ == '__main__':
 		# model = SAC(MlpPolicy, env=env, learning_rate=linear_schedule(1e-3), buffer_size=300000,
   		# 		batch_size= 1024, ent_coef= 'auto', gamma= 0.98, tau=0.02, train_freq= 64,  gradient_steps= 64,learning_starts= 10000,
   		# 		use_sde= True, policy_kwargs= dict(log_std_init=-3, net_arch=[400, 300]))#dict(pi=[256, 256], vf=[256, 256])
-		model = SAC(MlpPolicy, env=env, learning_rate=linear_schedule(1e-3), buffer_size=300000,
-				batch_size= 256, ent_coef= 'auto1.0', gamma= 0.99, tau=0.01, train_freq= 64,  gradient_steps= 64,learning_starts= 10000,
-				use_sde= True, policy_kwargs= dict(log_std_init=-3, net_arch=dict(pi=[128, 128], qf=[128, 128])))#dict(pi=[256, 256], vf=[256, 256])
+		model = SAC(MlpPolicy, env=env, learning_rate=0.001, tau=1e-3, target_update_interval=4,
+				batch_size= 256, train_freq= 1, learning_starts= 10000, gamma=0.999,
+				use_sde= False, policy_kwargs= dict(pi=[128, 128], qf=[128, 128]))#dict(pi=[256, 256], vf=[256, 256])
 		#resume training
 		# model = SAC.load("./logs/best_model", env=env)
 		# model.learning_starts = 0

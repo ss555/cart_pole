@@ -743,14 +743,14 @@ class CartPoleCosSinTension(gym.Env):
         assert self.observation_space.contains(self.state), 'obs_err'
         self.COUNTER+=1
         x, x_dot, costheta, sintheta, theta_dot = self.state
-        n=2
+        n=5
         if self.kinematics_integrator=='euler':
             for i in range(n):
                 # xacc = 1 / self.tauMec * (-x_dot + self.gTension(action[0] * 8.47))
                 # xacc = 1 / self.tauMec * (-x_dot + self.gTension(action[0] * 8.47) - np.sign(x_dot)*0.0438725) # static friction 0.0438725
                 xacc = 1 / self.tauMec * (-x_dot + self.gTension(action[0] * 8.47) - np.sign(x_dot)*0.0438725) # static friction 0.0438725
                 # xacc = 1 / self.tauMec * (-x_dot + self.gTension(action[0] * 8.47)) # static friction 0.0438725
-                thetaacc = self.wAngular ** 2 * sintheta - xacc * costheta - theta_dot * K2
+                thetaacc = self.wAngular ** 2 * sintheta - xacc * costheta #- theta_dot * K2
                 x_dot+=self.tau/n*xacc
                 x+=x_dot*self.tau/n
                 theta_dot+=thetaacc*self.tau/n
@@ -759,8 +759,169 @@ class CartPoleCosSinTension(gym.Env):
                 costheta=np.cos(theta)
                 sintheta=np.sin(theta)
 
+
         elif self.kinematics_integrator=='rk2':
-            pass
+            xacc = 1 / self.tauMec * (-x_dot + self.gTension(action[0] * 8.47) - np.sign(x_dot)*0.0438725)
+        done=False
+        if x < -self.x_threshold or x > self.x_threshold or self.COUNTER == self.MAX_STEPS_PER_EPISODE:
+            # print('out of bound')
+            done = True
+            x = np.clip(x, -self.x_threshold, self.x_threshold)
+        self.state=np.array([x,x_dot, costheta, sintheta, theta_dot],dtype=np.float32)
+
+        cost = reward_fnCos(x, costheta,theta_dot)
+        # print('cost: {}'.format(cost))
+        if x == -self.x_threshold or x == self.x_threshold:
+            cost=cost-self.MAX_STEPS_PER_EPISODE/5
+        return self.state, cost, done, {}
+
+    def reset(self, costheta=-1, sintheta=0, iniSpeed=0.0):
+        self.COUNTER=0
+        self.steps_beyond_done = None
+        self.state = np.zeros(shape=(5,))
+        self.state[1] = iniSpeed
+        self.state[2] = costheta
+        self.state[3] = sintheta
+        # self.state[0] = self.np_random.uniform(low=-0.2, high=0.2)
+        # print('reset state:{}'.format(self.state))
+        return np.array(self.state)
+    def rescale_angle(self,theta):
+        return math.atan2(math.sin(theta),math.cos(theta))
+
+    def render(self, mode='human'):
+        screen_width = 800
+        screen_height = 600
+
+        world_width = self.x_threshold * 2
+        scale = screen_width / world_width
+        carty = screen_height / 2  # TOP OF CART
+        polewidth = 10.0
+        polelen = scale * 0.2
+        cartwidth = 50.0
+        cartheight = 30.0
+
+        if self.viewer is None:
+            from gym.envs.classic_control import rendering
+            self.viewer = rendering.Viewer(screen_width, screen_height)
+            l, r, t, b = -cartwidth / 2, cartwidth / 2, cartheight / 2, -cartheight / 2
+            axleoffset = cartheight / 4.0
+            cart = rendering.FilledPolygon([(l, b), (l, t), (r, t), (r, b)])
+            self.carttrans = rendering.Transform()
+            cart.add_attr(self.carttrans)
+            self.viewer.add_geom(cart)
+            l, r, t, b = -polewidth / 2, polewidth / 2, polelen - polewidth / 2, -polewidth / 2
+            pole = rendering.FilledPolygon([(l, b), (l, t), (r, t), (r, b)])
+            pole.set_color(.8, .6, .4)
+            self.poletrans = rendering.Transform(translation=(0, axleoffset))
+            pole.add_attr(self.poletrans)
+            pole.add_attr(self.carttrans)
+            self.viewer.add_geom(pole)
+            self.axle = rendering.make_circle(polewidth / 2)
+            self.axle.add_attr(self.poletrans)
+            self.axle.add_attr(self.carttrans)
+            self.axle.set_color(.5, .5, .8)
+            self.viewer.add_geom(self.axle)
+            self.track = rendering.Line((0, carty), (screen_width, carty))
+            self.track.set_color(0, 0, 0)
+            self.viewer.add_geom(self.track)
+
+        if self.state is None: return None
+
+        x = self.state
+        theta = math.atan2(x[3], x[2])
+        cartx = x[0] * scale + screen_width / 2.0  # MIDDLE OF CART
+        self.carttrans.set_translation(cartx, carty)
+        self.poletrans.set_rotation(-theta)
+
+        return self.viewer.render(return_rgb_array=mode == 'rgb_array')
+
+    def close(self):
+        if self.viewer:
+            self.viewer.close()
+            self.viewer = None
+
+            #model with action history/fr
+
+class CartPoleCosSinTensionD(gym.Env):
+    metadata = {
+        'render.modes': ['human', 'rgb_array'],
+        'video.frames_per_second': 50
+    }
+
+    def __init__(self,
+                 Te = 0.05,
+                 seed : int = 0):
+        self.COUNTER = 0
+        self.MAX_STEPS_PER_EPISODE = N_STEPS
+        self.gravity = 9.81
+        self.masscart = Mcart
+        self.masspole = Mpole
+        self.total_mass = (self.masspole + self.masscart)
+        self.length = 0.45  # actually half the pole's length
+        self.polemass_length = (self.masspole * self.length)
+        self.force_mag = Applied_force
+        self.tau = Te  # seconds between state updates
+        self.kinematics_integrator = 'euler'#'rk'#
+        self.theta_threshold_radians = 180 * 2 * math.pi / 360
+        self.x_threshold = 0.37
+        # FOR DATA
+        self.v_max = 100
+        self.w_max = 100
+
+
+        high = np.array([
+            self.x_threshold,
+            self.v_max,
+            1,
+            1,
+            self.w_max])
+
+        #self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(1,), dtype=np.float32)
+        self.action_space = spaces.Discrete(2)
+        self.observation_space = spaces.Box(-high, high, dtype=np.float32)
+        self.seed(seed)
+        self.viewer = None
+        self.state = None
+        self.steps_beyond_done = None
+        self.total_mass = (self.masspole + self.masscart)
+        self.tauMec = 0.1
+        self.wAngular = 4.488
+        self.reward = None
+    def seed(self, seed=0):
+        self.np_random, seed = seeding.np_random(seed)
+        return [seed]
+    def gTension(self, u, uMin=0.805, slope=0.0545): #u in volts, PWM 17.1/255 slope=1/19 m/s/V
+        # if abs(u)<uMin:
+        #     return 0
+        # return (u-np.sign(u)*uMin)*slope
+        return u*slope
+    def step(self, action):#180 = 8.47V
+        assert self.observation_space.contains(self.state), 'obs_err'
+        self.COUNTER+=1
+        if action==0:
+            action=[-1.0]
+        else:
+            action=[1.0]
+        x, x_dot, costheta, sintheta, theta_dot = self.state
+        n=1
+        if self.kinematics_integrator=='euler':
+            for i in range(n):
+                # xacc = 1 / self.tauMec * (-x_dot + self.gTension(action[0] * 8.47))
+                # xacc = 1 / self.tauMec * (-x_dot + self.gTension(action[0] * 8.47) - np.sign(x_dot)*0.0438725) # static friction 0.0438725
+                xacc = 1 / self.tauMec * (-x_dot + self.gTension(action[0] * 8.47) - np.sign(x_dot)*0.0438725) # static friction 0.0438725
+                # xacc = 1 / self.tauMec * (-x_dot + self.gTension(action[0] * 8.47)) # static friction 0.0438725
+                thetaacc = self.wAngular ** 2 * sintheta - xacc * costheta #- theta_dot * K2
+                x_dot+=self.tau/n*xacc
+                x+=x_dot*self.tau/n
+                theta_dot+=thetaacc*self.tau/n
+                theta=math.atan2(sintheta,costheta)
+                theta+=theta_dot*self.tau/n
+                costheta=np.cos(theta)
+                sintheta=np.sin(theta)
+
+
+        elif self.kinematics_integrator=='rk2':
+            xacc = 1 / self.tauMec * (-x_dot + self.gTension(action[0] * 8.47) - np.sign(x_dot)*0.0438725)
         done=False
         if x < -self.x_threshold or x > self.x_threshold or self.COUNTER == self.MAX_STEPS_PER_EPISODE:
             # print('out of bound')
