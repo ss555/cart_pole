@@ -857,12 +857,12 @@ class CartPoleCosSinTensionD(gym.Env):
         self.masscart = Mcart
         self.masspole = Mpole
         self.total_mass = (self.masspole + self.masscart)
-        self.length = 0.45  # actually half the pole's length
+        self.length = 0.45  # center of mass
         self.polemass_length = (self.masspole * self.length)
         self.force_mag = Applied_force
         self.tau = Te  # seconds between state updates
         self.kinematics_integrator = 'euler'#'rk'#
-        self.theta_threshold_radians = 180 * 2 * math.pi / 360
+        self.theta_threshold_radians =  math.pi
         self.x_threshold = 0.37
         # FOR DATA
         self.v_max = 100

@@ -3,7 +3,7 @@ import gym
 import numpy as np
 from stable_baselines3.sac.policies import MlpPolicy
 from stable_baselines3 import SAC,DDPG,TD3, DQN
-from env_custom import  CartPoleCosSinDev,CartPoleCosSinObsNDev,CartPoleCosSinTension
+from env_custom import CartPoleCosSinDev,CartPoleCosSinObsNDev,CartPoleCosSinTension
 from custom_callbacks import ProgressBarManager
 from stable_baselines3.common.callbacks import EvalCallback
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
@@ -11,6 +11,7 @@ import argparse
 import math
 import time
 from utils import plot
+export CUDA_VISIBLE_DEVICES="0"
 from matplotlib import pyplot as plt
 Te = 5e-2
 env = CartPoleCosSinDev()#CartPoleCusBottom()CartPoleCosSin() #
@@ -33,9 +34,9 @@ actArr=[0.0]
 timeArr=[0.0]
 env.render()
 start_time=time.time()
-# mode='simplePi'
+mode='simplePi'
 # mode='iniSpeed'
-mode='oscillate'
+# mode='oscillate'
 if mode=='simplePi':
     obsArr = [env.reset(costheta=0, sintheta=1)]
     for i in range(1000):
