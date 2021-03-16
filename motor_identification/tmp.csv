@@ -1,0 +1,5 @@
+        fig = px.scatter(x=timeArr[:,0], y=observations[:,0], name='position through time')
+        fig.add_scatter(x=timeArr[:, 0], y=observations[:, 4], name='theta_dot through time')
+        theta=np.atan2(observations[:, 3],observations[:, 2])
+        fig.add_scatter(x=timeArr[:, 0], y=theta, name='theta through time')
+        fig.show()
