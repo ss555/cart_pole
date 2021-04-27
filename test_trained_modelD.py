@@ -1,28 +1,27 @@
 #tensorboard --logdir ./sac_cartpole_tensorboard/
 from stable_baselines3.dqn import MlpPolicy
 from stable_baselines3 import DQN
-from env_custom import CartPoleCosSinTensionD,CartPoleCosSinTensionD3
+from env_custom import CartPoleDiscrete,CartPoleDiscreteButter#,CartPoleDiscreteHistory #CartPoleCosSinTensionD,CartPoleCosSinTensionD3,
 from sb3_contrib import QRDQN
 import time
+from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 from matplotlib import pyplot as plt
 from utils import plot, plot_line
 import numpy as np
 Te = 5e-2
-# env = CartPoleCosSinDev()#CartPoleCusBottom()CartPoleCosSin() #
-env = CartPoleCosSinTensionD3(Te)#CartPoleCosSinHistory() #CartPoleCusBottom()CartPoleCosSin() #
-env.MAX_STEPS_PER_EPISODE = 800
+env = CartPoleDiscreteButter(Te, resetMode='goal')#CartPoleCosSinHistory() #CartPoleCusBottom()CartPoleCosSin() #
 # Load the saved statistics
-# model = QRDQN.load("./logs/other_algo/actions3/best_model", env=env)
-model = QRDQN.load("./logs/other_algo/actions3/best_model_training.zip", env=env)
-# model = DQN.load("./logs/best_model", env=env)
-# model = DQN.load("./logs/best_model_training.zip", env=env)
+# env = DummyVecEnv([lambda: env])
+# env = VecNormalize.load('envNorm.pkl', env)
+# env.training   =False
+# env.norm_reward=False
+env.MAX_STEPS_PER_EPISODE = 800
+model = DQN.load("./logs/best_model", env=env)
 env.randomReset=False
-obs = env.reset()
+obs = env.reset(xIni=0)
 env.render()
 observations=[]
 start_time=time.time()
-
-
 obsArr=[obs]
 actArr=[0.0]
 timeArr=[0.0]

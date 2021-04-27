@@ -1,11 +1,9 @@
 #tensorboard --logdir ./sac_cartpole_tensorboard/
 import torch
-import gym
 import numpy as np
-import os
 from stable_baselines3 import SAC
-from env_custom import CartPoleCosSinDev, CartPoleCosSinTension #CartPoleCosSinT_10
-from custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback
+from env_custom import CartPoleButter#, CartPoleCosSinTension #CartPoleCosSinT_10
+from custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
@@ -13,24 +11,35 @@ import argparse
 from typing import Callable
 from custom_callbacks import plot_results
 from utils import linear_schedule, plot
+from stable_baselines3.common.noise import NormalActionNoise
 NORMALISE=False
 logdir='./logs/sac/'
-env = CartPoleCosSinTension(Te=0.05)#
+# env = CartPoleCosSinTension(Te=0.05)#
+env = CartPoleButter(Te=0.05,discreteActions=False,sparseReward=False)#integrator='rk4')#
 env0 = Monitor(env, logdir)
 ## Automatically normalize the input features and reward
-env1=DummyVecEnv([lambda:env0])
+env=DummyVecEnv([lambda:env0])
+
 if NORMALISE:
-	# env = VecNormalize.load('envNorm.pkl', env1)
-	env=VecNormalize(env1, norm_obs=True, norm_reward=True, clip_obs=10000, clip_reward=10000)
+	env = VecNormalize.load('envNorm.pkl', env)
+	# env=VecNormalize(env1, norm_obs=True, norm_reward=True, clip_obs=10000, clip_reward=10000)
 	env.training = True
-	envEval=VecNormalize(env1, norm_obs=True, norm_reward=False, clip_obs=10000, clip_reward=10000)
+	envEval=env
+	envEval.training=False
+	envEval.norm_reward=True
+	# envEval=VecNormalize(env1, norm_obs=True, norm_reward=False, clip_obs=10000, clip_reward=10000)
+else:
+	envEval=env
+
+# model=SAC.load(logdir + "cartpole.pkl",env=env)
+
 # envEval = VecNormalize.load('envNorm.pkl', env1)
 #envEval.training = False
 # Stop training when the model reaches the reward threshold
 callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=2400, verbose=1)
 
 # Use deterministic actions for evaluation and SAVE the best model
-eval_callback = EvalCallback(env1,
+eval_callback = EvalCallback(env,
 							 best_model_save_path=logdir,
 							 log_path=logdir, eval_freq=5000, callback_on_new_best=callback_on_best,
 							 deterministic=True, render=False)
@@ -46,10 +55,7 @@ parser.add_argument('--env', default="cartpole_bottom",type=str,
 parser.add_argument('--steps', default=300000, type=int, help='timesteps to train')
 args = parser.parse_args()
 if __name__ == '__main__':
-
-
 	RL_ALGO=args.algo
-
 	STEPS_TO_TRAIN = args.steps
 	update_freq = 1  # for the q-target network
 	if (RL_ALGO == 'SAC'):
@@ -68,8 +74,8 @@ if __name__ == '__main__':
 		#pybullet conf n_timesteps: !!float 3e5
 		##sde
 		model = SAC(MlpPolicy, env=env, learning_rate=linear_schedule(1e-3), buffer_size=300000,
-  				batch_size= 1024, ent_coef= 'auto', gamma= 0.98, tau=0.02, train_freq= 64,  gradient_steps= 64,learning_starts= 10000,
-  				use_sde= True, policy_kwargs= dict(log_std_init=-3, net_arch=[128, 128]))#dict(pi=[256, 256], vf=[256, 256])
+  				batch_size= 1024, ent_coef= 'auto', gamma= 0.9999, tau=0.02, train_freq= 64,  gradient_steps= 64,learning_starts= 10000,#target_update_interval=64,
+  				use_sde= True, policy_kwargs= dict(log_std_init=-3, net_arch=[256,256,64]))#dict(pi=[256, 256], qf=[256, 256])))
 		#Tension env
 		# model = SAC(MlpPolicy, env=env, learning_rate=linear_schedule(0.01123), buffer_size= 1000000,
 		# 		batch_size= 128, train_freq= 8, tau=0.005, target_update_interval=1000,
@@ -80,19 +86,25 @@ if __name__ == '__main__':
 		# model.learning_starts = 0
 		# model.batch_size = 256
 		# model = SAC(MlpPolicy, env=env, learning_rate=linear_schedule(1e-3), buffer_size=300000,
-		# 		batch_size=2048, ent_coef='auto', gamma=0.98, tau=0.02, train_freq=-1, gradient_steps=-1, n_episodes_rollout=1,
-		# 		learning_starts=10000,
-		# 		use_sde=True, policy_kwargs=dict(log_std_init=-3, net_arch=[400, 300]))
+		# 		batch_size=2048, ent_coef='auto', gamma=0.9999, tau=0.02, train_freq=-1, gradient_steps=-1,n_episodes_rollout=1,#train_freq=16, gradient_steps=16,
+		# 		learning_starts=10000, target_update_interval=800,
+		# 		use_sde=True, policy_kwargs=dict(log_std_init=0.85, net_arch=[256, 256]))
 		##action_noise
 		# n_actions = env.action_space.shape[-1]
-		# action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.1 * np.ones(n_actions))
-		# model = SAC(MlpPolicy, env=env, learning_rate=linear_schedule(float(1e-3)), buffer_size=300000,
-		# 			batch_size=256, ent_coef='auto1.0', gamma=0.98, tau=0.02, n_episodes_rollout=-1, gradient_steps=-1,
-		# 			learning_starts=10000, seed=manual_seed, use_sde=True, policy_kwargs=dict(log_std_init=-3, net_arch=[400, 300]))
+		# action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.05 * np.ones(n_actions))
+		# model = SAC(MlpPolicy, env=env, learning_rate=linear_schedule(float(2e-3)), buffer_size=300000,
+		# 			batch_size=2048, ent_coef='auto', gamma=0.9999, tau=0.05, train_freq=32, target_update_interval=32, gradient_steps=-1,
+		# 			learning_starts=10000, seed=manual_seed, policy_kwargs=dict(log_std_init=-0.85, net_arch=[256, 256]))
+		#envTension params
 		# model = SAC(MlpPolicy, env=env, learning_rate=linear_schedule(0.01123), buffer_size= 1000000,
 		# 		batch_size= 2048, train_freq= -1, tau=0.005, target_update_interval=1000,
 		# 		 learning_starts= 10000, gamma=0.999,  gradient_steps=-1, n_episodes_rollout=1,
 		# 		use_sde= True, policy_kwargs=dict(net_arch=dict(pi=[256, 256], qf=[256, 256])))
+
+		# model = SAC(MlpPolicy, env=env, learning_rate=0.010890349012742202, buffer_size= 10000,
+		# 		batch_size= 256, train_freq= 16, tau=0.02,
+		# 		 learning_starts= 0, gamma=0.9999,  #gradient_steps=-1, n_episodes_rollout=1,
+		# 		use_sde= True, policy_kwargs=dict(log_std_init=-1.643055575126645,net_arch=dict(pi=[256, 256], qf=[256, 256])))
 
 	try:
 		# model for pendulum starting from bottom
@@ -120,3 +132,4 @@ if __name__ == '__main__':
 	finally:
 		model.save(logdir + "cartpole.pkl")
 		model.save_replay_buffer("sac_swingup_simulation.pkl")
+

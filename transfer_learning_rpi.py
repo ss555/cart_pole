@@ -8,8 +8,6 @@ from custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallbac
 import socket
 import time
 import numpy as np
-from typing import Callable
-from matplotlib import pyplot as plt
 from custom_callbacks import plot_results
 HOST = '169.254.161.71'#'255.255.0.0'#wifiHot #'127.0.0.1'  # Standard loopback interface address (localhost)
 PORT = 65432
