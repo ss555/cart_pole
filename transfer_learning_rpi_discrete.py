@@ -31,12 +31,17 @@ try:
             env = CartPoleCosSinRpiDiscrete3(pi_conn=conn)
             env0 = Monitor(env, logdir)
             # model = QRDQN.load("./logs/other_algo/actions3/best_model", env=env)
-            eval_callback = EvalCallback(env0, best_model_save_path='./logs/', n_eval_episodes=2,
-                                         log_path=logdir, eval_freq=5000,
+            eval_callback = EvalCallback(env0, best_model_save_path='./logs/', n_eval_episodes=3,
+                                         log_path=logdir, eval_freq=10000,
                                          deterministic=True, render=False)
             model = DQN.load("./logs/best_model", env=env)
-            model.load_replay_buffer("dqn_pi_swingup_bufferN")
+            # model.load_replay_buffer("dqn_pi_swingup_bufferN")
             model.learning_starts=0
+            model.gradient_steps=-1
+            model.train_freq=-1
+            model.n_episodes_rollout=1
+            model.exploration_final_eps=0.05
+            # model.exploration_initial_eps = 0
             model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[eval_callback, callbackSave])
             obs = env.reset()
             obsArr=[obs]
@@ -54,9 +59,10 @@ try:
             env.reset()
         conn.close()
 finally:
-    plot(obsArr, timeArr, actArr)
+
     model.save("cartpole_pi_dqnN")
     model.save_replay_buffer("dqn_pi_swingup_bufferN")
+    plot(obsArr, timeArr, actArr)
     # WHEN NORMALISING
     conn.close()
 

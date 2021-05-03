@@ -8,7 +8,6 @@ import logging
 from logging import info, basicConfig
 from collections import deque
 
-
 logname='TCP_SAC_DEBUG1'
 basicConfig(filename=logname,
 			filemode='w',#'a' for append
@@ -19,7 +18,7 @@ basicConfig(filename=logname,
 #     cost=2+np.cos(theta)-abs(x)/50
 #     return cost
 def reward_fnCosSin(x,costheta,theta_dot=0.0):
-    cost=1+costheta-x**2-1*(abs(theta_dot)>10)
+    cost=1+costheta-5*x**2 #TODO coef infront of x2
     return cost
 
 class CartPoleCosSinRpiDiscrete3(gym.Env):
@@ -87,10 +86,11 @@ class CartPoleCosSinRpiDiscrete3(gym.Env):
             cost = cost - self.MAX_STEPS_PER_EPISODE / 5
             print('out of bound')
             self.state[0] = np.clip(x, -self.x_threshold, self.x_threshold)
+        if abs(self.state[-1]>11):
+            print('speed limit')
         if self.MAX_STEPS_PER_EPISODE==self.counter:
             done=True
         info('state: {}, cost{}, done:{}'.format(self.state,cost,done))
-        self.state[-1]/=10
         return self.state, cost, done, {}
     def reset(self):
         self.conn.sendall('RESET'.encode(self.FORMAT))
@@ -127,14 +127,15 @@ class CartPoleCosSinRpiHistory(gym.Env):
         self.x_threshold = 0.36
         self.v_max = 15
         self.w_max = 100
+        self.kS=3
         high = np.array([
             self.x_threshold,
             self.v_max,
             1.0,
             1.0,
             self.w_max])
-        high = np.hstack((high, high, 1, 1))
-        self.actionHistory=deque(np.zeros(2),maxlen=2)
+        high = np.hstack((np.tile(high,self.kS), np.tile(1,self.kS)))
+        self.actionHistory = deque(np.zeros(self.kS),maxlen=self.kS)
         self.action_space = spaces.Discrete(3)
         self.observation_space = spaces.Box(-high, high, dtype = np.float32)
         self.seed(seed)
@@ -183,7 +184,7 @@ class CartPoleCosSinRpiHistory(gym.Env):
             self.state[0] = np.clip(x, -self.x_threshold, self.x_threshold)
         if self.MAX_STEPS_PER_EPISODE==self.counter:
             done=True
-        info('state: {}, cost{}, done:{}'.format(self.state,cost,done))
+        info('state: {}, cost{}, action{}'.format(self.state,cost,action))
         # self.state[-1]/=10
         return np.hstack((self.state,self.prevState,self.actionHistory)), cost, done, {}
     def reset(self):

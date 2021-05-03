@@ -12,7 +12,8 @@ from scipy import signal
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 APPLY_FILTER=False
-absPath='/home/sardor/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/idenPenduleCsv/angle_iden.csv'
+# absPath='/home/sardor/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/idenPenduleCsv/angle_iden.csv'
+absPath='/home/sardor/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/idenPenduleCsv/angle_iden_20ms.csv'
 def process_angle_raw(absPath,plot=True):
     data=np.genfromtxt(absPath,delimiter=',')
     #time position(in degree)
@@ -51,12 +52,12 @@ def process_angle_raw(absPath,plot=True):
         else:
             pos = posRaw[1:-1]
             time = time[1:-1]
-        if i==1:
-            k=1500
-            a=a[:k]
-            v=v[:k]
-            time=time[:k]
-            pos=pos[:k]
+        # if i==1:
+        #     k=1500
+        #     a=a[:k]
+        #     v=v[:k]
+        #     time=time[:k]
+        #     pos=pos[:k]
         if plot:
             fig=make_subplots(rows=3, cols=1)
             fig.add_trace(go.Scatter(x=time, y=pos, mode="lines"))

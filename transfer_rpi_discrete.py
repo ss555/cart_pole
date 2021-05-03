@@ -17,7 +17,7 @@ logdir='./Transfer_learning/'
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 # Save a checkpoint every 1000 steps
 callbackSave = SaveOnBestTrainingRewardCallback(check_freq=1000, log_dir=logdir)
-STEPS_TO_TRAIN = 150000
+STEPS_TO_PREDICT = 2000
 #lr schedule
 
 try:
@@ -26,11 +26,15 @@ try:
         s.listen()
         conn, addr = s.accept()
         with conn:
-            # env = CartPoleCosSinRpiDiscrete3(pi_conn=conn)
-            env = CartPoleCosSinRpiHistory(pi_conn=conn)
+            env = CartPoleCosSinRpiDiscrete3(pi_conn=conn)
+            # env = CartPoleCosSinRpiHistory(pi_conn=conn)
             env0 = Monitor(env, logdir)
             # model = QRDQN.load("./logs/other_algo/actions3/best_model", env=env)
             model = DQN.load("./logs/best_model", env=env)
+            # model = DQN.load("./logs/best_model_training", env=env)
+            env.MAX_STEPS_PER_EPISODE = STEPS_TO_PREDICT+5
+            model.train_freq=-1
+            model.n_episodes_rollout=1
             model.exploration_final_eps=0
             model.exploration_initial_eps=0
             # model = DQN.load("./logs/best_model", env=env)
@@ -40,7 +44,7 @@ try:
             actArr=[0.0]
             timeArr=[0.0]
             start_time = time.time()
-            for i in range(1000):
+            for i in range(STEPS_TO_PREDICT):
                 action, _states = model.predict(obs, deterministic=True)
                 obs, rewards, dones, _ = env.step(action)
                 obsArr.append(obs)
