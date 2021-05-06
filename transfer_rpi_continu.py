@@ -26,15 +26,15 @@ try:
         s.bind((HOST, PORT))
         s.listen()
         conn, addr = s.accept()
-
         with conn:
             env = CartPoleCosSinRPIv2(pi_conn=conn)
             env0 = Monitor(env, logdir)
-            n_actions = env.action_space.shape[-1]
+
             ## Automatically normalize the input features and reward
             env1 = DummyVecEnv([lambda: env0])
             if ENV_NORMALISE:
                 env = VecNormalize.load('envNorm.pkl', env1)#VecNormalize.load(logdir+'/envNorm.pkl', env1)
+                env.training = True
                 # env = VecNormalize(env1, norm_obs=True, norm_reward=True, clip_obs=10000, clip_reward=10000)
                 envEval = VecNormalize(env1, norm_obs=True, norm_reward=False, clip_obs=10000, clip_reward=10000)
             envEval = env1
@@ -45,26 +45,33 @@ try:
                                          log_path=logdir, eval_freq=15000, callback_on_new_best=callback_on_best,
                                          deterministic=True, render=False)
 
-            ##action_noise
-            n_actions = env.action_space.shape[-1]
-            action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.2 * np.ones(n_actions))
+            # model = SAC.load("./logs/sac/best_model", env=env1)
+            model = SAC.load("./weights/sac50/best_model_training.zip", env=env1)
             # model = SAC.load("cartpole_pi_sac", env=env)
             # model.learn(total_timesteps=STEPS_TO_TRAIN, log_interval=100, callback=[eval_callback, callbackSave])
             # # WHEN NORMALISING
             # env.save('envRpiNorm.pkl')
-            env.training = False
-            model = SAC.load("./logs/best_model", env=env1)  # SAC.load(logdir+"/best_model.zip", env=env)
+            # n_actions = env.action_space.shape[-1]
+              # SAC.load(logdir+"/best_model_sim.zip", env=env)
             # model.load_replay_buffer("sac_pi_swingup_buffer")
             obs = env.reset()
-            obsArr=[env.get_original_obs()[0]]
+            if ENV_NORMALISE:
+                obsArr=[env.get_original_obs()[0]]
+            else:
+                obsArr=[obs]
             actArr=[0.0]
             timeArr=[0.0]
             start_time = time.time()
-            for i in range(300):
+            for i in range(1000):
                 action, _states = model.predict(obs, deterministic=False)
                 obs, rewards, dones, _ = env.step(action)
-                obsArr.append(env.get_original_obs()[0])
-                actArr.append(action[0,0])
+                if ENV_NORMALISE:
+                    obsArr.append(env.get_original_obs()[0])
+                    actArr.append(action[0, 0])
+                else:
+                    obsArr.append(obs)
+                    actArr.append(action[0])
+
                 timeArr.append(time.time()-start_time)
                 if dones:
                     env.reset()
@@ -72,10 +79,4 @@ try:
         conn.close()
 finally:
     plot(obsArr, timeArr,actArr)
-    model.save("cartpole_pi_sac")
-    model.save_replay_buffer("sac_pi_swingup_buffer")
-    # WHEN NORMALISING
-    env.save('envRpiNorm.pkl')
     conn.close()
-    plot_results(logdir)
-

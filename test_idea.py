@@ -11,10 +11,12 @@ import time
 var=True
 speed=4.1241
 logname='TCP_SAC_DEBUG1'
+arr=[]
 def callback(way):
 	global speed
 	speed+=1.14
-	info(f'f{var}')
+	arr.append(speed)
+# info(f'f{var}')
 basicConfig(filename=logname,
 			filemode='w',#'a' for append
 			format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',

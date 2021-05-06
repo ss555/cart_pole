@@ -11,9 +11,11 @@ sys.path.append(os.path.abspath('./'))
 from scipy import signal
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
-APPLY_FILTER=False
+
+APPLY_FILTER='ukf'#'butterworth'
 # absPath='/home/sardor/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/idenPenduleCsv/angle_iden.csv'
 absPath='/home/sardor/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/idenPenduleCsv/angle_iden_20ms.csv'
+# absPath='/home/sardor/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/idenPenduleCsv/angle_iden_10ms.csv'
 def process_angle_raw(absPath,plot=True):
     data=np.genfromtxt(absPath,delimiter=',')
     #time position(in degree)
@@ -30,7 +32,7 @@ def process_angle_raw(absPath,plot=True):
         v = np.convolve(posRaw, [-0.5, 0, 0.5], 'valid') / dt
         a = np.convolve(posRaw, [1, -2, 1], 'valid') / dt ** 2
         # filter the signals
-        if APPLY_FILTER:
+        if APPLY_FILTER=='butterworth':
             # frequency and order of the butterworth filter used in smoothing
             # 50ms
             fc = 4
@@ -49,9 +51,37 @@ def process_angle_raw(absPath,plot=True):
             pos=pos[1:-1]
             time=time[1:-1]
             ##
-        else:
-            pos = posRaw[1:-1]
-            time = time[1:-1]
+        elif APPLY_FILTER=='ukf':
+            def fx(x, dt):
+                xout = np.empty_like(x)
+                xout[0] = x[1] * dt + x[0]
+                xout[1] = x[1]
+                return xout
+            def hx(x):
+                return x[:1]  # return position [x]
+            from numpy.random import randn
+            from filterpy.kalman import UnscentedKalmanFilter
+            from filterpy.common import Q_discrete_white_noise
+            from filterpy.kalman import JulierSigmaPoints, MerweScaledSigmaPoints
+            # sigmas = JulierSigmaPoints(n=2, kappa=1)#, alpha=.3, beta=2.)
+            sigmas = MerweScaledSigmaPoints(n=2, kappa=1, alpha=.3, beta=2.)
+            ukf = UnscentedKalmanFilter(dim_x=2, dim_z=1, dt=dt, hx=hx, fx=fx, points=sigmas)
+            ukf.P *= 1e-3
+            ukf.R *= 1e-5
+            ukf.Q = Q_discrete_white_noise(2, dt=dt, var=1.0)
+            ukfPos=[]
+            ukfSpeed=[]
+            for i in range(len(posRaw)):
+                ukf.predict()
+                ukf.update(posRaw[i])
+                ukfPos.append(ukf.x[0])
+                if i>0:
+                    ukfSpeed.append(-(ukfPos[-1]-ukfPos[-2])/dt)
+            # ukfSpeed=
+            ukfPos = ukfPos[1:-1]
+
+        pos = posRaw[1:-1]
+        time = time[1:-1]
         # if i==1:
         #     k=1500
         #     a=a[:k]
@@ -59,9 +89,13 @@ def process_angle_raw(absPath,plot=True):
         #     time=time[:k]
         #     pos=pos[:k]
         if plot:
-            fig=make_subplots(rows=3, cols=1)
+            fig=make_subplots(rows=3, cols=1,shared_xaxes=True)
             fig.add_trace(go.Scatter(x=time, y=pos, mode="lines"))
             fig.add_trace(go.Scatter(x=time, y=v), row=2, col=1)  # ,label='Xd')
+            if APPLY_FILTER=='ukf':
+                fig.add_trace(go.Scatter(x=time, y=ukfPos, mode="lines"), row=1, col=1)
+                fig.add_trace(go.Scatter(x=time, y=ukfSpeed, mode="lines"), row=2, col=1)
+
             fig.add_trace(go.Scatter(x=time, y=a), row=3, col=1)  # ,label='XdF')
             fig.show()
         else:

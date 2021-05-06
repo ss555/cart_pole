@@ -9,3 +9,4 @@ Box2D
 opencv-python
 IPython[all]
 gym[all]==0.10.8
+#torch '1.7.1'

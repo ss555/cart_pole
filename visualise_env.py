@@ -1,6 +1,6 @@
 #tensorboard --logdir ./sac_cartpole_tensorboard/
 import gym
-from env_custom import  CartPoleDiscrete,CartPoleButter
+from env_custom import CartPoleButter
 import time
 from utils import plot
 from matplotlib import pyplot as plt
