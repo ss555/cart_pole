@@ -26,7 +26,7 @@ length=0.416#center of mass
 N_STEPS=800
 # #TEST#
 K1 = 18.8 #30#Guil  #dynamic friction
-K2 = 0.11963736650935591#0.15 #2 #0.1  #friction on theta
+kPendViscous = 0.11963736650935591#0.15 #2 #0.1  #friction on theta
 Mcart=0.5
 Mpole=0.075
 
@@ -39,11 +39,11 @@ class CartPoleButter(gym.Env):
                  f_b=B,
                  f_c=C,
                  f_d=D,
-                 K2=0.11963736650935591,
+                 kPendViscous=0.0,#0.11963736650935591,
                  integrator="semi-euler",
-                 tensionMax=8.4706,
+                 tensionMax=12, #8.4706
                  FILTER=False,
-                 n=2,
+                 n=1, #2,5
                  Kp=0,
                  sparseReward=False,
                  Km=0,#1.2,
@@ -60,7 +60,7 @@ class CartPoleButter(gym.Env):
         :param f_b: coefficient of proportionality for the motor Tension
         :param f_c: static friction for the motor movement which comprises friction of motor,reductor and cart
         :param f_d: assymmetry coefficient in the motor movement
-        :param K2: viscous friction of a pendulum
+        :param kPendViscous: viscous friction of a pendulum
         :param integrator: semi-euler(fast) or ode(long but more precise simulation)
         :param tensionMax: maximum tension of the motor, bu default 12V
         :param FILTER: weather to apply butterworth lowpass filter on measurements
@@ -123,7 +123,7 @@ class CartPoleButter(gym.Env):
         self.wAngularStd=wAngularStd
         self.forceStd=forceStd
         self.FILTER=FILTER
-        self.K2=K2
+        self.kPendViscous=kPendViscous
         if self.FILTER:
             self.iirTheta_dot = iir_filter.IIR_filter(signal.butter(4, 0.9, 'lowpass', output='sos'))#2nd param 0.3
     def seed(self, seed=0):
@@ -152,7 +152,7 @@ class CartPoleButter(gym.Env):
             for i in range(self.n):
                 force = self._calculate_force(action)
                 xacc = (force + np.random.normal(0,scale=self.forceStd) + self.masspole * self.g * sintheta * costheta - self.masspole * theta_dot ** 2 * sintheta * self.length) / (self.masscart + self.masspole * sintheta ** 2)
-                thetaacc = self.wAngularUsed ** 2 * sintheta + xacc / self.length * costheta - theta_dot * self.K2
+                thetaacc = self.wAngularUsed ** 2 * sintheta + xacc / self.length * costheta - theta_dot * self.kPendViscous
                 x_dot += self.tau / self.n * xacc
                 x += x_dot * self.tau / self.n
                 theta_dot += thetaacc * self.tau / self.n
@@ -202,7 +202,7 @@ class CartPoleButter(gym.Env):
         dqdt[1] = (force#self.masscart*(fa*x_dot+fb*8.47*action[0]+fc*np.sign(x_dot))#force
                    + self.masspole * self.g * sintheta * costheta - self.masspole * theta_dot ** 2 * sintheta * self.length) \
                   / (self.masscart + self.masspole * sintheta ** 2)
-        dqdt[3] = self.g / self.length * sintheta + dqdt[1] / self.length * costheta - theta_dot * K2
+        dqdt[3] = self.g / self.length * sintheta + dqdt[1] / self.length * costheta - theta_dot * kPendViscous
         dqdt[2] = state[3]
         return dqdt
     def reset(self, costheta=-1, sintheta=0, xIni=None,iniSpeed=0.0):
@@ -387,7 +387,7 @@ class CartPoleDiscreteHistory(gym.Env):
                 # force=np.random.normal(force,)
                 xacc = (force + np.random.normal(0,scale=1.0) + self.masspole * self.g * sintheta * costheta - self.masspole * theta_dot ** 2 * sintheta * self.length) / (
                                    self.masscart + self.masspole * sintheta ** 2)  # self.wAngularIni = np.random.normal(wAngular, 0.006, 1)[0]
-                thetaacc = self.wAngularUsed ** 2 * sintheta + xacc / self.length * costheta - theta_dot * K2
+                thetaacc = self.wAngularUsed ** 2 * sintheta + xacc / self.length * costheta - theta_dot * kPendViscous
                 # xacc=np.random.normal(xacc, 0.03, 1)[0]
                 # thetaacc=np.random.normal(thetaacc, 0.03, 1)[0]
                 x_dot += self.tau / self.n * xacc
@@ -431,7 +431,7 @@ class CartPoleDiscreteHistory(gym.Env):
         dqdt[1] = (self.masscart*(fa*x_dot+fb*8.47*action[0]+fc*np.sign(x_dot))#force
                    + self.masspole * self.g * sintheta * costheta - self.masspole * theta_dot ** 2 * sintheta * self.length) \
                   / (self.masscart + self.masspole * sintheta ** 2)
-        dqdt[3] = self.g / self.length * sintheta# + dqdt[1] / self.length * costheta - theta_dot * K2
+        dqdt[3] = self.g / self.length * sintheta# + dqdt[1] / self.length * costheta - theta_dot * kPendViscous
         dqdt[2] = state[3]
         # print(dqdt)
         return dqdt
