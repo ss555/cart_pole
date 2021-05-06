@@ -27,14 +27,15 @@ N_STEPS=800
 # #TEST#
 K1 = 18.8 #30#Guil  #dynamic friction
 kPendViscous = 0.11963736650935591#0.15 #2 #0.1  #friction on theta
-Mcart=0.5
-Mpole=0.075
+
 
 class CartPoleButter(gym.Env):
     def __init__(self,
                  Te=0.05,
                  discreteActions=True,
                  resetMode='random',
+                 Mcart=0.5,
+                 Mpole = 0.075,
                  f_a=A,
                  f_b=B,
                  f_c=C,
@@ -296,18 +297,25 @@ class CartPoleDiscreteHistory(gym.Env):
                  Te=0.05,
                  discreteActions=True,
                  resetMode='random',
+                 Mcart=0.5,
+                 Mpole = 0.075,
                  f_a=A,
                  f_b=B,
                  f_c=C,
                  f_d=D,
+                 kPendViscous=0.0,#0.11963736650935591,
                  integrator="semi-euler",
-                 tensionMax=8.4706,
+                 tensionMax=12, #8.4706
                  FILTER=False,
-                 n=2,
+                 n=1, #2,5
                  Kp=0,
                  sparseReward=False,
                  Km=0,#1.2,
-                 seed=0):
+                 seed=0,
+                 N_STEPS=800,
+                 wAngularStd=0.0,#0.1
+                 masspoleStd=0.0, #0.01
+                 forceStd=0.0):  #0.1:
         self.COUNTER = 0
         self.MAX_STEPS_PER_EPISODE = N_STEPS
         self.sparseReward=sparseReward
