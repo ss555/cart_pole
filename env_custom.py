@@ -131,6 +131,7 @@ class CartPoleButter(gym.Env):
         self.np_random, seed = seeding.np_random()
         return [seed]
     def _calculate_force(self,action):
+        #m*(fa
         f=self.masscart*(self.fa*self.state[1]+self.fb*self.tensionMax*action[0]+self.fc*np.sign(self.state[1])+self.fd)  #PWM 180 : 7.437548494321268
         return f
     def step(self, action):
@@ -169,7 +170,6 @@ class CartPoleButter(gym.Env):
             theta_dot = np.random.normal(theta_dot, self.Kp * 0.2, 1)[0]
             x_dot = np.random.normal(x_dot, self.Kp * 1.2e-3, 1)[0]
             theta = np.random.normal(theta, 0.5 * self.Kp * 0.01, 1)[0]
-
         costheta = np.cos(theta)
         sintheta = np.sin(theta)
         self.state = np.array([x, x_dot, np.cos(theta), np.sin(theta), theta_dot], dtype=np.float32)
@@ -413,7 +413,6 @@ class CartPoleDiscreteHistory(gym.Env):
             theta_dot = np.random.normal(theta_dot, self.Kp * 0.2, 1)[0]
             x_dot = np.random.normal(x_dot, self.Kp * 1.2e-3, 1)[0]
             theta = np.random.normal(theta, 0.5 * self.Kp * 0.01, 1)[0]
-
         costheta = np.cos(theta)
         sintheta = np.sin(theta)
         self.state = np.array([x, x_dot, np.cos(theta), np.sin(theta), theta_dot], dtype=np.float32)
@@ -478,7 +477,6 @@ class CartPoleDiscreteHistory(gym.Env):
     def render(self, mode='human'):
         screen_width = 800
         screen_height = 600
-
         world_width = self.x_threshold * 2
         scale = screen_width / world_width
         carty = screen_height / 2  # TOP OF CART
@@ -486,7 +484,6 @@ class CartPoleDiscreteHistory(gym.Env):
         polelen = scale * 0.2
         cartwidth = 50.0
         cartheight = 30.0
-
         if self.viewer is None:
             from gym.envs.classic_control import rendering
             self.viewer = rendering.Viewer(screen_width, screen_height)

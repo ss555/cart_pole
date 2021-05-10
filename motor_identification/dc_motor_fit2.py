@@ -111,7 +111,6 @@ def regression_chariot(data,symmetricTension=True):
     # from sklearn.linear_model import RANSACRegressor
     # reg = RANSACRegressor(random_state=0).fit(regA, regB)
     # reg.score(regA, regB)
-
     error=X[1]
     X=X[0]
     X=np.squeeze(X, axis=1)

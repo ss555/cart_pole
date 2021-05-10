@@ -1,11 +1,54 @@
 from typing import Callable
 from matplotlib import pyplot as plt
-import numpy as np
-import pandas as pd
 import plotly.express as px
-import os
-import sys
+import numpy as np
 import glob
+import sys
+import os
+import yaml
+from typing import Any, Callable, Dict, List, Optional, Tuple
+from collections import OrderedDict
+from pprint import pprint
+def _save_config(self, saved_hyperparams: Dict[str, Any]) -> None:
+    """
+    Save unprocessed hyperparameters, this can be use later
+    to reproduce an experiment.
+
+    :param saved_hyperparams:
+    """
+    # Save hyperparams
+    with open(os.path.join(self.params_path, "config.yml"), "w") as f:
+        yaml.dump(saved_hyperparams, f)
+
+    # save command line arguments
+    with open(os.path.join(self.params_path, "args.yml"), "w") as f:
+        ordered_args = OrderedDict([(key, vars(self.args)[key]) for key in sorted(vars(self.args).keys())])
+        yaml.dump(ordered_args, f)
+
+    print(f"Log path: {self.save_path}")
+
+def read_hyperparameters(self) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    # Load hyperparameters from yaml file
+    with open(f"hyperparams/{self.algo}.yml", "r") as f:
+        hyperparams_dict = yaml.safe_load(f)
+        if self.env_id in list(hyperparams_dict.keys()):
+            hyperparams = hyperparams_dict[self.env_id]
+        elif self._is_atari:
+            hyperparams = hyperparams_dict["atari"]
+        else:
+            raise ValueError(f"Hyperparameters not found for {self.algo}-{self.env_id}")
+
+    if self.custom_hyperparams is not None:
+        # Overwrite hyperparams if needed
+        hyperparams.update(self.custom_hyperparams)
+    # Sort hyperparams that will be saved
+    saved_hyperparams = OrderedDict([(key, hyperparams[key]) for key in sorted(hyperparams.keys())])
+
+    if self.verbose > 0:
+        pprint(saved_hyperparams)
+
+    return hyperparams, saved_hyperparams
+
 
 PLOT_TIME_DIFF=True
 #from env_custom import CartPoleDiscrete
@@ -88,7 +131,8 @@ def plot(observations = [],timeArr=[], actArr=[], save=True,plotlyUse=False):
         np.savetxt('./tmp/obs.csv',observations, delimiter=",")
         np.savetxt('./tmp/time.csv',timeArr, delimiter=",")
         np.savetxt('./tmp/actArr.csv',actArr, delimiter=",")
-
+def plot_results(filename):
+    pass
 def plot_line(observations = [],timeArr=[]):
     observations=np.array(observations)
     plt.figure(figsize=(12, 12))
@@ -124,20 +168,20 @@ def plot_line(observations = [],timeArr=[]):
     plt.show()
     plt.savefig('./tmp/time_diff.png')
 
-def plotExpSim(observations = [],timeArr=[], actArr=[], save=True,plotlyUse=False):
-    fig = px.scatter(x=timeArr, y=observations[:, 0], title='observations through time')
-    # fig.add_scatter(x=timeArr[:, 0], y=observations[:, 4], name='theta_dot through time')
-    fig.add_scatter(x=timeArr, y=observations[:, 4], name='theta_dot through time')
-    theta = np.arctan2(observations[:, 3], observations[:, 2])
-    fig.add_scatter(x=timeArr, y=theta, name='theta through time')
-    env=CartPoleDiscrete()
-    for i in actArr:
-        simObs, rewards, dones, _ = env.step(action)
-    fig.add_scatter(x=timeArr, y=observations[:, 4], name='theta_dot through time')
-    fig.show()
+# def plotExpSim(observations = [],timeArr=[], actArr=[], save=True,plotlyUse=False):
+#     fig = px.scatter(x=timeArr, y=observations[:, 0], title='observations through time')
+#     # fig.add_scatter(x=timeArr[:, 0], y=observations[:, 4], name='theta_dot through time')
+#     fig.add_scatter(x=timeArr, y=observations[:, 4], name='theta_dot through time')
+#     theta = np.arctan2(observations[:, 3], observations[:, 2])
+#     fig.add_scatter(x=timeArr, y=theta, name='theta through time')
+#     env=CartPoleDiscrete()
+#     for i in actArr:
+#         simObs, rewards, dones, _ = env.step(action)
+#     fig.add_scatter(x=timeArr, y=observations[:, 4], name='theta_dot through time')
+#     fig.show()
 
 
-def printAllFilesCD(extension):
+def printAllFilesCD(extension,absPath):
     '''
     prints all files with this extension
     :param extension: extension of file searched

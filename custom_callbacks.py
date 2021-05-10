@@ -12,7 +12,6 @@ class ProgressBarCallback(BaseCallback):
     """
     :param pbar: (tqdm.pbar) Progress bar object
     """
-
     def __init__(self, pbar):
         super(ProgressBarCallback, self).__init__()
         self._pbar = pbar
@@ -43,7 +42,6 @@ class SaveOnBestTrainingRewardCallback(BaseCallback):
     """
     Callback for saving a model (the check is done every ``check_freq`` steps)
     based on the training reward (in practice, we recommend using ``EvalCallback``).
-
     :param check_freq: (int)
     :param log_dir: (str) Path to the folder where the model will be saved.
       It must contains the file created by the ``Monitor`` wrapper.
@@ -63,7 +61,6 @@ class SaveOnBestTrainingRewardCallback(BaseCallback):
 
     def _on_step(self) -> bool:
         if self.n_calls % self.check_freq == 0:
-
           # Retrieve training reward
           x, y = ts2xy(load_results(self.log_dir), 'timesteps')
           if len(x) > 0:
