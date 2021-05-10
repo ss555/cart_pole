@@ -9,6 +9,7 @@ import yaml
 from typing import Any, Callable, Dict, List, Optional, Tuple
 from collections import OrderedDict
 from pprint import pprint
+
 def _save_config(self, saved_hyperparams: Dict[str, Any]) -> None:
     """
     Save unprocessed hyperparameters, this can be use later
@@ -50,8 +51,7 @@ def read_hyperparameters(self) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     return hyperparams, saved_hyperparams
 
 
-PLOT_TIME_DIFF=True
-#from env_custom import CartPoleDiscrete
+
 def linear_schedule(initial_value: float) -> Callable[[float], float]:
     '''
     :param initial_value: initial value of a learning rate that decays, used with SB3
@@ -60,7 +60,7 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
     def func(progress_remaining: float) -> float:
         return progress_remaining * initial_value
     return func
-def plot(observations = [],timeArr=[], actArr=[], save=True,plotlyUse=False):
+def plot(observations = [],timeArr=[], actArr=[], save=True,plotlyUse=False,PLOT_TIME_DIFF=True):
     '''
     :param observations: experience in form of N,5
     :param timeArr: time when observation happened
@@ -131,8 +131,18 @@ def plot(observations = [],timeArr=[], actArr=[], save=True,plotlyUse=False):
         np.savetxt('./tmp/obs.csv',observations, delimiter=",")
         np.savetxt('./tmp/time.csv',timeArr, delimiter=",")
         np.savetxt('./tmp/actArr.csv',actArr, delimiter=",")
-def plot_results(filename):
-    pass
+# Import seaborn
+import seaborn as sns
+from env_wrappers import load_results
+def plot_results(load_results):
+    data=load_results(load_results)
+    dots = sns.load_dataset("dots")
+    sns.relplot(
+        data=dots, kind="line",
+        x="time", y="firing_rate", col="align",
+        hue="choice", size="coherence", style="choice",
+        facet_kws=dict(sharex=False),
+    )
 def plot_line(observations = [],timeArr=[]):
     observations=np.array(observations)
     plt.figure(figsize=(12, 12))

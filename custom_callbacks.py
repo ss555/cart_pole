@@ -90,7 +90,7 @@ def moving_average(values, window):
     return np.convolve(values, weights, 'valid')
 
 
-def plot_results(log_folder, title='Learning Curve'):
+def plot_results(log_folder, window_size=30, title='Learning Curve'):
     """
     plot the results
 
@@ -98,7 +98,7 @@ def plot_results(log_folder, title='Learning Curve'):
     :param title: (str) the title of the task to plot
     """
     x, y = ts2xy(load_results(log_folder), 'walltime_hrs')#'timesteps')
-    y = moving_average(y, window=50)
+    y = moving_average(y, window=window_size)
     # Truncate x
     x = x[len(x) - len(y):]
 
@@ -109,7 +109,7 @@ def plot_results(log_folder, title='Learning Curve'):
     plt.ylabel('Rewards')
     plt.title(title + " Smoothed")
     plt.show()
-    plt.savefig(log_folder + "LC_Smoothed.png")
+    plt.savefig(log_folder + title + ".png")
 # class PlottingCallback(BaseCallback):
 #     """
 #     Callback for plotting the performance in realtime.
