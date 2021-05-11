@@ -9,6 +9,9 @@ import yaml
 from typing import Any, Callable, Dict, List, Optional, Tuple
 from collections import OrderedDict
 from pprint import pprint
+# Import seaborn
+import seaborn as sns
+from env_wrappers import load_results
 
 def _save_config(self, saved_hyperparams: Dict[str, Any]) -> None:
     """
@@ -28,29 +31,20 @@ def _save_config(self, saved_hyperparams: Dict[str, Any]) -> None:
 
     print(f"Log path: {self.save_path}")
 
-def read_hyperparameters(self) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    # Load hyperparameters from yaml file
-    with open(f"hyperparams/{self.algo}.yml", "r") as f:
+def read_hyperparameters(name, path="parameters.yml",additional_params=None):
+
+    with open(path, "r") as f:
         hyperparams_dict = yaml.safe_load(f)
-        if self.env_id in list(hyperparams_dict.keys()):
-            hyperparams = hyperparams_dict[self.env_id]
-        elif self._is_atari:
-            hyperparams = hyperparams_dict["atari"]
-        else:
-            raise ValueError(f"Hyperparameters not found for {self.algo}-{self.env_id}")
-
-    if self.custom_hyperparams is not None:
+        hyperparams = hyperparams_dict[name]
+        if "train_freq" in hyperparams and isinstance(hyperparams["train_freq"], list):
+            hyperparams["train_freq"] = tuple(hyperparams["train_freq"])
+            print('parameters loaded')
+        # Convert to python object if needed
+        if isinstance(hyperparams["policy_kwargs"], str):
+            hyperparams["policy_kwargs"] = eval(hyperparams["policy_kwargs"])
         # Overwrite hyperparams if needed
-        hyperparams.update(self.custom_hyperparams)
-    # Sort hyperparams that will be saved
-    saved_hyperparams = OrderedDict([(key, hyperparams[key]) for key in sorted(hyperparams.keys())])
-
-    if self.verbose > 0:
-        pprint(saved_hyperparams)
-
-    return hyperparams, saved_hyperparams
-
-
+        # hyperparams.update(self.custom_hyperparams)
+    return hyperparams
 
 def linear_schedule(initial_value: float) -> Callable[[float], float]:
     '''
@@ -131,9 +125,7 @@ def plot(observations = [],timeArr=[], actArr=[], save=True,plotlyUse=False,PLOT
         np.savetxt('./tmp/obs.csv',observations, delimiter=",")
         np.savetxt('./tmp/time.csv',timeArr, delimiter=",")
         np.savetxt('./tmp/actArr.csv',actArr, delimiter=",")
-# Import seaborn
-import seaborn as sns
-from env_wrappers import load_results
+
 def plot_results(load_results):
     data=load_results(load_results)
     dots = sns.load_dataset("dots")

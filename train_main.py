@@ -15,7 +15,7 @@ from stable_baselines3.common.noise import NormalActionNoise
 NORMALISE=False
 logdir='./logs/sac/'
 # env = CartPoleCosSinTension(Te=0.05)#
-env = CartPoleButter(Te=0.05,discreteActions=False,sparseReward=False)#integrator='rk4')#
+env = CartPoleButter(Te=0.05,discreteActions=False,sparseReward=False,tensionMax=12)#integrator='rk4')#
 env0 = Monitor(env, logdir)
 ## Automatically normalize the input features and reward
 env=DummyVecEnv([lambda:env0])
@@ -66,46 +66,13 @@ if __name__ == '__main__':
 		torch.manual_seed(manual_seed)
 		np.random.seed(manual_seed)
 
-		#model=SAC(MlpPolicy,env=env,**sac_kwargs)
-		# model = SAC(MlpPolicy, env=env, learning_rate=linear_schedule(0.0003), ent_coef='auto', #action_noise=action_noise,
-		# 			batch_size=2048, use_sde=True, buffer_size=300000,
-		# 			learning_starts=30000, tensorboard_log="./sac_cartpole_tensorboard",
-		# 			policy_kwargs=dict(net_arch=[64, 64]), train_freq=-1, n_episodes_rollout=1, gradient_steps=-1)
-		#pybullet conf n_timesteps: !!float 3e5
-		##sde
+		# ##sde
 		model = SAC(MlpPolicy, env=env, learning_rate=linear_schedule(1e-3), buffer_size=300000,
   				batch_size= 1024, ent_coef= 'auto', gamma= 0.9999, tau=0.02, train_freq= 64,  gradient_steps= 64,learning_starts= 10000,#target_update_interval=64,
   				use_sde= True, policy_kwargs= dict(log_std_init=-3, net_arch=[256,256,64]))#dict(pi=[256, 256], qf=[256, 256])))
-		#Tension env
-		# model = SAC(MlpPolicy, env=env, learning_rate=linear_schedule(0.01123), buffer_size= 1000000,
-		# 		batch_size= 128, train_freq= 8, tau=0.005, target_update_interval=1000,
-		# 		 learning_starts= 10000, gamma=0.999,  gradient_steps=8,
-		# 		use_sde= True, policy_kwargs=dict(log_std_init=-1.8353, net_arch=dict(pi=[256, 256], qf=[256, 256])))#dict(pi=[256, 256], vf=[256, 256])
-		#resume training
-		# model = SAC.load("./logs/best_model", env=env)
-		# model.learning_starts = 0
-		# model.batch_size = 256
-		# model = SAC(MlpPolicy, env=env, learning_rate=linear_schedule(1e-3), buffer_size=300000,
-		# 		batch_size=2048, ent_coef='auto', gamma=0.9999, tau=0.02, train_freq=-1, gradient_steps=-1,n_episodes_rollout=1,#train_freq=16, gradient_steps=16,
-		# 		learning_starts=10000, target_update_interval=800,
-		# 		use_sde=True, policy_kwargs=dict(log_std_init=0.85, net_arch=[256, 256]))
-		##action_noise
-		# n_actions = env.action_space.shape[-1]
-		# action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.05 * np.ones(n_actions))
-		# model = SAC(MlpPolicy, env=env, learning_rate=linear_schedule(float(2e-3)), buffer_size=300000,
-		# 			batch_size=2048, ent_coef='auto', gamma=0.9999, tau=0.05, train_freq=32, target_update_interval=32, gradient_steps=-1,
-		# 			learning_starts=10000, seed=manual_seed, policy_kwargs=dict(log_std_init=-0.85, net_arch=[256, 256]))
-		#envTension params
-		# model = SAC(MlpPolicy, env=env, learning_rate=linear_schedule(0.01123), buffer_size= 1000000,
-		# 		batch_size= 2048, train_freq= -1, tau=0.005, target_update_interval=1000,
-		# 		 learning_starts= 10000, gamma=0.999,  gradient_steps=-1, n_episodes_rollout=1,
-		# 		use_sde= True, policy_kwargs=dict(net_arch=dict(pi=[256, 256], qf=[256, 256])))
-
-		# model = SAC(MlpPolicy, env=env, learning_rate=0.010890349012742202, buffer_size= 10000,
-		# 		batch_size= 256, train_freq= 16, tau=0.02,
-		# 		 learning_starts= 0, gamma=0.9999,  #gradient_steps=-1, n_episodes_rollout=1,
-		# 		use_sde= True, policy_kwargs=dict(log_std_init=-1.643055575126645,net_arch=dict(pi=[256, 256], qf=[256, 256])))
-
+		# from utils import plot_results,read_hyperparameters
+		# hyperparams=read_hyperparameters('sac_cartpole_50')
+		# model = SAC(env=env,**hyperparams)
 	try:
 		# model for pendulum starting from bottom
 		with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:

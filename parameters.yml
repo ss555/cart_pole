@@ -1,6 +1,6 @@
 
 #TODO bug with long episode
-dqn_sim50:
+dqn_cartpole_50:
     policy: 'MlpPolicy'
     learning_starts : 10000
     gamma : 0.995
@@ -16,17 +16,16 @@ dqn_sim50:
     #policy_kwargs : dict(net_arch=[256, 256])}
     policy_kwargs : 'dict(net_arch=[256, 256])'
 
-sac_cartpole50:
+sac_cartpole_50:
     policy: 'MlpPolicy'
     gamma: 0.98
-    lr: 0.001292297868387387
+    learning_rate: 0.001292297868387387
     batch_size: 2048
     buffer_size: 10000
     learning_starts: 0
-    train_freq : (1, "episode")
+    train_freq : [1, "episode"]
     tau: 0.02
-    log_std_init: -0.9655242596737095
-    net_arch: "dict(net_arch=[256,256])"
+    policy_kwargs: "dict(log_std_init=-0.9655242596737095,net_arch=[256,256])"
 
 dqn_20:
     policy: 'MlpPolicy'

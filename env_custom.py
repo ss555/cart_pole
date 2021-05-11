@@ -18,7 +18,7 @@ def reward_fnCos(x, costheta, sintheta, theta_dot=0, sparse=False, Kx=5):
         if abs(np.arctan2(sintheta,costheta))<np.pi*30/180 and abs(x)<0.2:
             reward+=1
     else:
-        reward = 1 + costheta - Kx * x ** 2
+        reward = 1 - costheta - Kx * x ** 2
     return reward
 
 
@@ -131,7 +131,6 @@ class CartPoleButter(gym.Env):
         self.np_random, seed = seeding.np_random()
         return [seed]
     def _calculate_force(self,action):
-        #m*(fa
         f=self.masscart*(self.fa*self.state[1]+self.fb*self.tensionMax*action[0]+self.fc*np.sign(self.state[1])+self.fd)  #PWM 180 : 7.437548494321268
         return f
     def step(self, action):
@@ -152,9 +151,9 @@ class CartPoleButter(gym.Env):
         self.polemass_length = (self.masspole * self.length)
         if self.kinematics_integrator=='semi-euler':
             for i in range(self.n):
-                force = self._calculate_force(action)
-                xacc = (force + np.random.normal(0,scale=self.forceStd) + self.masspole * self.g * sintheta * costheta - self.masspole * theta_dot ** 2 * sintheta * self.length) / (self.masscart + self.masspole * sintheta ** 2)
-                thetaacc = self.wAngularUsed ** 2 * sintheta + xacc / self.length * costheta - theta_dot * self.kPendViscous
+                force = self._calculate_force(action) + np.random.normal(0,scale=self.forceStd)
+                xacc = (force+self.masspole*theta_dot**2*self.length*sintheta+self.masspole*self.g*sintheta*costheta)/(self.masscart+self.masspole*sintheta**2)
+                thetaacc = -self.wAngularUsed ** 2 * sintheta - xacc / self.length * costheta - theta_dot * self.kPendViscous
                 x_dot += self.tau / self.n * xacc
                 x += x_dot * self.tau / self.n
                 theta_dot += thetaacc * self.tau / self.n
@@ -206,7 +205,7 @@ class CartPoleButter(gym.Env):
         dqdt[3] = self.g / self.length * sintheta + dqdt[1] / self.length * costheta - theta_dot * kPendViscous
         dqdt[2] = state[3]
         return dqdt
-    def reset(self, costheta=-1, sintheta=0, xIni=None,iniSpeed=0.0):
+    def reset(self, costheta=1, sintheta=0, xIni=None,iniSpeed=0.0):
         if self.FILTER:
             # self.iirX_dot=iir_filter.IIR_filter(signal.butter(4, 0.5, 'lowpass', output='sos'))
             self.iirTheta_dot.reset()
@@ -222,7 +221,7 @@ class CartPoleButter(gym.Env):
             self.state[3] = sintheta
         elif self.resetMode=='goal':
             self.state = np.zeros(shape=(5,))
-            self.state[2] = 1
+            self.state[2] = -1
             self.state[0] = self.np_random.uniform(low=-0.1, high=0.1)
         elif self.resetMode == 'random':
             self.state = np.zeros(shape=(5,))
@@ -282,7 +281,7 @@ class CartPoleButter(gym.Env):
         theta = math.atan2(x[3], x[2])
         cartx = x[0] * scale + screen_width / 2.0  # MIDDLE OF CART
         self.carttrans.set_translation(cartx, carty)
-        self.poletrans.set_rotation(theta)
+        self.poletrans.set_rotation(theta+np.pi)
 
         return self.viewer.render(return_rgb_array=mode == 'rgb_array')
 
