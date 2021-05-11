@@ -13,7 +13,7 @@ from stable_baselines3 import DQN, SAC
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
 from custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback
 from env_custom import CartPoleButter
-git ,read_hyperparameters
+from utils import plot_results,read_hyperparameters
 import yaml
 from custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback
 STEPS_TO_TRAIN=100000
@@ -51,18 +51,19 @@ if amplitudeVariationSim:
         print(f'simulation for {tension} V')
         with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
             model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback])
-    plot_results(filename)
+    plot_results(filenames)
 
 #TODO standard deviation of xas a function of the control amplitude in steadystate
 #TODO standard deviation of θas a function of the control amplitude in steadystate
 #TODO temps d’apprentissage et note en fonction du coefficient de friction statique 4 valeurs du coefficient:Ksc,virt= 0,0.1∗Ksc,manip,Ksc,manip,10∗Ksc,manipDiscussion
 STATIC_FRICTION_CART=-0.902272006611719
-STATIC_FRICTION_ARR=[0,0.1,1,10]*STATIC_FRICTION_CART
+STATIC_FRICTION_ARR=np.array([0,0.1,1,10])*STATIC_FRICTION_CART
 #TODO temps  d’apprentissage  et  note  en  fonction  du  coefficient  de  frictiondynamique
 DYNAMIC_FRICTION_PENDULUM=-21
-DYNAMIC_FRICTION_ARR=[0,0.1,1,10]*DYNAMIC_FRICTION_PENDULUM
+DYNAMIC_FRICTION_ARR=np.array([0,0.1,1,10])*DYNAMIC_FRICTION_PENDULUM
 DYNAMIC_FRICTION_SIM=True
 if DYNAMIC_FRICTION_SIM:
+    filenames=[]
     for frictionValue in DYNAMIC_FRICTION_ARR:
         env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True,resetMode='experimental', sparseReward=False,f_a=frictionValue)  # ,integrator='ode')#,integrator='rk4')
         filename = logdir + f'dynamic_friction_sim_{frictionValue}_'
@@ -74,7 +75,7 @@ if DYNAMIC_FRICTION_SIM:
             model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback])
     plot_results(filename)
 #TODO encoder noise
-NOISE_TABLE=[0,0.01,0.05,0.10.15,0.5,1,5,10]#/np.pi
+NOISE_TABLE=np.array([0,0.01,0.05,0.1,0.15,0.5,1,5,10])/np.pi
 '''
 Noise effects (DQN)add noise to position: gaussian,σ(θ) = 0,0.01,0.05,0.10.15,0.5,1,5,10◦.we correlate simultaneously to the noise in   ̇σ,σ( ̇θ) =σ(θ)/∆twith ∆t= 50ms.Figure :  temps d’apprentissage en fonction deσθ
 '''
