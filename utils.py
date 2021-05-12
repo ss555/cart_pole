@@ -14,12 +14,6 @@ import seaborn as sns
 from env_wrappers import load_results
 
 def _save_config(self, saved_hyperparams: Dict[str, Any]) -> None:
-    """
-    Save unprocessed hyperparameters, this can be use later
-    to reproduce an experiment.
-
-    :param saved_hyperparams:
-    """
     # Save hyperparams
     with open(os.path.join(self.params_path, "config.yml"), "w") as f:
         yaml.dump(saved_hyperparams, f)
@@ -126,15 +120,7 @@ def plot(observations = [],timeArr=[], actArr=[], save=True,plotlyUse=False,PLOT
         np.savetxt('./tmp/time.csv',timeArr, delimiter=",")
         np.savetxt('./tmp/actArr.csv',actArr, delimiter=",")
 
-def plot_results(load_results):
-    data=load_results(load_results)
-    dots = sns.load_dataset("dots")
-    sns.relplot(
-        data=dots, kind="line",
-        x="time", y="firing_rate", col="align",
-        hue="choice", size="coherence", style="choice",
-        facet_kws=dict(sharex=False),
-    )
+
 def plot_line(observations = [],timeArr=[]):
     observations=np.array(observations)
     plt.figure(figsize=(12, 12))
@@ -170,17 +156,6 @@ def plot_line(observations = [],timeArr=[]):
     plt.show()
     plt.savefig('./tmp/time_diff.png')
 
-# def plotExpSim(observations = [],timeArr=[], actArr=[], save=True,plotlyUse=False):
-#     fig = px.scatter(x=timeArr, y=observations[:, 0], title='observations through time')
-#     # fig.add_scatter(x=timeArr[:, 0], y=observations[:, 4], name='theta_dot through time')
-#     fig.add_scatter(x=timeArr, y=observations[:, 4], name='theta_dot through time')
-#     theta = np.arctan2(observations[:, 3], observations[:, 2])
-#     fig.add_scatter(x=timeArr, y=theta, name='theta through time')
-#     env=CartPoleDiscrete()
-#     for i in actArr:
-#         simObs, rewards, dones, _ = env.step(action)
-#     fig.add_scatter(x=timeArr, y=observations[:, 4], name='theta_dot through time')
-#     fig.show()
 
 
 def printAllFilesCD(extension,absPath):

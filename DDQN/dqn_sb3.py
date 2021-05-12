@@ -19,8 +19,6 @@ LOAD_BUFFER_PATH=None#"dqn_pi_swingup_bufferN"
 logdir='./logs/'
 
 env = CartPoleButter(Te=Te,N_STEPS=EP_STEPS,discreteActions=True,tensionMax=8.4706,resetMode='experimental',sparseReward=False,Km=0.0,n=1)#,integrator='ode')#,integrator='rk4')
-# env = CartPoleButter(Te=Te,N_STEPS=EP_STEPS,discreteActions=True,resetMode='experimental',sparseReward=False,Km=0.0,integrator='ode')#,integrator='rk4')
-# env = CartPoleDiscreteHistory(Te=0.05,discreteActions=True,resetMode='random',sparseReward=False)#,integrator='ode')#,integrator='rk4')
 env = Monitor(env, filename=logdir+'basic_simulation_')
 envEvaluation = env
 NORMALISE=False

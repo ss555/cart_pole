@@ -22,7 +22,27 @@ basicConfig(filename=logname,
 			format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
 			datefmt='%H:%M:%S',
 			level=logging.DEBUG)
-info(f'done{var},and{speed}')#time9.131431579589844e-05
 start_time=time.time()
-callback(1.23)
+info(f'done{var},and{speed}')#time9.131431579589844e-05
 print(time.time()-start_time)
+start_time=time.time()
+info(f'done{var},and{speed}')#time9.131431579589844e-05
+print(time.time()-start_time)
+
+
+'''
+#FIND ALL JUPYTER FILES
+import os
+
+# This is the path where you want to search
+path = r'./../..'
+
+# this is the extension you want to detect
+extension = '.ipynb'
+
+for root, dirs_list, files_list in os.walk(path):
+    for file_name in files_list:
+        if os.path.splitext(file_name)[-1] == extension:
+            file_name_path = os.path.join(root, file_name)
+            print(file_name)
+            print(file_name_path)   # This is the full path of the filter file'''

@@ -28,8 +28,8 @@ if ENV_NORMALISE:
     # reward normalization is not needed at test time
     env.norm_reward = False
 # resumeDir='./Transfer_learning/backup'
-# model=SAC.load(resumeDir+"/cartpole_pi_sac",env=env)
-model = SAC.load("./logs/sac/best_model", env=env)
+# model = SAC.load("./logs/sac/best_model", env=env)
+model = SAC.load("./weights/sac50/best_model", env=env)
 # model = SAC.load("./logs/best_model_training.zip", env=env)
 obs = env.reset()
 env.render()

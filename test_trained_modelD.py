@@ -11,7 +11,7 @@ import numpy as np
 
 Te = 5e-2
 #CartPoleCosSinHistory() #CartPoleCusBottom()CartPoleCosSin() #
-env = CartPoleButter(Te=0.02,N_STEPS=1500,discreteActions=True,resetMode='goal',sparseReward=False)
+env = CartPoleButter(Te=0.02,N_STEPS=1500,discreteActions=True,resetMode='experimental',sparseReward=False)
 # Load the saved statistics
 env.MAX_STEPS_PER_EPISODE = 800
 model = DQN.load("./logs/best_model", env=env)

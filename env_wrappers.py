@@ -8,8 +8,7 @@ from glob import glob
 from typing import Dict, List, Optional, Tuple, Union
 import gym
 import numpy as np
-import pandas
-
+import pandas as pd
 from stable_baselines3.common.type_aliases import GymObs, GymStepReturn
 
 
@@ -168,7 +167,8 @@ class ResultsWriter:
             if os.path.isdir(filename):
                 filename = os.path.join(filename, Monitor.EXT)
             else:
-                filename = filename + "." + Monitor.EXT
+                filename = filename + Monitor.EXT
+                # filename = filename + "." + Monitor.EXT
         self.file_handler = open(filename, "wt")
         self.file_handler.write("#%s\n" % json.dumps(header))
         self.logger = csv.DictWriter(self.file_handler, fieldnames=("r", "l", "t") + extra_keys)
@@ -198,9 +198,35 @@ def get_monitor_files(path: str) -> List[str]:
     :return: the log files
     """
     return glob(os.path.join(path, "*" + Monitor.EXT))
+X_TIMESTEPS = "timesteps"
+X_EPISODES = "episodes"
+X_WALLTIME = "walltime_hrs"
+POSSIBLE_X_AXES = [X_TIMESTEPS, X_EPISODES, X_WALLTIME]
+def ts2xy(data_frame: pd.DataFrame, x_axis: str) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Decompose a data frame variable to x ans ys
 
+    :param data_frame: the input data
+    :param x_axis: the axis for the x and y output
+        (can be X_TIMESTEPS='timesteps', X_EPISODES='episodes' or X_WALLTIME='walltime_hrs')
+    :return: the x and y output
+    """
 
-def load_results(path: str) -> pandas.DataFrame:
+    if x_axis == X_TIMESTEPS:
+        x_var = np.cumsum(data_frame.l.values)
+        y_var = data_frame.r.values
+    elif x_axis == X_EPISODES:
+        x_var = np.arange(len(data_frame))
+        y_var = data_frame.r.values
+    elif x_axis == X_WALLTIME:
+        # Convert to hours
+        x_var = data_frame.t.values / 3600.0
+        y_var = data_frame.r.values
+    else:
+        raise NotImplementedError
+    return x_var, y_var
+
+def load_results(path: str) -> pd.DataFrame:
     """
     Load all Monitor logs from a given directory path matching ``*monitor.csv``
     :param path: the directory path containing the log file(s)
@@ -215,12 +241,12 @@ def load_results(path: str) -> pandas.DataFrame:
             first_line = file_handler.readline()
             assert first_line[0] == "#"
             header = json.loads(first_line[1:])
-            data_frame = pandas.read_csv(file_handler, index_col=None)
+            data_frame = pd.read_csv(file_handler, index_col=None)
             headers.append(header)
             data_frame["t"] += header["t_start"]
         data_frames.append(data_frame)
-    data_frame = pandas.concat(data_frames)
-    data_frame.sort_values("t", inplace=True)
-    data_frame.reset_index(inplace=True)
-    data_frame["t"] -= min(header["t_start"] for header in headers)
-    return data_frame
+    # data_frame = pd.concat(data_frames)
+    # data_frame.sort_values("t", inplace=True)
+    # data_frame.reset_index(inplace=True)
+    # data_frame["t"] -= min(header["t_start"] for header in headers)
+    return data_frames, monitor_files

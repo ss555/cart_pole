@@ -10,7 +10,7 @@ from collections import deque
 from scipy.integrate import odeint
 import iir_filter
 #PWM 180
-[A,B,C,D]=[-21.30359185798466, 1.1088617953891196, -0.902272006611719, -0.03935160774012411]
+[A,B,C,D]=[-21.30359185798466, 1.1088617953891196, -0.902272006611719, -0.03935160774012411]#20ms#(-7.794018686563599, 0.37538450501353504, -0.4891760779740128, -0.002568958116514183)
 wAngular=4.85658326956131
 def reward_fnCos(x, costheta, sintheta, theta_dot=0, sparse=False, Kx=5):
     if sparse:
@@ -36,11 +36,13 @@ class CartPoleButter(gym.Env):
                  resetMode='random',
                  Mcart=0.5,
                  Mpole = 0.075,
-                 f_a=A,
-                 f_b=B,
-                 f_c=C,
-                 f_d=D,
-                 kPendViscous=0.0,#0.11963736650935591,
+                 length=0.416,
+                 f_a=-21.30359185798466,
+                 f_b=1.1088617953891196,
+                 f_c=-0.902272006611719,
+                 f_d=-0.0393516077401241,
+                 wAngular = 4.85658326956131,
+                 kPendViscous = 0.11963736650935591,#0.0,#
                  integrator="semi-euler",
                  tensionMax=12, #8.4706
                  FILTER=False,
@@ -57,18 +59,20 @@ class CartPoleButter(gym.Env):
         :param Te: sampling time
         :param discreteActions: to use discrete Actions("True" to use with DQN) or continous ("False" to use with SAC)
         :param resetMode: experimental, goal or random
-        :param f_a: viscous friction of motor Force= f_a*Speed+f_b*Vmotor+f_c*np.sign(Speed)+f_d
+        :param length: longeur du pendule
+        :param f_a: viscous friction of motor Force= f_a*Speed+f_b*Vmotor+f_c*np.sign(Speed)+f_d (look report for more details)
         :param f_b: coefficient of proportionality for the motor Tension
         :param f_c: static friction for the motor movement which comprises friction of motor,reductor and cart
         :param f_d: assymmetry coefficient in the motor movement
+        :param wAngular: frequence propre du pendule
         :param kPendViscous: viscous friction of a pendulum
         :param integrator: semi-euler(fast) or ode(long but more precise simulation)
         :param tensionMax: maximum tension of the motor, bu default 12V
         :param FILTER: weather to apply butterworth lowpass filter on measurements
         :param n: when using semi-euler integrator for the simulation, to increase the precision
-        :param Kp: Noise process coefficient, the more elevated Kp is, the more noisy will be the system
+        :param Kp: Noise process standard deviation error for the pendulum, the more elevated Kp is, the more noisy will be the system
         :param sparseReward: weather to train with Sparse or Informative rewards
-        :param Km: Noise process coefficient, the more elevated Kp is, the more noisy will be the system
+        :param Km: Noise measurement standard deviation error on encoder readings, the more elevated Km is, the more noisy are the measurements(doesn't affect process)
         :param seed: seed for random initialisation
         :param N_STEPS: How many steps in an episode
         :param wAngularStd: gaussian uncertainty on the natural angular frequency of a pendulum
@@ -84,7 +88,7 @@ class CartPoleButter(gym.Env):
         self.masscart = Mcart
         self.masspoleIni = Mpole
         self.total_mass = (self.masspoleIni + self.masscart)
-        self.length = 0.4611167818372032  # center of mass
+        self.length = length  # center of mass
         # self.polemass_length = (self.masspole * self.length)
         self.tau = Te  # seconds between state updates
         self.kinematics_integrator = integrator  # 'rk'#
@@ -119,7 +123,6 @@ class CartPoleButter(gym.Env):
         self.tensionMax=tensionMax
         self.arr=[]
         self.n=n
-        self.Kp=Kp
         self.masspoleStd=masspoleStd
         self.wAngularStd=wAngularStd
         self.forceStd=forceStd
@@ -166,9 +169,9 @@ class CartPoleButter(gym.Env):
                            args=(action, self.fa, self.fb, self.fc))[-1,:]
         #adding process noise
         if self.Kp!=0:
-            theta_dot = np.random.normal(theta_dot, self.Kp * 0.2, 1)[0]
-            x_dot = np.random.normal(x_dot, self.Kp * 1.2e-3, 1)[0]
-            theta = np.random.normal(theta, 0.5 * self.Kp * 0.01, 1)[0]
+            theta_dot = np.random.normal(theta_dot, self.Kp/self.tau, 1)[0]
+            x_dot = np.random.normal(x_dot, 6e-3*self.Kp/self.tau, 1)[0]
+            theta = np.random.normal(theta, self.Kp, 1)[0]
         costheta = np.cos(theta)
         sintheta = np.sin(theta)
         self.state = np.array([x, x_dot, np.cos(theta), np.sin(theta), theta_dot], dtype=np.float32)
@@ -183,9 +186,9 @@ class CartPoleButter(gym.Env):
             cost=cost-self.MAX_STEPS_PER_EPISODE/2
         #adding noise on observed variables (on x is negligible)
         if self.Km!=0:
-            theta= np.random.normal(theta, 1.5*self.Km * 0.01, 1)[0]
-            theta_dot = np.random.normal(theta_dot, self.Km * 0.2, 1)[0]
-            x_dot = np.random.normal(x_dot, self.Km * 1.2e-3, 1)[0]
+            theta_dot = np.random.normal(theta_dot, self.Km/self.tau, 1)[0]
+            x_dot = np.random.normal(x_dot, 6e-3*self.Km/self.tau, 1)[0]
+            theta = np.random.normal(theta, self.Km, 1)[0]
         # # # filtering
         if self.FILTER:
             x_dot = self.iirX_dot.filter(x_dot)

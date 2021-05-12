@@ -1,11 +1,12 @@
 from stable_baselines3.common.callbacks import BaseCallback
 from tqdm.auto import tqdm
-import matplotlib.pyplot as plt
 import numpy as np
 import os
-
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
 import numpy as np
-from stable_baselines3.common.results_plotter import load_results, ts2xy
+from env_wrappers import load_results, ts2xy
 from stable_baselines3.common.noise import NormalActionNoise
 from stable_baselines3.common.callbacks import BaseCallback
 class ProgressBarCallback(BaseCallback):
@@ -90,26 +91,37 @@ def moving_average(values, window):
     return np.convolve(values, weights, 'valid')
 
 
-def plot_results(log_folder, window_size=50, title='Learning Curve'):
+def plot_results(log_folder, window_size=30, title='Learning Curve'):
     """
     plot the results
-
     :param log_folder: (str) the save location of the results to plot
     :param title: (str) the title of the task to plot
     """
-    x, y = ts2xy(load_results(log_folder), 'walltime_hrs')#'timesteps')
-    y = moving_average(y, window=window_size)
-    # Truncate x
-    x = x[len(x) - len(y):]
+    # x, y = ts2xy(load_results(log_folder), 'walltime_hrs')#'timesteps')
+    data_frame, legends = load_results(log_folder)
 
-    fig = plt.figure(title)
-    plt.plot(x, y)
-    # plt.xlabel('Number of Timesteps')
-    plt.xlabel('Hours')
+
+    for data in data_frame:
+        # Convert to hours
+        # x_var = data.t.values / 3600.0
+        x_var = np.cumsum(data.l.values)
+        y_var = data.r.values
+        y_var = moving_average(y_var, window=window_size)
+        # Truncate x
+        x_var = x_var[len(x_var) - len(y_var):]
+        x_var -= x_var[0]
+        sns.lineplot(y=y_var, x=x_var)
+    legends=np.array([legend.split('/') for legend in legends])
+    plt.xlabel('timesteps')
+    # plt.xlabel('Hours')
     plt.ylabel('Rewards')
-    plt.title(title + " Smoothed")
+    plt.title(log_folder.split('/')[-1] + "simulation smoothed")
+    plt.legend(legends[:,-1])
+
+    plt.savefig(log_folder+'/plot.png')
     plt.show()
-    plt.savefig(log_folder + title + ".png")
+    print(f'saved to {log_folder}')
+    # plt.savefig(log_folder + title + ".png")
 # class PlottingCallback(BaseCallback):
 #     """
 #     Callback for plotting the performance in realtime.
