@@ -97,12 +97,13 @@ def maxAction(Q, state):
 
 def create_bins(x_threshold,theta_dot_threshold, nBins):
     ## 5 observations, x, x_dot, cos(theta), sin(theta), theta_dot
-    bins = np.zeros((5, nBins))
-    bins[0] = np.linspace(-x_threshold, x_threshold, nBins)
-    bins[1] = np.linspace(-5, 5, nBins)
-    bins[2] = np.linspace(-1, 1, nBins)
-    bins[3] = np.linspace(-1, 1, nBins)
-    bins[4] = np.linspace(-theta_dot_threshold, theta_dot_threshold, nBins)
+    # bins = np.zeros((5, nBins))
+    bins1 = np.linspace(-x_threshold, x_threshold, nBins[0])
+    bins2 = np.linspace(-5, 5, nBins[1])
+    bins3 = np.linspace(-1, 1, nBins[2])
+    bins4 = np.linspace(-1, 1, nBins[3])
+    bins5 = np.linspace(-theta_dot_threshold, theta_dot_threshold, nBins[4])
+    bins = [bins1, bins2, bins3, bins4, bins5]
     return bins
 
 
@@ -128,7 +129,7 @@ def choose_action(Q, state, EPS):
 
 
 def initialize_Q(observationNum, actionNum, nBins):
-    columns = list(it.product(range(nBins+1), repeat=observationNum))
+    columns = list(it.product(range(nBins[0]+1), range(nBins[1]+1), range(nBins[2]+1), range(nBins[3]+1), range(nBins[4]+1)))
     index = range(actionNum)
     Q = pd.DataFrame(0, index=index, columns=columns)
     return Q
@@ -166,7 +167,7 @@ def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon
     length = []
     reward = []
     eps = []
-    for n in range(numEpisode):
+    for n in range(numEpisode+1):
         # eps=0.5/(1+n*10e-3)
         EPS = get_epsilon(n, min_epsilon, numEpisode)
 
@@ -187,7 +188,7 @@ def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon
 if __name__ == '__main__':
 
 
-    numEpisode=1e6
+    numEpisode=1000
     EP_STEPS=800
     Te=0.05
 
@@ -204,7 +205,7 @@ if __name__ == '__main__':
 
     x_threshold = env.x_threshold
     theta_dot_threshold = 2*np.pi
-    nBins = 15
+    nBins = [10, 10, 15, 15, 15]
 
     import time
     start_time = time.time()
@@ -223,3 +224,5 @@ if __name__ == '__main__':
 
 
 
+
+# %%
