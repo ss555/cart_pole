@@ -138,10 +138,10 @@ def play_one_episode(bins, Q, EPS, observationNum):
     done = False
     cnt = 0  # number of moves in an episode
     state = assignBins(observation, bins, observationNum)
-    print('initial state', state)
+    # print('initial state', state)
     totalReward = 0
     act = choose_action(Q, state, EPS)
-    print('initial action', act)
+    # print('initial action', act)
 
     while not done:
         cnt += 1
@@ -157,7 +157,7 @@ def play_one_episode(bins, Q, EPS, observationNum):
 
 
 
-    return totalReward, cnt, state
+    return totalReward, cnt, state, act
 
 def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon):
     global Q
@@ -165,26 +165,29 @@ def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon
 
     length = []
     reward = []
+    eps = []
     for n in range(numEpisode):
         # eps=0.5/(1+n*10e-3)
         EPS = get_epsilon(n, min_epsilon, numEpisode)
 
-        episodeReward, episodeLength, state = play_one_episode(bins, Q, EPS, observationNum)
+        episodeReward, episodeLength, state, act = play_one_episode(bins, Q, EPS, observationNum)
 
-        if n % 500 == 0:
+        if n % 1000 == 0:
             # print(n, '%.4f' % EPS, episodeReward)
             print('{}, \t {:.4f}, \t {}, \t {}'.format(n, EPS, episodeReward, state))
             print(Q[state])
         length.append(episodeLength)
         reward.append(episodeReward)
+        eps.append(EPS)
 
-    return length, reward
+    result = pd.DataFrame({'reward':reward, 'episodeLength':length, 'eps':eps})
+    return result
 
 #%%
 if __name__ == '__main__':
 
 
-    numEpisode=1
+    numEpisode=1e6
     EP_STEPS=800
     Te=0.05
 
@@ -201,12 +204,21 @@ if __name__ == '__main__':
 
     x_threshold = env.x_threshold
     theta_dot_threshold = 2*np.pi
-    nBins = 10
+    nBins = 15
+
+    import time
+    start_time = time.time()
+    now = datetime.now()
+    dt_string = now.strftime("%m%d_%H%M%S")
 
     bins = create_bins(x_threshold, theta_dot_threshold, nBins=nBins)
-    episodeLengths, episodeRewards = play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon)
+    result = play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon)
     print('finished')
+    
+    result.to_csv('ql_alpha_'+str(ALPHA)+'_gamma_'+str(GAMMA)+'_'+dt_string+'_nBins_'+str(nBins)+'.csv')
 
+    elapsed_time = time.time() - start_time
+    print('Elapsed time', elapsed_time)
 
 
 
