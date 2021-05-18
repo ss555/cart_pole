@@ -125,7 +125,7 @@ def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon
             print('{}, \t {:.4f}, \t {}, \t {}, \t {}'.format(n, EPS, episodeReward, state, episodeLength))
         if n % 10000 ==0:
             Q.to_csv('Q_'+str(n)+'.csv')
-            print('Qmax', Q.max())
+            print('Qmax', Q.max().max())
         length.append(episodeLength)
         reward.append(episodeReward)
         eps.append(EPS)
@@ -138,11 +138,12 @@ def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon
 if __name__ == '__main__':
 
 
-    numEpisode=100000
+    numEpisode=1000000
     EP_STEPS=800
     Te=0.05
+    resetMode='random'
 
-    env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode='experimental', sparseReward=False,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)#,integrator='ode')#,integrator='rk4')
+    env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode=resetMode, sparseReward=False,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)#,integrator='ode')#,integrator='rk4')
 
 
     actionNum = env.action_space.n
@@ -150,14 +151,14 @@ if __name__ == '__main__':
 
     ALPHA0 = 1
     GAMMA = 0.99
-    decay = 50000
-    min_epsilon = 0.01
-    min_lr = 0.01
+    decay = 10000
+    min_epsilon = 0.1
+    min_lr = 0.1
 
     x_threshold = env.x_threshold
     theta_dot_threshold = 2*np.pi
     nBins = [20, 10, 15, 15, 15]
-    INFO = {'ALPHA0': ALPHA0, 'GAMMA': GAMMA, 'decay':decay, 'min_epsilon':min_epsilon, 'min_lr':min_lr, 'numEpisode': numEpisode, 'nBins':str(nBins)}
+    INFO = {'ALPHA0': ALPHA0, 'GAMMA': GAMMA, 'decay':decay, 'min_epsilon':min_epsilon, 'min_lr':min_lr, 'numEpisode': numEpisode, 'resetMode':resetMode, 'nBins':str(nBins), 'reward':'without limite theta dot'}
 
 
     import time
@@ -172,10 +173,10 @@ if __name__ == '__main__':
     result, Q = play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon, min_lr)
     print('finished')
     
-    result.to_csv('ql_alpha_'+str(ALPHA)+'_gamma_'+str(GAMMA)+'_minEps_'+str(min_epsilon)+'_'+dt_string+'.csv')
-    Q.to_csv('Q_alpha_'+str(ALPHA)+'_gamma_'+str(GAMMA)+'_minEps_'+str(min_epsilon)+'_'+dt_string+'.csv')
+    result.to_csv('ql_alpha0_'+str(ALPHA0)+'_gamma_'+str(GAMMA)+'_minEps_'+str(min_epsilon)+'_'+dt_string+'.csv')
+    Q.to_csv('Q_alpha0_'+str(ALPHA0)+'_gamma_'+str(GAMMA)+'_minEps_'+str(min_epsilon)+'_'+dt_string+'.csv')
     elapsed_time = time.time() - start_time
-    INFO.append({'Elapsed time': elapsed_time})
+    INFO.update({'Elapsed time': elapsed_time})
 
     with open('0_INFO.json', 'w') as file:
         json.dump(INFO, file, indent=4)
