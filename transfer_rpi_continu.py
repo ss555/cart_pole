@@ -45,15 +45,9 @@ try:
                                          log_path=logdir, eval_freq=15000, callback_on_new_best=callback_on_best,
                                          deterministic=True, render=False)
 
-            # model = SAC.load("./logs/sac/best_model", env=env1)
-            model = SAC.load("./weights/sac50/best_model_training.zip", env=env1)
-            # model = SAC.load("cartpole_pi_sac", env=env)
-            # model.learn(total_timesteps=STEPS_TO_TRAIN, log_interval=100, callback=[eval_callback, callbackSave])
-            # # WHEN NORMALISING
-            # env.save('envRpiNorm.pkl')
-            # n_actions = env.action_space.shape[-1]
-              # SAC.load(logdir+"/best_model_sim.zip", env=env)
-            # model.load_replay_buffer("sac_pi_swingup_buffer")
+            model = SAC.load("./logs/sac/best_model", env=env1)
+
+
             obs = env.reset()
             if ENV_NORMALISE:
                 obsArr=[env.get_original_obs()[0]]
@@ -62,8 +56,8 @@ try:
             actArr=[0.0]
             timeArr=[0.0]
             start_time = time.time()
-            for i in range(1000):
-                action, _states = model.predict(obs, deterministic=False)
+            for i in range(1500):
+                action, _states = model.predict(obs, deterministic=True)
                 obs, rewards, dones, _ = env.step(action)
                 if ENV_NORMALISE:
                     obsArr.append(env.get_original_obs()[0])

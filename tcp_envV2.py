@@ -4,22 +4,8 @@ from gym import spaces, logger
 from gym.utils import seeding
 import numpy as np
 import socket
-import logging
-from logging import info, basicConfig
 from collections import deque
-
-logname='TCP_SAC_DEBUG1'
-basicConfig(filename=logname,
-			filemode='w',#'a' for append
-			format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
-			datefmt='%H:%M:%S',
-			level=logging.DEBUG)
-# def reward_fn(x,theta,action=0.0):
-#     cost=2+np.cos(theta)-abs(x)/50
-#     return cost
-def reward_fnCosSin(x,costheta,theta_dot=0.0):
-    cost=1+costheta-5*x**2 #TODO coef infront of x2
-    return cost
+from env_custom import reward_fnCos
 
 class CartPoleCosSinRpiDiscrete3(gym.Env):
     metadata = {
@@ -79,7 +65,7 @@ class CartPoleCosSinRpiDiscrete3(gym.Env):
         self.state[3]=np.clip(self.state[3],-1,1)
         x = self.state[0]
         costheta = self.state[2]
-        cost = reward_fnCosSin(x, costheta)
+        cost = reward_fnCos(x, costheta)
         if x <= -self.x_threshold or x >= self.x_threshold:
             cost = cost - self.MAX_STEPS_PER_EPISODE / 5
             print('out of bound')
@@ -88,7 +74,7 @@ class CartPoleCosSinRpiDiscrete3(gym.Env):
             print('speed limit')
         if self.MAX_STEPS_PER_EPISODE==self.counter:
             done=True
-        info('state: {}, cost{}, done:{}'.format(self.state,cost,done))
+        # info('state: {}, cost{}, done:{}'.format(self.state,cost,done))
         return self.state, cost, done, {}
     def reset(self):
         self.conn.sendall('RESET'.encode(self.FORMAT))
@@ -96,9 +82,7 @@ class CartPoleCosSinRpiDiscrete3(gym.Env):
         sData = self.conn.recv(124).decode(self.FORMAT)
         state = np.array(sData.split(',')).astype(np.float32)
         self.state = state[:-1]
-        info('reset with nsteps: {}, state:{}'.format(self.counter, self.state))
         self.counter = 0
-        print('state {}'.format(self.state))
         return self.state
 
     def render(self, mode='human'):
@@ -158,7 +142,7 @@ class CartPoleCosSinRPIv2(gym.Env):
         self.state[3]=np.clip(self.state[3],-1,1)
         x = self.state[0]
         costheta = self.state[2]
-        cost = reward_fnCosSin(x, costheta)
+        cost = reward_fnCos(x, costheta)
 
         if x < -self.x_threshold or x > self.x_threshold:
             cost = cost - self.MAX_STEPS_PER_EPISODE / 5
@@ -166,7 +150,7 @@ class CartPoleCosSinRPIv2(gym.Env):
             self.state[0] = np.clip(x, -self.x_threshold, self.x_threshold)
         if self.MAX_STEPS_PER_EPISODE==self.counter:
             done=True
-        info('state: {}, cost{}, action:{}'.format(self.state,cost,action))
+        # info('state: {}, cost{}, action:{}'.format(self.state,cost,action))
         return self.state, cost, done, {}
     def reset(self):
 
@@ -175,7 +159,7 @@ class CartPoleCosSinRPIv2(gym.Env):
         sData = self.conn.recv(124).decode(self.FORMAT)
         state = np.array(sData.split(',')).astype(np.float32)
         self.state = state[:-1]
-        info('reset with nsteps: {}, state:{}'.format(self.counter, self.state))
+        # info('reset with nsteps: {}, state:{}'.format(self.counter, self.state))
         self.counter = 0
         print('state {}'.format(self.state))
         return self.state
@@ -254,7 +238,7 @@ class CartPoleCosSinRpiHistory(gym.Env):
         self.state[3]=np.clip(self.state[3],-1,1)
         x = self.state[0]
         costheta = self.state[2]
-        cost = reward_fnCosSin(x, costheta)
+        cost = reward_fnCos(x, costheta)
 
         if x <= -self.x_threshold or x >= self.x_threshold:
             cost = cost - self.MAX_STEPS_PER_EPISODE / 5
@@ -341,7 +325,7 @@ class CartPoleCosSinRpiDiscrete(gym.Env):
         self.state[3]=np.clip(self.state[3],-1,1)
         x = self.state[0]
         costheta = self.state[2]
-        cost = reward_fnCosSin(x, costheta)
+        cost = reward_fnCos(x, costheta)
 
         if x <= -self.x_threshold or x >= self.x_threshold:
             cost = cost - self.MAX_STEPS_PER_EPISODE / 5

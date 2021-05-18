@@ -50,14 +50,14 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
     return func
 def plot(observations = [],timeArr=[], actArr=[], save=True,plotlyUse=False,PLOT_TIME_DIFF=True):
     '''
-    :param observations: experience in form of N,5
+    :param observations: experience in form of N,5 observations=np.array(observations)
     :param timeArr: time when observation happened
     :param actArr: array of actions
     :param save: save plt plot or not
     :param plotlyUse: plot in nice figures in browser
     :return:
     '''
-    observations=np.array(observations)
+
     try:
         fig1=plt.figure(figsize=(12, 12))
         plt.subplot(221)
@@ -103,12 +103,15 @@ def plot(observations = [],timeArr=[], actArr=[], save=True,plotlyUse=False,PLOT
         fig.add_scatter(x=timeArr, y=theta, name='theta through time')
         fig.show()
     if PLOT_TIME_DIFF:
-        # LOOK NOISE IN TIME
-        fig2 = plt.figure(figsize=(12, 12))
-        plt.plot(np.diff(timeArr[:,0]))
-        # plt.show()
-        plt.savefig('./tmp/time_diff.png',dpi=200)
-        plt.close(fig2)
+        try:
+            # LOOK NOISE IN TIME
+            fig2 = plt.figure(figsize=(12, 12))
+            plt.plot(np.diff(timeArr))
+
+            plt.savefig('./tmp/time_diff.png',dpi=200)
+            plt.close(fig2)
+        except:
+            print('err of time plot')
 
     fig3 = plt.figure(figsize=(12, 12))
     plt.plot(timeArr,actArr,'.')

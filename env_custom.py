@@ -12,12 +12,13 @@ import iir_filter
 #PWM 180
 [A,B,C,D]=[-21.30359185798466, 1.1088617953891196, -0.902272006611719, -0.03935160774012411]#20ms#(-7.794018686563599, 0.37538450501353504, -0.4891760779740128, -0.002568958116514183)
 wAngular=4.85658326956131
-def reward_fnCos(x, costheta, sintheta, theta_dot=0, sparse=False, Kx=5):
+def reward_fnCos(x, costheta, sintheta=0, theta_dot=0, sparse=False, Kx=5):
     if sparse:
         reward = 0.0
         if abs(np.arctan2(sintheta,costheta))<np.pi*30/180 and abs(x)<0.2:
             reward+=1
     else:
+        # reward = 1 - costheta - (1-costheta)* Kx * x ** 2
         reward = 1 - costheta - Kx * x ** 2
     return reward
 
@@ -77,7 +78,7 @@ class CartPoleButter(gym.Env):
         :param N_STEPS: How many steps in an episode
         :param wAngularStd: gaussian uncertainty on the natural angular frequency of a pendulum
         :param masspoleStd: gaussian uncertainty on the mass
-        :param forceStd: gaussian uncertainty on the force applied by the motor
+        :param forceStd: gaussian uncertainty in % on the force applied by the motor
         '''
         self.COUNTER = 0
         self.MAX_STEPS_PER_EPISODE = N_STEPS
@@ -154,7 +155,9 @@ class CartPoleButter(gym.Env):
         self.polemass_length = (self.masspole * self.length)
         if self.kinematics_integrator=='semi-euler':
             for i in range(self.n):
-                force = self._calculate_force(action) + np.random.normal(0,scale=self.forceStd)
+                force = self._calculate_force(action)
+                if self.forceStd!=0:
+                    force+=np.random.normal(0,scale=self.forceStd*abs(force)/100)
                 xacc = (force+self.masspole*theta_dot**2*self.length*sintheta+self.masspole*self.g*sintheta*costheta)/(self.masscart+self.masspole*sintheta**2)
                 thetaacc = -self.wAngularUsed ** 2 * sintheta - xacc / self.length * costheta - theta_dot * self.kPendViscous
                 x_dot += self.tau / self.n * xacc

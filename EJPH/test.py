@@ -23,9 +23,7 @@ Te=0.05
 from custom_callbacks import plot_results
 plot_results('./EJPH/tension')
 # plot_results('./EJPH/static-friction',window_size=30)
-#TODO graphique la fonction de recompense qui depends de la tension a 40000 pas
-#TODO valeur de MAX recompense en fonction de tension
-#TODO encoder noise STEP 150000
+
 
 # import pandas as pd
 # import seaborn as sns
