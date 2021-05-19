@@ -83,7 +83,7 @@ def initialize_Q(observationNum, actionNum, nBins):
 
 def play_one_episode(bins, Q, EPS, ALPHA, observationNum):
     observation = env.reset()
-    env.render()
+    # env.render()
     done = False
     cnt = 0  # number of moves in an episode
     state = assignBins(observation, bins, observationNum)
@@ -103,7 +103,7 @@ def play_one_episode(bins, Q, EPS, ALPHA, observationNum):
         Q[state][act] += ALPHA * (reward + GAMMA * target_values - Q[state][act])
         state, act = stateNew, actionNew
         # print('new state', stateNew, 'new action', actionNew, 'reward', reward)
-        env.render()
+        # env.render()
 
 
     return totalReward, cnt, state, act
@@ -142,7 +142,7 @@ if __name__ == '__main__':
     numEpisode=1000000
     EP_STEPS=800
     Te=0.05
-    resetMode='random'
+    resetMode='goal'
 
     env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode=resetMode, sparseReward=False,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)#,integrator='ode')#,integrator='rk4')
 
