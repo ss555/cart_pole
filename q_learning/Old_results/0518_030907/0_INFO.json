@@ -1,0 +1,11 @@
+{
+    "ALPHA0": 1,
+    "GAMMA": 0.99,
+    "decay": 10000,
+    "min_epsilon": 0.1,
+    "min_lr": 0.1,
+    "numEpisode": 100000,
+    "resetMode": "random",
+    "nBins": "[20, 10, 15, 15, 15]",
+    "Elapsed time": 1908.0333981513977
+}
