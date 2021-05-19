@@ -13,12 +13,12 @@ from custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback
 from env_custom import CartPoleButter,CartPoleDiscreteHistory#,CartPoleContinous,CartPoleDiscreteHistory#,CartPoleDiscreteButter2
 import argparse
 Te=0.02
-EP_STEPS=2000
+EP_STEPS=1500
 LOAD_MODEL_PATH=None#"./logs/best_model"
 LOAD_BUFFER_PATH=None#"dqn_pi_swingup_bufferN"
 logdir='./logs/'
-
-env = CartPoleButter(Te=Te,N_STEPS=EP_STEPS,f_a=-7.794018686563599, f_b=0.37538450501353504, f_c=-0.4891760779740128, f_d=-0.002568958116514183,tensionMax=12,resetMode='random',sparseReward=False,Km=0.0,n=1)#,integrator='ode')#,integrator='rk4')
+env = CartPoleButter(Te=Te,N_STEPS=EP_STEPS,tensionMax=8.4706,resetMode='random',sparseReward=False,Km=0.0,n=1)#,integrator='ode')#,integrator='rk4')
+# env = CartPoleButter(Te=Te,N_STEPS=EP_STEPS,f_a=-7.794018686563599, f_b=0.37538450501353504, f_c=-0.4891760779740128, f_d=-0.002568958116514183,tensionMax=8.47,resetMode='random',sparseReward=False,Km=0.0,n=1)#,integrator='ode')#,integrator='rk4')
 env = Monitor(env, filename=logdir+'basic_simulation_')
 envEvaluation = env
 NORMALISE=False
@@ -35,8 +35,7 @@ else:
 
 #callbacks
 # Use deterministic actions for evaluation and SAVE the best model
-eval_callback = EvalCallback(envEvaluation, best_model_save_path='./logs/',
-							 log_path=logdir, eval_freq=15000, n_eval_episodes=30,
+eval_callback = EvalCallback(envEvaluation, best_model_save_path='./logs/',log_path=logdir, eval_freq=15000, n_eval_episodes=30,
 							 deterministic=True, render=False)
 callbackSave = SaveOnBestTrainingRewardCallback(check_freq=1000, log_dir=logdir)
 

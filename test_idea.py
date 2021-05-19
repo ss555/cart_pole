@@ -22,12 +22,20 @@ basicConfig(filename=logname,
 			format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
 			datefmt='%H:%M:%S',
 			level=logging.DEBUG)
+
 start_time=time.time()
 info(f'done{var},and{speed}')#time9.131431579589844e-05
 print(time.time()-start_time)
-start_time=time.time()
-info(f'done{var},and{speed}')#time9.131431579589844e-05
-print(time.time()-start_time)
+# from env_wrappers import ResultsWriter
+# res=ResultsWriter(
+#                 'test',
+#                 header={"t_start": 0, "env_id": 0 and 0}
+#             )
+#
+#
+# start_time=time.time()
+# res.write_row({'r':5,'l':3})
+# print(time.time()-start_time)
 
 
 '''

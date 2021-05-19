@@ -1,6 +1,6 @@
 import sys
 import os
-STEPS_TO_TRAIN=90000
+STEPS_TO_TRAIN=150000
 sys.path.append(os.path.abspath('./'))
 from utils import linear_schedule
 from custom_callbacks import plot_results
@@ -33,30 +33,22 @@ if NORMALISE:
 else:
     envEval=env
 
+from pathlib import Path
+log_save='./weights/dqn50-sim'
+Path(log_save).mkdir(exist_ok=True)
 #callbacks
 # Use deterministic actions for evaluation and SAVE the best model
-eval_callback = EvalCallback(envEvaluation, best_model_save_path='./logs/',
-							 log_path=logdir, eval_freq=15000, n_eval_episodes=30,
-							 deterministic=True, render=False)
+eval_callback = EvalCallback(envEvaluation, best_model_save_path=log_save,
+							 log_path=logdir, eval_freq=15000, n_eval_episodes=30,deterministic=True, render=False)
 callbackSave = SaveOnBestTrainingRewardCallback(check_freq=1000, log_dir=logdir)
+from utils import read_hyperparameters
+hyperparams=read_hyperparameters('dqn_cartpole_50')
+model = DQN(env=env,**hyperparams)
+# model = DQN(MlpPolicy, env, learning_starts=0, gamma=0.995,
+#             learning_rate=0.0003, exploration_final_eps=0.17787752200089602, #exploration_initial_eps=0.17787752200089602,
+#             target_update_interval=1000, buffer_size=50000, train_freq=(1, "episode"), gradient_steps=-1,#n_episodes_rollout=1,
+#             verbose=0, batch_size=1024, policy_kwargs=dict(net_arch=[256, 256]))
 
-# from parameters import dqn_sim50
-# model = DQN(**dqn_sim50)
-model = DQN(MlpPolicy, env, learning_starts=0, gamma=0.995,
-            learning_rate=0.0003, exploration_final_eps=0.17787752200089602, #exploration_initial_eps=0.17787752200089602,
-            target_update_interval=1000, buffer_size=50000, train_freq=(1, "episode"), gradient_steps=-1,#n_episodes_rollout=1,
-            verbose=0, batch_size=1024, policy_kwargs=dict(net_arch=[256, 256]))
-# model = DQN(MlpPolicy, env, learning_starts=10000, gamma=0.995,
-#             learning_rate=0.0003, exploration_final_eps=0.17787752200089602, exploration_initial_eps=0.17787752200089602,
-#             target_update_interval=1000, buffer_size=50000, n_episodes_rollout=1,train_freq=-1, gradient_steps=-1,
-#             verbose=0, batch_size=2024, policy_kwargs=dict(net_arch=[400, 300]))
-# model = DQN(MlpPolicy, env1, learning_starts=10000, gamma=0.9999,
-#             learning_rate=0.0003, exploration_final_eps=0.2, exploration_initial_eps=1,
-#             target_update_interval=1500, buffer_size=300000, n_episodes_rollout=1,train_freq=-1, gradient_steps=-1, #train_freq=256, gradient_steps=256,#
-#             verbose=0, batch_size=512, policy_kwargs=dict(net_arch=[400, 300]))
-# model = DQN.load("./logs/best_model", env=env)
-# model.exploration_final_eps = 0
-# model.exploration_initial_eps = 0
 try:
     # model for pendulum starting from bottom
     with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:

@@ -15,78 +15,19 @@ sys.path.insert(0, parent_dir)
 from env_custom import CartPoleButter
 import gym
 import pandas as pd
+pd.options.plotting.backend = "plotly"
 import itertools as it
 
 import plotly.express as px
-from bokeh.plotting import figure, output_file, show, save
-from bokeh.palettes import d3, viridis
-from bokeh.models import Range1d, Legend, Span
 global colors
 import json
-colors = d3["Category20"][20]
 from datetime import datetime
 import math
 import pickle
 from stable_baselines3.common.monitor import Monitor
 from custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback
+#%%
 
-def plot_df(df, x_col, y_list, title='title', symbol='line', index=False, shiftX=0, shiftY=0):
-    fig = figure(
-    tools = "pan,wheel_zoom,box_zoom,box_select,reset,crosshair,hover,undo,redo,save",
-    active_drag="box_zoom",
-    active_scroll="wheel_zoom",
-    title = title,
-    plot_width=1200, plot_height=600
-    )
-    fname = title+'.html'
-    output_file(fname, mode='inline')
-
-    if type(y_list) != list:
-        y_list = [y_list]
-
-    if index:
-        xplot = df.index.values
-    elif x_col == 'index':
-        xplot = df.index.values
-    else:
-        xplot = df[x_col]
-    xplot += shiftX
-
-    legend_it = []
-    if symbol == 'line':
-        i=0
-        for y_col in y_list:
-            color = colors[i % len(colors)]
-            yplot = df[y_col] + shiftY
-            c = fig.line(xplot, yplot, line_width=2, alpha=0.8, color = color)
-            legend_it.append((str(y_col), [c]))
-            i += 1
-    elif symbol == 'circle':
-        i=0
-        for y_col in y_list:
-            color = colors[i % len(colors)]
-            yplot = df[y_col] + shiftY
-            c = fig.circle(xplot, yplot, fill_alpha=0.6, size=10, color = color)
-            legend_it.append((str(y_col), [c]))
-            i += 1
-    elif symbol == 'line+circle':
-        i=0
-        for y_col in y_list:
-            color = colors[i % len(colors)]
-            yplot = df[y_col] + shiftY
-            c1 = fig.circle(xplot, yplot, fill_alpha=0.6, size=10, color = color)
-            c2 = fig.line(xplot, yplot, line_width=2, alpha=0.8, color = color)
-            legend_it.append((str(y_col), [c]))
-            i += 1
-    legend = Legend(items=legend_it, location=(10, 20))
-    legend.click_policy="hide"
-    fig.xaxis.axis_label = str(x_col)
-    fig.yaxis.axis_label = str(y_col)
-#    fig.legend.location = "bottom_left"
-#    fig.legend.click_policy="hide"
-    fig.add_layout(legend, 'right')
-    save(fig)
-    return fig
 
 
 def maxAction(Q, state):
@@ -115,10 +56,16 @@ def assignBins(observation, bins, observationNum):
     state = tuple(tmp)
     return state
 
-def get_epsilon(t, min_epsilon, STEPS_TO_TRAIN):
-    # eps = max(min_epsilon, min(1, 1 - math.log10((t + 1) / decay)))
-    eps = max(min_epsilon, 1 - 2*t/(STEPS_TO_TRAIN))
-    return eps
+# def get_epsilon(t, min_epsilon, STEPS_TO_TRAIN):
+#     # eps = max(min_epsilon, min(1, 1 - math.log10((t + 1) / decay)))
+#     eps = max(min_epsilon, 1 - 2*t/(STEPS_TO_TRAIN))
+#     return eps
+
+def get_epsilon(t, min_epsilon, decay):
+    return max(min_epsilon, min(1., 1. - math.log10((t + 1) / decay)))
+
+def get_learning_rate(t, min_lr, decay):
+    return max(min_lr, min(ALPHA0, 1. - math.log10((t + 1) / decay)))
 
 def choose_action(Q, state, EPS):
     if (np.random.random() < EPS):
@@ -134,7 +81,7 @@ def initialize_Q(observationNum, actionNum, nBins):
     Q = pd.DataFrame(0, index=index, columns=columns)
     return Q
 
-def play_one_episode(bins, Q, EPS, observationNum):
+def play_one_episode(bins, Q, EPS, ALPHA, observationNum):
     observation = env.reset()
     done = False
     cnt = 0  # number of moves in an episode
@@ -160,7 +107,7 @@ def play_one_episode(bins, Q, EPS, observationNum):
 
     return totalReward, cnt, state, act
 
-def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon):
+def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon, min_lr):
     Q = initialize_Q(observationNum, actionNum, nBins)
 
     length = []
@@ -168,21 +115,22 @@ def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon
     eps = []
     for n in range(numEpisode+1):
         # eps=0.5/(1+n*10e-3)
-        EPS = get_epsilon(n, min_epsilon, numEpisode)
+        EPS = get_epsilon(n, min_epsilon, decay)
+        ALPHA = get_learning_rate(n, min_lr, decay)
 
-        episodeReward, episodeLength, state, act = play_one_episode(bins, Q, EPS, observationNum)
+        episodeReward, episodeLength, state, act = play_one_episode(bins, Q, EPS, ALPHA, observationNum)
 
         if n % 1000 == 0:
             # print(n, '%.4f' % EPS, episodeReward)
-            print('{}, \t {:.4f}, \t {}, \t {}, \t {}'.format(n, EPS, episodeReward, state, cnt))
+            print('{}, \t {:.4f}, \t {}, \t {}, \t {}'.format(n, EPS, episodeReward, state, episodeLength))
         if n % 10000 ==0:
             Q.to_csv('Q_'+str(n)+'.csv')
-            print('Qmax', Q.max())
+            print('Qmax', Q.max().max())
         length.append(episodeLength)
         reward.append(episodeReward)
         eps.append(EPS)
 
-    result = pd.DataFrame({'reward':reward, 'episodeLength':length, 'eps':eps})
+    result = pd.DataFrame({'reward':reward, 'episodeLength':length, 'eps':eps, 'lastState': str(state)})
 
     return result, Q
 
@@ -190,41 +138,47 @@ def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon
 if __name__ == '__main__':
 
 
-    numEpisode=60000
+    numEpisode=1000000
     EP_STEPS=800
     Te=0.05
+    resetMode='random'
 
-    env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode='experimental', sparseReward=False,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)#,integrator='ode')#,integrator='rk4')
+    env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode=resetMode, sparseReward=False,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)#,integrator='ode')#,integrator='rk4')
 
 
     actionNum = env.action_space.n
     observationNum = env.observation_space.shape[0]
 
-    ALPHA = 0.1
+    ALPHA0 = 1
     GAMMA = 0.99
     decay = 10000
-    min_epsilon = 0.001
+    min_epsilon = 0.1
+    min_lr = 0.1
 
     x_threshold = env.x_threshold
     theta_dot_threshold = 2*np.pi
     nBins = [20, 10, 15, 15, 15]
+    INFO = {'ALPHA0': ALPHA0, 'GAMMA': GAMMA, 'decay':decay, 'min_epsilon':min_epsilon, 'min_lr':min_lr, 'numEpisode': numEpisode, 'resetMode':resetMode, 'nBins':str(nBins), 'reward':'without limite theta dot'}
+
 
     import time
     start_time = time.time()
     now = datetime.now()
     dt_string = now.strftime("%m%d_%H%M%S")
+    logpath = '/home/robotfish/Project/cart_pole/q_learning/'+dt_string
+    os.makedirs(logpath, exist_ok=True)
+    os.chdir(logpath)
 
     bins = create_bins(x_threshold, theta_dot_threshold, nBins=nBins)
-    result, Q = play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon)
+    result, Q = play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon, min_lr)
     print('finished')
     
-    result.to_csv('ql_alpha_'+str(ALPHA)+'_gamma_'+str(GAMMA)+'_minEps_'+str(min_epsilon)+'_nBins_'+str(nBins)+'_'+dt_string+'.csv')
-    Q.to_csv('Q_alpha_'+str(ALPHA)+'_gamma_'+str(GAMMA)+'_minEps_'+str(min_epsilon)+'_nBins_'+str(nBins)+'_'+dt_string+'.csv')
+    result.to_csv('ql_alpha0_'+str(ALPHA0)+'_gamma_'+str(GAMMA)+'_minEps_'+str(min_epsilon)+'_'+dt_string+'.csv')
+    Q.to_csv('Q_alpha0_'+str(ALPHA0)+'_gamma_'+str(GAMMA)+'_minEps_'+str(min_epsilon)+'_'+dt_string+'.csv')
     elapsed_time = time.time() - start_time
-    print('Elapsed time', elapsed_time)
+    INFO.update({'Elapsed time': elapsed_time})
 
-
-
-
+    with open('0_INFO.json', 'w') as file:
+        json.dump(INFO, file, indent=4)
 
 # %%
