@@ -83,6 +83,7 @@ def initialize_Q(observationNum, actionNum, nBins):
 
 def play_one_episode(bins, Q, EPS, ALPHA, observationNum):
     observation = env.reset()
+    env.render()
     done = False
     cnt = 0  # number of moves in an episode
     state = assignBins(observation, bins, observationNum)
@@ -102,7 +103,7 @@ def play_one_episode(bins, Q, EPS, ALPHA, observationNum):
         Q[state][act] += ALPHA * (reward + GAMMA * target_values - Q[state][act])
         state, act = stateNew, actionNew
         # print('new state', stateNew, 'new action', actionNew, 'reward', reward)
-
+        env.render()
 
 
     return totalReward, cnt, state, act
