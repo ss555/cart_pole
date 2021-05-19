@@ -78,7 +78,7 @@ def choose_action(Q, state, EPS):
 def initialize_Q(observationNum, actionNum, nBins):
     columns = list(it.product(range(nBins[0]+1), range(nBins[1]+1), range(nBins[2]+1), range(nBins[3]+1), range(nBins[4]+1)))
     index = range(actionNum)
-    Q = pd.DataFrame(0, index=index, columns=columns)
+    Q = pd.DataFrame(0.00000000, index=index, columns=columns)
     return Q
 
 def play_one_episode(bins, Q, EPS, ALPHA, observationNum):
@@ -98,17 +98,22 @@ def play_one_episode(bins, Q, EPS, ALPHA, observationNum):
         stateNew = assignBins(observationNew, bins, observationNum)
         totalReward += reward
         actionNew = choose_action(Q, stateNew, EPS)
-        
         a_, target_values = maxAction(Q, stateNew)
-        Q[state][act] += ALPHA * (reward + GAMMA * target_values - Q[state][act])
+        update = ALPHA * (reward + GAMMA * target_values - Q.at[act, state])
+        # print('update', update)
+        # print('state', state)
+        # print('act', act)
+        Q.at[act, state] += update
+        # print('Q.at[act, state]',Q.at[act, state])
         state, act = stateNew, actionNew
         # print('new state', stateNew, 'new action', actionNew, 'reward', reward)
+        # print('Qmax', Q.max().max())
+        # print('Qmin', Q.min().min())
         # env.render()
-
-
-    return totalReward, cnt, state, act
+    return totalReward, cnt, state, act, Q
 
 def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon, min_lr):
+
     Q = initialize_Q(observationNum, actionNum, nBins)
 
     length = []
@@ -118,15 +123,17 @@ def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon
         # eps=0.5/(1+n*10e-3)
         EPS = get_epsilon(n, min_epsilon, decay)
         ALPHA = get_learning_rate(n, min_lr, decay)
+        # ALPHA = ALPHA0
 
-        episodeReward, episodeLength, state, act = play_one_episode(bins, Q, EPS, ALPHA, observationNum)
+        episodeReward, episodeLength, state, act, Q = play_one_episode(bins, Q, EPS, ALPHA, observationNum)
 
         if n % 1000 == 0:
             # print(n, '%.4f' % EPS, episodeReward)
             print('{}, \t {:.4f}, \t {}, \t {}, \t {}'.format(n, EPS, episodeReward, state, episodeLength))
-        if n % 10000 ==0:
-            Q.to_csv('Q_'+str(n)+'.csv')
-            print('Qmax', Q.max().max())
+            # print('Qmax', Q.max().max())
+        if n % 50000 ==0:
+            Q.T.to_csv('Q_'+str(n)+'.csv')
+
         length.append(episodeLength)
         reward.append(episodeReward)
         eps.append(EPS)
@@ -142,7 +149,7 @@ if __name__ == '__main__':
     numEpisode=1000000
     EP_STEPS=800
     Te=0.05
-    resetMode='goal'
+    resetMode='experimental'
 
     env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode=resetMode, sparseReward=False,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)#,integrator='ode')#,integrator='rk4')
 
@@ -158,8 +165,9 @@ if __name__ == '__main__':
 
     x_threshold = env.x_threshold
     theta_dot_threshold = 2*np.pi
-    nBins = [20, 10, 15, 15, 15]
-    INFO = {'ALPHA0': ALPHA0, 'GAMMA': GAMMA, 'decay':decay, 'min_epsilon':min_epsilon, 'min_lr':min_lr, 'numEpisode': numEpisode, 'resetMode':resetMode, 'nBins':str(nBins), 'reward':'without limite theta dot'}
+    nBins = [20, 20, 20, 20, 20]
+    INFO = {'ALPHA0': ALPHA0, 'GAMMA': GAMMA, 'decay':decay, 'min_epsilon':min_epsilon, 'min_lr':min_lr, 'numEpisode': numEpisode, 'resetMode':resetMode, 'theta_dot_threshold':theta_dot_threshold, 'nBins':str(nBins), 'reward':'without limite theta dot'}
+
 
 
     import time
@@ -169,17 +177,16 @@ if __name__ == '__main__':
     logpath = '/home/robotfish/Project/cart_pole/q_learning/'+dt_string
     os.makedirs(logpath, exist_ok=True)
     os.chdir(logpath)
+    with open('0_INFO.json', 'w') as file:
+        json.dump(INFO, file, indent=4)
 
     bins = create_bins(x_threshold, theta_dot_threshold, nBins=nBins)
     result, Q = play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon, min_lr)
     print('finished')
     
     result.to_csv('ql_alpha0_'+str(ALPHA0)+'_gamma_'+str(GAMMA)+'_minEps_'+str(min_epsilon)+'_'+dt_string+'.csv')
-    Q.to_csv('Q_alpha0_'+str(ALPHA0)+'_gamma_'+str(GAMMA)+'_minEps_'+str(min_epsilon)+'_'+dt_string+'.csv')
+    Q.T.to_csv('Q_alpha0_'+str(ALPHA0)+'_gamma_'+str(GAMMA)+'_minEps_'+str(min_epsilon)+'_'+dt_string+'.csv')
     elapsed_time = time.time() - start_time
-    INFO.update({'Elapsed time': elapsed_time})
-
-    with open('0_INFO.json', 'w') as file:
-        json.dump(INFO, file, indent=4)
+    print('elapsed_time',elapsed_time)
 
 # %%
