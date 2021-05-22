@@ -9,9 +9,8 @@ Created on Tue Jan  5 13:27:33 2021
 import numpy as np
 import matplotlib.pyplot as plt
 import os,sys,inspect
-current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parent_dir = os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir)
+
+sys.path.insert(0, '/home/robotfish/Project/cart_pole')
 from env_custom import CartPoleButter
 import gym
 import pandas as pd
@@ -98,7 +97,8 @@ def play_one_episode(bins, Q, EPS, ALPHA, observationNum):
         stateNew = assignBins(observationNew, bins, observationNum)
         totalReward += reward
         actionNew = choose_action(Q, stateNew, EPS)
-        a_, target_values = maxAction(Q, stateNew)
+        # a_, target_values = maxAction(Q, stateNew) ## Qlearning
+        target_values = Q.at[actionNew, stateNew] ## sarsa
         update = ALPHA * (reward + GAMMA * target_values - Q.at[act, state])
         # print('update', update)
         # print('state', state)
@@ -131,8 +131,8 @@ def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon
             # print(n, '%.4f' % EPS, episodeReward)
             print('{}, \t {:.4f}, \t {}, \t {}, \t {}'.format(n, EPS, episodeReward, state, episodeLength))
             # print('Qmax', Q.max().max())
-        if n % 50000 ==0:
-            Q.T.to_csv('Q_'+str(n)+'.csv')
+        # if n % 50000 ==0:
+        #     Q.T.to_csv('Q_'+str(n)+'.csv')
 
         length.append(episodeLength)
         reward.append(episodeReward)
@@ -174,7 +174,7 @@ if __name__ == '__main__':
     # start_time = time.time()
     # now = datetime.now()
     # dt_string = now.strftime("%m%d_%H%M%S")
-    # logpath = '/home/robotfish/Project/cart_pole/q_learning/'+dt_string
+    # logpath = '/home/robotfish/Project/cart_pole/Sarsa/'+dt_string
     # os.makedirs(logpath, exist_ok=True)
     # os.chdir(logpath)
     with open('0_INFO.json', 'w') as file:
@@ -184,8 +184,10 @@ if __name__ == '__main__':
     result, Q = play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon, min_lr)
     print('finished')
     
-    result.to_csv('ql_alpha0_'+str(ALPHA0)+'_gamma_'+str(GAMMA)+'_minEps_'+str(min_epsilon)+'.csv')
+    result.to_csv('sarsa_alpha0_'+str(ALPHA0)+'_gamma_'+str(GAMMA)+'_minEps_'+str(min_epsilon)+'.csv')
     Q.T.to_csv('Q_alpha0_'+str(ALPHA0)+'_gamma_'+str(GAMMA)+'_minEps_'+str(min_epsilon)+'.csv')
 
+
+# %%
 
 # %%
