@@ -197,7 +197,7 @@ def get_monitor_files(path: str) -> List[str]:
     :param path: the logging folder
     :return: the log files
     """
-    return glob(os.path.join(path, "*" + Monitor.EXT))
+    return sorted(glob(os.path.join(path, "*" + Monitor.EXT)),key=os.path.getmtime)
 X_TIMESTEPS = "timesteps"
 X_EPISODES = "episodes"
 X_WALLTIME = "walltime_hrs"

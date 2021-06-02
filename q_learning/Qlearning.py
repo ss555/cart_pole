@@ -165,7 +165,7 @@ if __name__ == '__main__':
     start_time = time.time()
     now = datetime.now()
     dt_string = now.strftime("%m%d_%H%M%S")
-    logpath = '/home/robotfish/Project/cart_pole/q_learning/'+dt_string
+    logpath = './q_learning/'+dt_string
     os.makedirs(logpath, exist_ok=True)
     os.chdir(logpath)
 

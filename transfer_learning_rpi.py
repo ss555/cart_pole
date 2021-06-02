@@ -11,6 +11,8 @@ import numpy as np
 from custom_callbacks import plot_results
 HOST = '169.254.161.71'#'255.255.0.0'#wifiHot #'127.0.0.1'  # Standard loopback interface address (localhost)
 PORT = 65432
+
+
 logdir='./logs/dqn'
 # Use deterministic actions for evaluation and SAVE the best model
 from stable_baselines3.common.noise import NormalActionNoise

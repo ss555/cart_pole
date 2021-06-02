@@ -6,7 +6,7 @@ from utils import plot
 from matplotlib import pyplot as plt
 Te = 5e-2
 N=20
-env = CartPoleButter(Te=Te,n=N,integrator='ode')
+env = CartPoleButter(Te=Te,n=N,integrator='ode',resetMode='experimental')
 actArr=[0.0]
 timeArr=[0.0]
 env.render()

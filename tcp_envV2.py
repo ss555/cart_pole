@@ -6,7 +6,6 @@ import numpy as np
 import socket
 from collections import deque
 from env_custom import reward_fnCos
-
 class CartPoleCosSinRpiDiscrete3(gym.Env):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
@@ -40,7 +39,6 @@ class CartPoleCosSinRpiDiscrete3(gym.Env):
     def seed(self, seed=0):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
-
     def step(self, action):
         #send action receive data-old
         self.counter+=1

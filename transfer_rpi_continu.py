@@ -29,12 +29,11 @@ try:
         with conn:
             env = CartPoleCosSinRPIv2(pi_conn=conn)
             env0 = Monitor(env, logdir)
-
             ## Automatically normalize the input features and reward
             env1 = DummyVecEnv([lambda: env0])
             if ENV_NORMALISE:
                 env = VecNormalize.load('envNorm.pkl', env1)#VecNormalize.load(logdir+'/envNorm.pkl', env1)
-                env.training = True
+                env.training = Truee
                 # env = VecNormalize(env1, norm_obs=True, norm_reward=True, clip_obs=10000, clip_reward=10000)
                 envEval = VecNormalize(env1, norm_obs=True, norm_reward=False, clip_obs=10000, clip_reward=10000)
             envEval = env1

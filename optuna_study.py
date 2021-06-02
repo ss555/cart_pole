@@ -146,14 +146,15 @@ class TrialEvalCallback(EvalCallback):
 
 
 def objective(trial: optuna.Trial) -> float:
-
+    Te=0.05
+    EP_STEPS=1e5
     kwargs = DEFAULT_HYPERPARAMS.copy()
     # Sample hyperparameters
     kwargs.update(sample_a2c_params(trial))
     # Create the RL model
     model = SAC(**kwargs)
     # Create env used for evaluation
-    eval_env = gym.make(ENV_ID)
+    eval_env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode='experimental', sparseReward=False)#,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)
     # Create the callback that will periodically evaluate
     # and report the performance
     eval_callback = TrialEvalCallback(

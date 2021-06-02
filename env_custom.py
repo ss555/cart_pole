@@ -59,7 +59,7 @@ class CartPoleButter(gym.Env):
         '''
         :param Te: sampling time
         :param discreteActions: to use discrete Actions("True" to use with DQN) or continous ("False" to use with SAC)
-        :param resetMode: experimental, goal or random
+        :param resetMode: experimental, goal , random or random_theta_thetaDot
         :param length: longeur du pendule
         :param f_a: viscous friction of motor Force= f_a*Speed+f_b*Vmotor+f_c*np.sign(Speed)+f_d (look report for more details)
         :param f_b: coefficient of proportionality for the motor Tension
@@ -211,7 +211,7 @@ class CartPoleButter(gym.Env):
         dqdt[3] = self.g / self.length * sintheta + dqdt[1] / self.length * costheta - theta_dot * kPendViscous
         dqdt[2] = state[3]
         return dqdt
-    def reset(self, costheta=1, sintheta=0, xIni=None,iniSpeed=0.0):
+    def reset(self, costheta=1, sintheta=0, xIni=0.0,x_ini_speed=0.0,theta_ini_speed=0.0):
         if self.FILTER:
             # self.iirX_dot=iir_filter.IIR_filter(signal.butter(4, 0.5, 'lowpass', output='sos'))
             self.iirTheta_dot.reset()
@@ -219,24 +219,26 @@ class CartPoleButter(gym.Env):
         self.steps_beyond_done = None
         if self.resetMode=='experimental':
             self.state = np.zeros(shape=(5,))
-            if xIni!=None:
-                self.state[0] = xIni
-                print(f'x = {self.state[0]}')
-            self.state[1] = iniSpeed
+            self.state[0] = xIni
+            self.state[1] = x_ini_speed
             self.state[2] = costheta
             self.state[3] = sintheta
+            self.state[4] = theta_ini_speed
         elif self.resetMode=='goal':
             self.state = np.zeros(shape=(5,))
             self.state[2] = -1
             self.state[0] = self.np_random.uniform(low=-0.1, high=0.1)
         elif self.resetMode == 'random':
             self.state = np.zeros(shape=(5,))
-            self.state[0] = self.np_random.uniform(low=-0.3, high=0.3)
-            self.state[1] = self.np_random.uniform(low=-0.3, high=0.3)
-            self.state[4] = self.np_random.uniform(low=-5, high=5)
+            self.state[0] = self.np_random.uniform(low=-0.35, high=0.35)
+            self.state[1] = self.np_random.uniform(low=-0.5, high=0.5)
+            self.state[4] = self.np_random.uniform(low=-10, high=10)
             theta=self.np_random.uniform(-math.pi,math.pi)
             self.state[2] = np.cos(theta)
             self.state[3] = np.sin(theta)
+        elif self.resetMode == 'random_theta_thetaDot':
+            theta = self.np_random.uniform(-math.pi, math.pi)
+            self.state=[xIni, x_ini_speed, np.cos(theta), np.sin(theta),self.np_random.uniform(low=-10, high=10)]
         else:
             print('not defined, choose from experimental/goal/random')
         # print('reset state:{}'.format(self.state))
@@ -287,7 +289,7 @@ class CartPoleButter(gym.Env):
         theta = math.atan2(x[3], x[2])
         cartx = x[0] * scale + screen_width / 2.0  # MIDDLE OF CART
         self.carttrans.set_translation(cartx, carty)
-        self.poletrans.set_rotation(theta+np.pi)
+        self.poletrans.set_rotation(theta)#old: +np.pi)
 
         return self.viewer.render(return_rgb_array=mode == 'rgb_array')
 
@@ -447,7 +449,7 @@ class CartPoleDiscreteHistory(gym.Env):
         dqdt[2] = state[3]
         # print(dqdt)
         return dqdt
-    def reset(self, costheta=-1, sintheta=0, xIni=None,iniSpeed=0.0):
+    def reset(self, costheta=-1, sintheta=0, xIni=None,x_ini_speed=0.0):
         self.COUNTER=0
         self.steps_beyond_done = None
         if self.resetMode=='experimental':
@@ -455,7 +457,7 @@ class CartPoleDiscreteHistory(gym.Env):
             if xIni!=None:
                 self.state[0] = xIni
                 print(f'x = {self.state[0]}')
-            self.state[1] = iniSpeed
+            self.state[1] = x_ini_speed
             self.state[2] = costheta
             self.state[3] = sintheta
         elif self.resetMode=='goal':

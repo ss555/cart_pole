@@ -8,14 +8,15 @@ from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 from matplotlib import pyplot as plt
 from utils import plot, plot_line
 import numpy as np
-#TODO put time in obs feat
-Te = 2e-2
+#TODO put time in obs feature?
+Te = 5e-2
 #CartPoleCosSinHistory() #CartPoleCusBottom()CartPoleCosSin() #
 STEPS = 5000
 env = CartPoleButter(Te=Te,tensionMax=8.4706,resetMode='experimental',sparseReward=False,Km=0.0,n=1)#,integrator='ode')#,integrator='rk4')
 # Load the saved statistics
 env.MAX_STEPS_PER_EPISODE = STEPS
-model = DQN.load("./logs/best_model", env=env)
+model = DQN.load('./weights/dqn50-sim/best_model.zip', env=env)
+# model = DQN.load("./logs/best_model", env=env)
 env.randomReset = False
 obs = env.reset(xIni=0)
 # env.render()

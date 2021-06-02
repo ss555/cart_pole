@@ -1,12 +1,201 @@
-stable-baselines3
-tqdm
-pybullet
-numpy
-scipy
-matplotlib
-scikit-image
-Box2D
-opencv-python
-IPython[all]
-gym[all]==0.10.8
-#torch '1.7.1'
+absl-py==0.11.0
+alabaster==0.7.12
+alembic==1.4.3
+apipkg==1.5
+appdirs==1.4.4
+argon2-cffi==20.1.0
+astunparse==1.6.3
+async-generator==1.10
+atari-py==0.2.6
+attrs==20.3.0
+Babel==2.9.0
+backcall==0.2.0
+black==20.8b1
+bleach==3.3.0
+bluedot==2.0.0
+bokeh @ file:///tmp/build/80754af9/bokeh_1614700623796/work
+cachetools==4.2.0
+-e git+git@github.com:ss555/rl-baselines3-zoo.git@c0c04b9fb74e414b7da81010dcef2718866aef4a#egg=cartpole&subdirectory=custom_envs
+certifi==2020.12.5
+cffi==1.14.4
+chardet==4.0.0
+click==7.1.2
+cliff==3.5.0
+cloudpickle @ file:///tmp/build/80754af9/cloudpickle_1598884132938/work
+cmaes==0.7.0
+cmd2==1.4.0
+colorama==0.4.4
+colorlog==4.6.2
+ConfigArgParse @ file:///tmp/build/80754af9/configargparse_1615837118917/work
+coverage==5.3.1
+cycler==0.10.0
+Cython==0.29.21
+DataProperty==0.50.0
+dbus-python @ file:///home/conda/feedstock_root/build_artifacts/dbus-python_1602326232960/work
+decorator==4.4.2
+defusedxml==0.7.1
+docutils==0.16
+EasyProcess==0.3
+entrypoints==0.3
+execnet==1.7.1
+filterpy==1.4.5
+flake8==3.8.4
+future==0.18.2
+gast==0.3.3
+glfw==2.0.0
+google-auth==1.24.0
+google-auth-oauthlib==0.4.2
+google-pasta==0.2.0
+grpcio==1.34.0
+gym @ file:///home/conda/feedstock_root/build_artifacts/gym_1608551755383/work
+gym-minigrid==1.0.2
+h5py==2.10.0
+idna==2.10
+imageio==2.9.0
+imagesize==1.2.0
+importlab==0.5.1
+iniconfig==1.1.1
+ipykernel==5.5.3
+ipython==7.19.0
+ipython-genutils==0.2.0
+ipywidgets==7.6.3
+isort==5.7.0
+jedi==0.18.0
+Jinja2 @ file:///tmp/build/80754af9/jinja2_1621238361758/work
+joblib==1.0.0
+jsonschema==3.2.0
+jupyter-client==6.1.12
+jupyter-core==4.7.1
+jupyterlab-pygments==0.1.2
+jupyterlab-widgets==1.0.0
+Keras-Preprocessing==1.1.2
+kiwisolver @ file:///tmp/build/80754af9/kiwisolver_1612282420641/work
+livereload==2.6.3
+lockfile==0.12.2
+Mako==1.1.3
+Markdown==3.3.3
+MarkupSafe @ file:///tmp/build/80754af9/markupsafe_1620985072657/work
+matplotlib @ file:///tmp/build/80754af9/matplotlib-base_1592846008246/work
+mbstrdecoder==1.0.1
+mccabe==0.6.1
+mime==0.1.0
+mistune==0.8.4
+mkl-fft==1.3.0
+mkl-random @ file:///tmp/build/80754af9/mkl_random_1618853849286/work
+mkl-service==2.3.0
+msgfy==0.1.0
+mypy-extensions==0.4.3
+nbclient==0.5.3
+nbconvert==6.0.7
+nbformat==5.1.2
+nest-asyncio==1.5.1
+networkx==2.5
+ninja==1.10.0.post2
+nn-builder==0.0.12
+notebook==6.3.0
+numpy @ file:///tmp/build/80754af9/numpy_and_numpy_base_1618497241363/work
+oauthlib==3.1.0
+olefile==0.46
+opencv-python==4.5.1.48
+opt-einsum==3.3.0
+optuna==2.4.0
+packaging @ file:///tmp/build/80754af9/packaging_1611952188834/work
+pandas==1.2.0
+pandocfilters==1.4.3
+parso==0.8.1
+pathspec==0.8.1
+pathvalidate==2.3.2
+pbr==5.5.1
+pexpect==4.8.0
+pickleshare==0.7.5
+Pillow @ file:///tmp/build/80754af9/pillow_1617383569452/work
+plotly @ file:///tmp/build/80754af9/plotly_1610565580232/work
+pluggy==0.13.1
+prettytable==0.7.2
+prometheus-client==0.10.1
+prompt-toolkit==3.0.10
+protobuf==3.14.0
+psutil==5.8.0
+ptyprocess==0.7.0
+py==1.10.0
+-e git+https://github.com/berndporr/py-iir-filter.git@d990d7ea9c9eb575c2a9b87d6b5c1635dc38f009#egg=py_iir_filter
+pyaml==20.4.0
+pyasn1==0.4.8
+pyasn1-modules==0.2.8
+pybullet==3.0.8
+pycodestyle==2.6.0
+pycparser==2.20
+pyenchant==3.2.0
+pyflakes==2.2.0
+pyglet @ file:///home/conda/feedstock_root/build_artifacts/pyglet_1610213405023/work
+Pygments==2.7.3
+pyparsing @ file:///home/linux1/recipes/ci/pyparsing_1610983426697/work
+pyperclip==1.8.1
+pyrsistent==0.17.3
+pytablewriter==0.58.0
+pytest==6.2.1
+pytest-cov==2.10.1
+pytest-env==0.6.2
+pytest-forked==1.3.0
+pytest-xdist==2.2.0
+python-dateutil @ file:///home/ktietz/src/ci/python-dateutil_1611928101742/work
+python-editor==1.0.4
+pytype==2020.12.23
+pytz==2020.5
+PyVirtualDisplay==0.2.1
+PyYAML==5.4.1
+pyzmq==22.0.3
+regex==2020.11.13
+requests==2.25.1
+requests-oauthlib==1.3.0
+retrying==1.3.3
+rsa==4.7
+sb3-contrib @ git+https://github.com/Stable-Baselines-Team/stable-baselines3-contrib@4b4d487fdbf63700ea4082befe3f4c558913f180
+scikit-learn==0.24.0
+scikit-optimize==0.8.1
+scipy @ file:///tmp/build/80754af9/scipy_1618855647378/work
+seaborn==0.11.1
+Send2Trash==1.5.0
+six @ file:///tmp/build/80754af9/six_1605205327372/work
+snowballstemmer==2.0.0
+Sphinx==3.4.3
+sphinx-autobuild==2020.9.1
+sphinx-autodoc-typehints==1.11.1
+sphinx-rtd-theme==0.5.1
+sphinxcontrib-applehelp==1.0.2
+sphinxcontrib-devhelp==1.0.2
+sphinxcontrib-htmlhelp==1.0.3
+sphinxcontrib-jsmath==1.0.1
+sphinxcontrib-qthelp==1.0.3
+sphinxcontrib-serializinghtml==1.1.4
+sphinxcontrib-spelling==7.1.0
+SQLAlchemy==1.3.22
+stable-baselines3==1.0
+stevedore==3.3.0
+tabledata==1.1.3
+tcolorpy==0.0.8
+tensorboard==2.2.2
+tensorboard-plugin-wit==1.7.0
+tensorboardX==2.1
+tensorflow==2.2.0
+tensorflow-estimator==2.2.0
+termcolor==1.1.0
+terminado==0.9.4
+testpath==0.4.4
+threadpoolctl==2.1.0
+toml==0.10.2
+torch==1.8.1
+torchaudio==0.8.0a0+e4e171a
+torchvision==0.9.1
+tornado @ file:///tmp/build/80754af9/tornado_1606942300299/work
+tqdm==4.56.0
+traitlets==5.0.5
+typed-ast==1.4.2
+typepy==1.1.2
+typing-extensions @ file:///home/ktietz/src/ci_mi/typing_extensions_1612808209620/work
+urllib3==1.26.2
+wcwidth==0.2.5
+webencodings==0.5.1
+Werkzeug==1.0.1
+widgetsnbextension==3.5.1
+wrapt==1.12.1

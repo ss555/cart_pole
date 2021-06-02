@@ -1,6 +1,6 @@
 import sys
 import os
-STEPS_TO_TRAIN=240000
+STEPS_TO_TRAIN=40000
 sys.path.append(os.path.abspath('./'))
 from utils import linear_schedule
 from custom_callbacks import plot_results
@@ -9,9 +9,11 @@ from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 from stable_baselines3.dqn import MlpPolicy
 from stable_baselines3 import DQN,SAC
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
+from custom_callbacks import EvalCustomCallback
 from custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback
 from env_custom import CartPoleButter,CartPoleDiscreteHistory#,CartPoleContinous,CartPoleDiscreteHistory#,CartPoleDiscreteButter2
 import argparse
+
 Te=0.02
 EP_STEPS=1500
 LOAD_MODEL_PATH=None#"./logs/best_model"
@@ -35,7 +37,7 @@ else:
 
 #callbacks
 # Use deterministic actions for evaluation and SAVE the best model
-eval_callback = EvalCallback(envEvaluation, best_model_save_path='./logs/',log_path=logdir, eval_freq=15000, n_eval_episodes=30,
+eval_callback = EvalCustomCallback(envEvaluation, best_model_save_path='./logs/',log_path=logdir, eval_freq=15000, n_eval_episodes=30,
 							 deterministic=True, render=False)
 callbackSave = SaveOnBestTrainingRewardCallback(check_freq=1000, log_dir=logdir)
 
