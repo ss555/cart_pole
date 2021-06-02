@@ -57,7 +57,7 @@ if qLearningVsDQN:
     # envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.47, resetMode='random', sparseReward=False,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)#,integrator='ode')#,integrator='rk4')
     env = Monitor(env, filename=logdir+'basic/basic_simulation_')
     model = DQN(env=env,**hyperparams, seed=MANUAL_SEED)
-    eval_callback = EvalCustomCallback(env, eval_freq=15000, n_eval_episodes=1, deterministic=True)
+    eval_callback = EvalCustomCallback(env, eval_freq=5000, n_eval_episodes=1, deterministic=True)
 
     with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
         model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback,eval_callback])
@@ -82,7 +82,7 @@ if EVAL_TENSION_FINAL_PERF:
             filename=logdir + f'/tension-perf/tension_sim_{tension}_V_'
             env = Monitor(env, filename=filename)
             model = DQN(env=env, **hyperparams, seed=MANUAL_SEED)
-            eval_callback = EvalCustomCallback(envEval, log_path=filename, eval_freq=15000, n_eval_episodes=25, deterministic=True)
+            eval_callback = EvalCustomCallback(envEval, log_path=filename, eval_freq=5000, n_eval_episodes=51, deterministic=True)
             print(f'simulation for {tension} V')
             with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
                 model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
@@ -116,15 +116,15 @@ if STATIC_FRICTION_SIM:
     filenames=[]
     for frictionValue in STATIC_FRICTION_ARR:
         env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True,resetMode='experimental',sparseReward=False,f_c=frictionValue)  # ,integrator='ode')#,integrator='rk4')
-        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='random', sparseReward=False, f_c=frictionValue)
-        eval_callback = EvalCustomCallback(envEval, log_path=filename, eval_freq=15000, n_eval_episodes=25, deterministic=True)
+        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='random_theta_thetaDot', sparseReward=False, f_c=frictionValue)
+        eval_callback = EvalCustomCallback(envEval, log_path=filename, eval_freq=5000, n_eval_episodes=51, deterministic=True)
         filename = logdir + f'static-friction/static_friction_sim_{frictionValue}_'
         #filenames.append(filename)#NOT USED
         env = Monitor(env, filename=filename)
         model = DQN(env=env, **hyperparams)
         print(f'simulation with static friciton {frictionValue} coef')
         with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
-            model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback])
+            model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback,eval_callback])
     plot_results(logdir+'static-friction')
 
 if DYNAMIC_FRICTION_SIM:
@@ -132,12 +132,12 @@ if DYNAMIC_FRICTION_SIM:
     filenames=[]
     for frictionValue in DYNAMIC_FRICTION_ARR:
         env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True,resetMode='experimental', sparseReward=False,kPendViscous=frictionValue)  # ,integrator='ode')#,integrator='rk4')
-        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True,resetMode='random', sparseReward=False,kPendViscous=frictionValue)  # ,integrator='ode')#,integrator='rk4')
+        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True,resetMode='random_theta_thetaDot', sparseReward=False,kPendViscous=frictionValue)  # ,integrator='ode')#,integrator='rk4')
         filename = logdir + f'dynamic-friction/dynamic_friction_sim_{frictionValue}_'
         #filenames.append(filename)#NOT USED
         env = Monitor(env, filename=filename)
         model = DQN(env=env, **hyperparams)
-        eval_callback = EvalCustomCallback(envEval, log_path=filename,eval_freq=15000, n_eval_episodes=25, deterministic=True)
+        eval_callback = EvalCustomCallback(envEval, log_path=filename,eval_freq=5000, n_eval_episodes=51, deterministic=True)
         print(f'simulation with dynamic friciton {frictionValue} coef')
         with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
             model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback,eval_callback])
@@ -148,17 +148,16 @@ if encNoiseVarSim:
     filenames=[]
     for encNoise in NOISE_TABLE:
         env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True,resetMode='experimental', sparseReward=False,Km=encNoise)  # ,integrator='ode')#,integrator='rk4')
-        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True,resetMode='random', sparseReward=False,Km=encNoise)  # ,integrator='ode')#,integrator='rk4')
+        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True,resetMode='random_theta_thetaDot', sparseReward=False,Km=encNoise)  # ,integrator='ode')#,integrator='rk4')
         filename = logdir + f'encoder-noise/enc_noise_sim_{encNoise}_rad_'
         #filenames.append(filename)#NOT USED
         env = Monitor(env, filename=filename)
-        eval_callback = EvalCustomCallback(envEval, log_path=filename, eval_freq=15000,
-                                           n_eval_episodes=25, deterministic=True)
+        eval_callback = EvalCustomCallback(envEval, log_path=filename, eval_freq=5000, n_eval_episodes=51, deterministic=True)
 
         model = DQN(env=env, **hyperparams)
         print(f'simulation with noise {encNoise*180/np.pi} degree')
         with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
-            model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback])
+            model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback,eval_callback])
     plot_results(logdir+'encoder-noise')
 #TODO effect of initialisation with eval callback
 if RESET_EFFECT:
@@ -167,11 +166,11 @@ if RESET_EFFECT:
     filename = logdir + f'experimental-vs-random/experimental'
     env0 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True,resetMode='experimental', sparseReward=False)  # ,integrator='ode')#,integrator='rk4')
     env = Monitor(env0, filename=filename)
-    envEval0 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='random', sparseReward=False)
+    envEval0 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='random_theta_thetaDot', sparseReward=False)
     envEval = Monitor(envEval0, filename=filename)
 
     #filenames.append(filename)#NOT USED
-    eval_callback = EvalCustomCallback(envEval0, log_path=filename,eval_freq=15000,n_eval_episodes=25, deterministic=True)
+    eval_callback = EvalCustomCallback(envEval0, log_path=filename,eval_freq=5000,n_eval_episodes=51, deterministic=True)
     model = DQN(env=env, **hyperparams)
     print(f'simulation with experimental reset')
     with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
@@ -180,7 +179,7 @@ if RESET_EFFECT:
     print(f'simulation with random reset')
     filename = logdir + f'experimental-vs-random/random'
 
-    eval_callback2 = EvalCustomCallback(envEval0, log_path=filename, eval_freq=15000,n_eval_episodes=25, deterministic=True)
+    eval_callback2 = EvalCustomCallback(envEval0, log_path=filename, eval_freq=5000,n_eval_episodes=51, deterministic=True)
 
     model = DQN(env=envEval, **hyperparams)
     print(f'simulation with random reset')
@@ -194,10 +193,10 @@ if ACTION_NOISE_SIM:
     for forceStd in FORCE_STD_ARR:
         Path('./EJPH/action-noise').mkdir(exist_ok=True)
         env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental',sparseReward=False,forceStd=forceStd)
-        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='random',sparseReward=False,forceStd=forceStd)
+        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='random_theta_thetaDot',sparseReward=False,forceStd=forceStd)
         env=Monitor(env,filename=logdir+f'action-noise/actionStd%-{forceStd}')
-        eval_callback = EvalCustomCallback(envEval, log_path=filename, eval_freq=15000,
-                                           n_eval_episodes=25, deterministic=True)
+        eval_callback = EvalCustomCallback(envEval, log_path=filename, eval_freq=5000,
+                                           n_eval_episodes=51, deterministic=True)
         model=DQN(env=env,**hyperparams)
         print(f'simulation with action noise in {forceStd}%')
         with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
@@ -210,10 +209,10 @@ if SEED_TRAIN:
     Path('./EJPH/seeds').mkdir(parents=True, exist_ok=True)
     for seed in range(10):
         env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode='experimental', sparseReward=False)#,integrator='ode')#,integrator='rk4')
-        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode='random', sparseReward=False)#,integrator='ode')#,integrator='rk4')
+        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode='random_theta_thetaDot', sparseReward=False)#,integrator='ode')#,integrator='rk4')
         filename = logdir + f'seeds/basic_{seed}'
         env = Monitor(env, filename)
-        eval_callback = EvalCustomCallback(envEval, log_path=filename,eval_freq=15000, n_eval_episodes=25, deterministic=True)
+        eval_callback = EvalCustomCallback(envEval, log_path=filename,eval_freq=5000, n_eval_episodes=51, deterministic=True)
         model = DQN(env=env,**hyperparams, seed=seed)
         with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
             model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback,eval_callback])

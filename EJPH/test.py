@@ -92,8 +92,6 @@ if PLOT_EVAL_REWARD:
     stdRew2=np.std(data2["results"],axis=1)
     sns.set_context("paper")
     sns.set_style("whitegrid")
-
-
     NUM_TIMESTEPS=90000
     EVAL_NUM_STEPS=15000
     timesteps=np.linspace(EVAL_NUM_STEPS,NUM_TIMESTEPS,int(NUM_TIMESTEPS/EVAL_NUM_STEPS))
