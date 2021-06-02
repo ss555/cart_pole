@@ -85,7 +85,6 @@ if PLOT_EVAL_REWARD:
 
     data = np.load('./EJPH/experimental-vs-random/random.npz')
     data2 = np.load('./EJPH/experimental-vs-random/experimental.npz')
-
     meanRew=np.mean(data["results"],axis=1)
     meanRew2=np.mean(data2["results"],axis=1,keepdims=False)
     stdRew=np.std(data["results"],axis=1)
@@ -105,5 +104,6 @@ if PLOT_EVAL_REWARD:
     plt.savefig('./EJPH/exp-vs-rand.pdf')
     plt.show()
 
+    data = np.load('./EJPH/experimental-vs-random/random.npz')
 
 
