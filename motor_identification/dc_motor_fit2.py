@@ -175,13 +175,8 @@ expData,dt,weightedData = parce_csv(absPath,weightedStartRegression=0,weight=200
 # (-19.355136863835682, 0.925594504005501, 0.15323233104506603, -0.19643065915299515)
 
 # weighted_data
-# [fA,fB,fC,error] = regression_chariot(expData)
 [fA,fB,fC,fD,error] = regression_chariot(weightedData,symmetricTension=False)
-# expData,dt,weightedData = parce_csv(absPath)#,fitTensionMin=150,fitTensionMax=170)
-# fA=0.0
-# fB=0.0
-# fC=0.0
-# fD=0.0
+
 plot_experimental_fitted(absPath+'/chariot_iden.csv',fA,fB,fC,fD,applyFiltering=False,Nf = 4,fc=2)
 
 print(len(expData))
@@ -191,4 +186,4 @@ print(f'{fA,fB,fC,fD}')
 # (-9.992699476436576, 0.5283959730526665, -0.4335098068332604)
 # (-18.03005925191054, 0.965036433340654, -0.8992003750802359)
 
-
+#TODO changer le signe commande pour controle

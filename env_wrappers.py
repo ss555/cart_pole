@@ -11,7 +11,6 @@ import numpy as np
 import pandas as pd
 from stable_baselines3.common.type_aliases import GymObs, GymStepReturn
 
-
 class Monitor(gym.Wrapper):
     """
     A monitor wrapper for Gym environments, it is used to know the episode reward, length, time and other data.

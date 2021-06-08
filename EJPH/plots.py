@@ -17,6 +17,7 @@ from env_custom import CartPoleButter
 # from utils import plot_results
 import argparse
 import yaml
+import glob
 import seaborn as sns
 PLOT_TRAINING_REWARD=False
 PLOT_EVAL_REWARD=True
@@ -30,6 +31,12 @@ def save_show_fig(xArr,yArr,legs,title,savename):
     plt.legend(legs, loc='best')
     plt.savefig(savename)
     plt.show()
+
+def generate_legends(legends):
+    legends = np.array([legend.split('_') for legend in legends])
+    return legends
+
+
 logdir='./plots'
 STEPS_TO_TRAIN=100000
 EP_STEPS=800
@@ -71,17 +78,59 @@ if PLOT_TRAINING_REWARD:
     save_show_fig(xArr,yArr,legs,title=t6,savename='./EJPH/plots/exp-vs-rand.pdf')
 
 if PLOT_EVAL_REWARD:
-    dirTension='./EJPH/tension'
+    dirTension='./EJPH/tension-perfomance'
     dirStatic='./EJPH/static-friction'
+    dirDynamic='./EJPH/dynamic-friction'
     dirNoise='./EJPH/noise-eval'
     dirAction='./EJPH/plots/action-eval'
     dirReset='./EJPH/plots/exp-vs-rand-eval'
 
-    dirTension='./EJPH/plots/tension-eval'
-    dirStatic='./EJPH/plots/static-eval'
-    dirNoise='./EJPH/plots/noise-eval'
-    dirAction='./EJPH/plots/action-eval'
-    dirReset='./EJPH/plots/exp-vs-rand-eval'
+    # dirTension='./EJPH/plots/tension-eval'
+    # dirStatic='./EJPH/plots/static-eval'
+    # dirNoise='./EJPH/plots/noise-eval'
+    # dirAction='./EJPH/plots/action-eval'
+    # dirReset='./EJPH/plots/exp-vs-rand-eval'
+    NUM_TIMESTEPS = 100000
+    EVAL_NUM_STEPS = 5000
+    timesteps = np.linspace(EVAL_NUM_STEPS, NUM_TIMESTEPS, int(NUM_TIMESTEPS / EVAL_NUM_STEPS))
+    def plot_from_npz(path,xlabel,ylabel,title):
+        filenames = sorted(glob.glob(path + '/*.npz'))
+        for filename in filenames:
+            data = np.load(filename)
+            meanRew, stdRew = np.mean(data["results"], axis=1), np.std(data["results"], axis=1, keepdims=False)
+            plt.plot(timesteps, meanRew)
+            plt.fill_between(timesteps, meanRew + stdRew, meanRew - stdRew, alpha=0.2)
+            plt.xlabel(xlabel)
+            plt.ylabel(ylabel)
+            plt.title(title)
+        return filenames
+    xl='Timesteps'
+    yl='Rewards'
+    title='Effect of applied tension on the "greedy policy" reward'
+    filenames=plot_from_npz(dirTension,xl,yl,title)
+    legends=generate_legends(filenames)
+    legs = []
+    for i, counter in enumerate(legends[:, -2]):
+        legs.append(legends[i, -3] + legends[i, -2])
+    plt.legend(legs)
+    plt.savefig('./EJPH/plots/greedy_tension.pdf')
+    plt.show()
+
+
+    title='Effect of static friction on the "greedy policy" reward'
+    filenames=plot_from_npz(dirStatic,xl,yl,title)
+    legends = generate_legends(filenames)
+    legs=[round(float(leg[1:]),4) for leg in legends[:,-2]]
+    plt.legend(legs)
+    plt.savefig('./EJPH/plots/greedy_static.pdf')
+    plt.show()
+
+    title='Effect of viscous friction on the "greedy policy" reward'
+    filenames=plot_from_npz(dirDynamic,xl,yl,title)
+    legs=np.array([0,0.1,1,10])*0.1196
+    plt.legend(legs)
+    plt.savefig('./EJPH/plots/greedy_viscous.pdf')
+    plt.show()
 
     data = np.load('./EJPH/experimental-vs-random/random.npz')
     data2 = np.load('./EJPH/experimental-vs-random/experimental.npz')
@@ -91,19 +140,15 @@ if PLOT_EVAL_REWARD:
     stdRew2=np.std(data2["results"],axis=1)
     sns.set_context("paper")
     sns.set_style("whitegrid")
-    NUM_TIMESTEPS=90000
-    EVAL_NUM_STEPS=15000
-    timesteps=np.linspace(EVAL_NUM_STEPS,NUM_TIMESTEPS,int(NUM_TIMESTEPS/EVAL_NUM_STEPS))
     plt.plot(timesteps,meanRew, 'ro-')
     plt.fill_between(timesteps,meanRew + stdRew, meanRew - stdRew, facecolor='red', alpha=0.2)
     plt.plot(timesteps,meanRew2, 'bo--')
     plt.fill_between(timesteps,meanRew2 + stdRew2, meanRew2 - stdRew2, facecolor='blue', alpha=0.2)
-    plt.xlabel('Tension (V)')
+    plt.xlabel('timesteps')
     plt.ylabel('Rewards')
-    plt.title('Effect of initialisation (random vs experimental) on the "greedy policy" reward from experimental state')#random
+    plt.title('Effect of initialisation on the "greedy policy" reward from experimental state')#random
+    plt.legend(['random','experimental'])
     plt.savefig('./EJPH/exp-vs-rand.pdf')
     plt.show()
-
-    data = np.load('./EJPH/experimental-vs-random/random.npz')
 
 

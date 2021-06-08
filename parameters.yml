@@ -14,8 +14,8 @@ dqn_cartpole_50:
     gradient_steps : -1
     verbose : 0
     batch_size : 1024
-    #policy_kwargs : dict(net_arch=[256, 256])}
     policy_kwargs : 'dict(net_arch=[256, 256])'
+
 
 sac_cartpole_50:
     policy: 'MlpPolicy'

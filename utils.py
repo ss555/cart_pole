@@ -6,9 +6,10 @@ import glob
 import sys
 import os
 import yaml
-from typing import Any, Callable, Dict, List, Optional, Tuple
+import gym
+from typing import Any, Callable, Dict, Union, List, Optional, Tuple
 from collections import OrderedDict
-from pprint import pprint
+from stable_baselines3.common.vec_env import VecEnv
 # Import seaborn
 import seaborn as sns
 from env_wrappers import load_results
@@ -25,8 +26,33 @@ def _save_config(self, saved_hyperparams: Dict[str, Any]) -> None:
 
     print(f"Log path: {self.save_path}")
 
-def read_hyperparameters(name, path="parameters.yml",additional_params=None):
+def evaluate_policy_episodes(
+        env: Union[gym.Env, VecEnv],
+        model:"base_class.BaseAlgorithm",
+        n_eval_episodes:int=1,
+        episode_steps=3000):
+    '''
 
+    :param env:
+    :param model:
+    :param n_eval_episodes:
+    :return: array of episode rewards
+    '''
+    episodeRewArr=np.zeros((n_eval_episodes,episode_steps),dtype=np.float32)
+    lengthArr=np.zeros(n_eval_episodes,dtype=np.float32)
+    for i in range(n_eval_episodes):
+        episodeLength=0
+        done = False
+        obs=env.reset()
+        while not done:
+            action,_state=model.predict(obs,deterministic=True)
+            obs,reward,done,_=env.step(action)
+            episodeRewArr[i,episodeLength]=reward
+            episodeLength+=1
+        lengthArr[i]=episodeLength
+    return episodeRewArr,lengthArr
+
+def read_hyperparameters(name, path="parameters.yml",additional_params=None):
     with open(path, "r") as f:
         hyperparams_dict = yaml.safe_load(f)
         hyperparams = hyperparams_dict[name]

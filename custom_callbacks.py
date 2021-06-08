@@ -15,7 +15,8 @@ from stable_baselines3.common.vec_env import DummyVecEnv, VecEnv, sync_envs_norm
 import gym
 import warnings
 from stable_baselines3.common.callbacks import EventCallback
-
+from stable_baselines3.common import base_class
+from env_custom import CartPoleButter
 class ProgressBarCallback(BaseCallback):
     """
     :param pbar: (tqdm.pbar) Progress bar object
@@ -163,8 +164,6 @@ class EvalCustomCallback(EventCallback):
         use a stochastic or deterministic actions.
     :param render: Whether to render or not the environment during evaluation
     :param verbose:
-    :param warn: Passed to ``evaluate_policy`` (warns if ``eval_env`` has not been
-        wrapped with a Monitor wrapper)
     """
 
     def __init__(
@@ -219,6 +218,111 @@ class EvalCustomCallback(EventCallback):
                 return_episode_rewards=True,
                 warn=self.warn,
             )
+            mean_reward, std_reward = np.mean(episode_rewards), np.std(episode_rewards)
+            mean_ep_length, std_ep_length = np.mean(episode_lengths), np.std(episode_lengths)
+            self.last_mean_reward = mean_reward
+            if self.log_path is not None:
+                self.evaluations_timesteps.append(self.num_timesteps)
+                self.evaluations_length.append(episode_lengths)
+                self.evaluations_results.append(episode_rewards)
+                np.savez(
+                    self.log_path,
+                    timesteps=self.evaluations_timesteps,
+                    results=self.evaluations_results,
+                    ep_length=self.evaluations_length
+                )
+            if self.verbose > 0:
+                print(f"Eval num_timesteps={self.num_timesteps}, " f"episode_reward={mean_reward:.2f} +/- {std_reward:.2f}")
+                print(f"Episode length: {mean_ep_length:.2f} +/- {std_ep_length:.2f}")
+
+
+            if mean_reward > self.best_mean_reward:
+                if self.verbose > 0:
+                    print("New best mean reward!")
+                if self.best_model_save_path is not None:
+                    self.model.save(self.best_model_save_path)
+                self.best_mean_reward = mean_reward
+                # Trigger callback if needed
+                if self.callback is not None:
+                    return self._on_event()
+
+        return True
+
+class EvalThetaDotMetric(EventCallback):
+    """
+    Callback for evaluating a cartpole systematically on a given metric(grid on THETA and THETA_DOT.
+
+    :param eval_env: The environment used for initialization
+    :param callback_on_new_best: Callback to trigger
+        when there is a new best model according to the ``mean_reward``
+    :param eval_freq: Evaluate the agent every eval_freq call of the callback.
+    :param log_path: filename for evaluations, with automatically added (``.npz``) if not exist
+        will be saved. It will be updated at each evaluation.
+    :param best_model_save_path: Path to a folder where the best model
+        according to performance on the eval env will be saved.
+    :param deterministic: Whether the evaluation should
+        use a stochastic or deterministic actions.
+    :param
+    :param render: Whether to render or not the environment during evaluation
+    :param verbose:
+    """
+    def __init__(
+        self,
+        eval_env: CartPoleButter,
+        callback_on_new_best: Optional[BaseCallback] = None,
+        eval_freq: int = 10000,
+        log_path: str = None,
+        best_model_save_path: str = None,
+        deterministic: bool = True,
+        render: bool = False,
+        verbose: int = 1,
+        warn: bool = True,
+        THETA_DOT_THRESHOLD : float = 10.0,
+        N_BINS : int = 10
+    ):
+        super(EvalThetaDotMetric, self).__init__(callback_on_new_best, verbose=verbose)
+        self.eval_freq = eval_freq
+        self.best_mean_reward = -np.inf
+        self.last_mean_reward = -np.inf
+        self.deterministic = deterministic
+        self.render = render
+        self.warn = warn
+        self.log_path=log_path
+        self.eval_env = eval_env
+        self.best_model_save_path = best_model_save_path
+        self.evaluations_results = []
+        self.evaluations_length = []
+        self.evaluations_timesteps = []
+        self.THETA_DOT_THRESHOLD = THETA_DOT_THRESHOLD
+        self.N_BINS=N_BINS
+        theta = np.linspace(-np.pi, np.pi, self.N_BINS)
+        theta_dot = np.linspace(-self.THETA_DOT_THRESHOLD, self.THETA_DOT_THRESHOLD, self.N_BINS)
+        self.arrTest = np.transpose([np.tile(theta, len(theta_dot)), np.repeat(theta_dot, len(theta))])
+
+    def _init_callback(self) -> None:
+        # Does not work in some corner cases, where the wrapper is not the same
+        if not isinstance(self.training_env, type(self.eval_env)):
+            warnings.warn("Training and eval env are not of the same type" f"{self.training_env} != {self.eval_env}")
+
+        # Create folders if needed
+        if self.best_model_save_path is not None:
+            os.makedirs(self.best_model_save_path, exist_ok=True)
+
+
+    def _on_step(self) -> bool:
+
+        if self.eval_freq > 0 and self.n_calls % self.eval_freq == 0:
+
+            episode_rewards = np.zeros(self.arrTest.shape[0], dtype=np.float32)
+            episode_lengths = np.zeros(self.arrTest.shape[0], dtype=np.float32)
+            for i,elem in enumerate(self.arrTest):
+                done=False
+                obs=self.eval_env.reset(costheta=np.cos(elem[0]),sintheta=np.sin(elem[0]), theta_ini_speed=elem[1])
+                while not done:
+                    action,_state = self.model.predict(obs,deterministic=True)
+                    obs,reward,done,_ = self.eval_env.step(action)
+                    episode_rewards[i] += reward
+                    episode_lengths[i] += 1
             mean_reward, std_reward = np.mean(episode_rewards), np.std(episode_rewards)
             mean_ep_length, std_ep_length = np.mean(episode_lengths), np.std(episode_lengths)
             self.last_mean_reward = mean_reward

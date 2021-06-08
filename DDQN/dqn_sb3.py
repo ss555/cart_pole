@@ -5,18 +5,17 @@ from utils import linear_schedule
 from custom_callbacks import plot_results
 from env_wrappers import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
-from stable_baselines3.dqn import MlpPolicy
-from stable_baselines3 import DQN,SAC
+from stable_baselines3 import DQN
 # from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
 from custom_callbacks import EvalCustomCallback
 from custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback
-from env_custom import CartPoleButter,CartPoleDiscreteHistory#,CartPoleContinous,CartPoleDiscreteHistory#,CartPoleDiscreteButter2
+from env_custom import CartPoleButter,CartPoleCsv,CartPoleDiscreteHistory#,CartPoleContinous,CartPoleDiscreteHistory#,CartPoleDiscreteButter2
 import argparse
 from utils import read_hyperparameters
 from pathlib import Path
 Te=0.05
 EP_STEPS=800
-STEPS_TO_TRAIN=30000
+STEPS_TO_TRAIN=90000
 LOAD_MODEL_PATH=None#"./logs/best_model"
 LOAD_BUFFER_PATH=None#"dqn_pi_swingup_bufferN"
 logdir='./logs/'
@@ -42,7 +41,6 @@ Path(log_save).mkdir(exist_ok=True)
 eval_callback = EvalCustomCallback(envEvaluation, best_model_save_path=log_save,
 							 log_path=logdir+'/evals', eval_freq=15000, n_eval_episodes=30,deterministic=True, render=False)
 callbackSave = SaveOnBestTrainingRewardCallback(check_freq=1000, log_dir=logdir)
-
 hyperparams=read_hyperparameters('dqn_cartpole_50')
 model = DQN(env=env,**hyperparams)
 

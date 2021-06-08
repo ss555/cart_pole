@@ -15,7 +15,7 @@ from env_custom import CartPoleButter
 from utils import read_hyperparameters
 from pathlib import Path
 from custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback
-from custom_callbacks import EvalCustomCallback
+from custom_callbacks import EvalCustomCallback,EvalThetaDotMetric
 from matplotlib import pyplot as plt
 STEPS_TO_TRAIN=100000
 EP_STEPS=800
@@ -23,11 +23,11 @@ Te=0.05
 MANUAL_SEED=5
 #simulation results
 qLearningVsDQN=False #compare q-learn and dqn
-DYNAMIC_FRICTION_SIM=True#True
-STATIC_FRICTION_SIM=True
-encNoiseVarSim=True
-ACTION_NOISE_SIM=True
-RESET_EFFECT=True
+DYNAMIC_FRICTION_SIM=False#True
+STATIC_FRICTION_SIM=False
+encNoiseVarSim=False
+ACTION_NOISE_SIM=False
+RESET_EFFECT=False
 EVAL_TENSION_FINAL_PERF=True#evaluate final perfomance of a cartpole for different voltages
 PLOT_FINAL_PERFOMANCE_STD=False#False#
 SEED_TRAIN=False
@@ -40,7 +40,7 @@ STATIC_FRICTION_CART=-0.902272006611719
 STATIC_FRICTION_ARR=np.array([0,0.1,1,10])*STATIC_FRICTION_CART
 
 #DONE temps d’apprentissage et note en fonction de l’amplitude du controle
-tensionMax = [2.4, 3.5, 4.7, 5.9, 7.1, 8.47, 9.4, 12]
+TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]
 
 #DONE temps  d’apprentissage  et  note  en  fonction  du  coefficient  de frottement dynamique
 DYNAMIC_FRICTION_PENDULUM=0.11963736650935591
@@ -70,25 +70,23 @@ if qLearningVsDQN:
 if EVAL_TENSION_FINAL_PERF:
     Path('./EJPH/tension-perf').mkdir(parents=True, exist_ok=True)
     filenames=[]
-    scoreArr=np.zeros_like(tensionMax)
-    stdArr=np.zeros_like(tensionMax)
+    scoreArr=np.zeros_like(TENSION_RANGE)
+    stdArr=np.zeros_like(TENSION_RANGE)
     TRAIN=True
     if TRAIN:
-        for i,tension in enumerate(tensionMax):
-            env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension,resetMode='experimental',
-                                  sparseReward=False)
-            envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension,
-                                 resetMode='random_theta_thetaDot', sparseReward=False)
+        for i,tension in enumerate(TENSION_RANGE):
+            env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension,resetMode='experimental',sparseReward=False)
+            envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension,resetMode='random_theta_thetaDot', sparseReward=False)
             filename=logdir + f'/tension-perf/tension_sim_{tension}_V_'
             env = Monitor(env, filename=filename)
             model = DQN(env=env, **hyperparams, seed=MANUAL_SEED)
-            eval_callback = EvalCustomCallback(envEval, log_path=filename, eval_freq=5000, n_eval_episodes=51, deterministic=True)
+            eval_callback = EvalThetaDotMetric(envEval, best_model_save_path=filename+'.zip',log_path=filename, eval_freq=5000, deterministic=True)
             print(f'simulation for {tension} V')
             with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
                 model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
             # scoreArr[i] = eval_callback.best_mean_reward # eval_callback.evaluations_results
     else:
-        for i,tension in enumerate(tensionMax):
+        for i,tension in enumerate(TENSION_RANGE):
             env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension,resetMode='random_theta_thetaDot',sparseReward=False)
             model = DQN.load(logdir + f'/tension-perf/tension-perf{tension}', env=env)
             episode_rewards, episode_lengths = evaluate_policy(
@@ -100,16 +98,25 @@ if EVAL_TENSION_FINAL_PERF:
             )
             scoreArr[i]=np.mean(episode_rewards)
             stdArr[i]=np.std(episode_rewards)
-            plot_results(logdir+'tension-perf',paperMode=True)
-            sns.set_context("paper")
-            sns.set_style("whitegrid")
-            tensionMax=np.array(tensionMax)
-            plt.plot(tensionMax,scoreArr,'ro-')
-            plt.fill_between(tensionMax, scoreArr+stdArr, scoreArr-stdArr, facecolor='red', alpha=0.5)
-            plt.xlabel('Tension (V)')
-            plt.ylabel('Rewards')
-            plt.title('Effect of the applied tension on the "greedy policy" reward')
-            plt.show()
+            print('done')
+        sns.set_context("paper")
+        sns.set_style("whitegrid")
+        tensionMax=np.array(TENSION_RANGE)
+        plt.plot(tensionMax,scoreArr,'ro-')
+        plt.fill_between(tensionMax, scoreArr+stdArr, scoreArr-stdArr, facecolor='red', alpha=0.5)
+        plt.xlabel('Tension (V)')
+        plt.ylabel('Rewards')
+        plt.title('Effect of the applied tension on the "greedy policy" reward')
+        plt.savefig('./EJPH/plots/episode_rew_10000eps')
+        plt.show()
+        np.savez(
+            './EJPH/plots/tension-perf10000ep',
+            tensionRange=tensionMax,
+            results=scoreArr,
+            resultsStd=stdArr
+        )
+
+    plot_results(logdir + 'tension-perf', paperMode=True)
 
 if STATIC_FRICTION_SIM:
     Path('./EJPH/static-friction').mkdir(exist_ok=True)
@@ -153,7 +160,6 @@ if encNoiseVarSim:
         #filenames.append(filename)#NOT USED
         env = Monitor(env, filename=filename)
         eval_callback = EvalCustomCallback(envEval, log_path=filename, eval_freq=5000, n_eval_episodes=51, deterministic=True)
-
         model = DQN(env=env, **hyperparams)
         print(f'simulation with noise {encNoise*180/np.pi} degree')
         with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
