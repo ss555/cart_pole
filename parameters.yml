@@ -6,7 +6,8 @@ dqn_cartpole_50:
     #10000
     gamma : 0.995
     learning_rate : 0.0003
-    exploration_final_eps : 0.17787752200089602
+    exploration_final_eps : 0
+    #0.17787752200089602
     exploration_initial_eps : 0.17787752200089602
     target_update_interval : 1000
     buffer_size : 50000
@@ -24,8 +25,7 @@ sac_cartpole_50:
     batch_size: 2048
     buffer_size: 10000
     learning_starts: 0
-    train_freq : 64
-  #[1, "episode"]
+    train_freq : [1, "episode"]
     tau: 0.02
     policy_kwargs: "dict(log_std_init=-0.9655242596737095,net_arch=[400,300],use_sde=True)"
 

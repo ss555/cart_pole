@@ -52,6 +52,9 @@ sns.set_context("paper")
 sns.set_style("whitegrid")
 # sns.set(style='ticks',rc={"font.size": 10, 'font.family': ['sans-serif'], 'axes.grid': True, 'font.sans-serif': 'Times New Roman'})
 
+'''
+PLOT THE TRAINING reward from csv log, namely monitor files
+'''
 if PLOT_TRAINING_REWARD:
     xArr,yArr,legs=plot_results('./EJPH/tension-perf',title=t1,only_return_data=True) #'Effect of varying tension on the learning'
     legs=[leg+'V' for leg in legs[:,-3]]
@@ -76,7 +79,9 @@ if PLOT_TRAINING_REWARD:
     xArr,yArr,legs= plot_results('./EJPH/experimental-vs-random',title=t6, only_return_data=True)
     legs=['experimental','random']
     save_show_fig(xArr,yArr,legs,title=t6,savename='./EJPH/plots/exp-vs-rand.pdf')
-
+'''
+PLOT THE inference reward from .npz, namely EvalCallback logs
+'''
 if PLOT_EVAL_REWARD:
     dirTension='./EJPH/tension-perfomance'
     dirStatic='./EJPH/static-friction'

@@ -9,7 +9,7 @@ from stable_baselines3 import DQN
 # from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
 from custom_callbacks import EvalCustomCallback
 from custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback
-from env_custom import CartPoleButter,CartPoleCsv,CartPoleDiscreteHistory#,CartPoleContinous,CartPoleDiscreteHistory#,CartPoleDiscreteButter2
+from env_custom import CartPoleButter,CartPoleDebug,CartPoleDiscreteHistory#,CartPoleContinous,CartPoleDiscreteHistory#,CartPoleDiscreteButter2
 import argparse
 from utils import read_hyperparameters
 from pathlib import Path
@@ -19,7 +19,7 @@ STEPS_TO_TRAIN=90000
 LOAD_MODEL_PATH=None#"./logs/best_model"
 LOAD_BUFFER_PATH=None#"dqn_pi_swingup_bufferN"
 logdir='./logs/'
-env = CartPoleButter(Te=Te,N_STEPS=EP_STEPS,discreteActions=True,tensionMax=8.4706,resetMode='experimental',sparseReward=False,Km=0.0,n=1)#,integrator='ode')#,integrator='rk4')
+env = CartPoleButter(Te=Te, x_threshold = 0.e, N_STEPS=EP_STEPS,discreteActions=True,tensionMax=8.4706,resetMode='experimental',sparseReward=False,Km=0.0,n=1)#,integrator='ode')#,integrator='rk4')
 env = Monitor(env, filename=logdir+'basic_simulation_')
 envEvaluation = CartPoleButter(Te=Te,N_STEPS=EP_STEPS,discreteActions=True,tensionMax=8.4706,resetMode='random',sparseReward=False,Km=0.0,n=1)#,integrator='ode')#,integrator='rk4')
 NORMALISE=False

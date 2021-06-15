@@ -57,7 +57,11 @@ class CartPoleButter(gym.Env):
                  N_STEPS=800,
                  wAngularStd=0.0,#0.1
                  masspoleStd=0.0, #0.01
-                 forceStd=0.0):  #0.1
+                 forceStd=0.0,
+                 x_threshold = 0.36,
+                 thetaDotReset=None,
+                 thetaReset=None,
+                 THETA_DOT_LIMIT = 100):  #0.1
         '''
         :param Te: sampling time
         :param discreteActions: to use discrete Actions("True" to use with DQN) or continous ("False" to use with SAC)
@@ -96,7 +100,7 @@ class CartPoleButter(gym.Env):
         self.tau = Te  # seconds between state updates
         self.kinematics_integrator = integrator  # 'rk'#
         self.theta_threshold_radians = math.pi
-        self.x_threshold = 0.36
+        self.x_threshold = x_threshold
         # FOR DATA
         self.v_max = 15
         self.w_max = 100
@@ -131,6 +135,9 @@ class CartPoleButter(gym.Env):
         self.forceStd=forceStd
         self.FILTER=FILTER
         self.kPendViscous=kPendViscous
+        self.thetaDotReset = thetaDotReset
+        self.thetaReset = thetaReset
+        self.THETA_DOT_LIMIT = THETA_DOT_LIMIT
         if self.FILTER:
             self.iirTheta_dot = iir_filter.IIR_filter(signal.butter(4, 0.9, 'lowpass', output='sos'))#2nd param 0.3
     def seed(self, seed=0):
@@ -182,7 +189,7 @@ class CartPoleButter(gym.Env):
         self.state = np.array([x, x_dot, np.cos(theta), np.sin(theta), theta_dot], dtype=np.float32)
         done=False
         self.COUNTER+=1
-        if x < -self.x_threshold or x > self.x_threshold or self.COUNTER == self.MAX_STEPS_PER_EPISODE or abs(theta_dot)>11:
+        if x < -self.x_threshold or x > self.x_threshold or self.COUNTER == self.MAX_STEPS_PER_EPISODE or abs(theta_dot)>self.THETA_DOT_LIMIT:
             # print('out of bound')
             done = True
             x = np.clip(x, -self.x_threshold, self.x_threshold)
@@ -213,7 +220,7 @@ class CartPoleButter(gym.Env):
         dqdt[3] = self.g / self.length * sintheta + dqdt[1] / self.length * costheta - theta_dot * kPendViscous
         dqdt[2] = state[3]
         return dqdt
-    def reset(self, costheta=1, sintheta=0, xIni=0.0,x_ini_speed = 0.0, theta_ini_speed = 0.0):
+    def reset(self, costheta=1, sintheta=0, xIni=0.0, x_ini_speed = 0.0, theta_ini_speed = 0.0):
         if self.FILTER:
             # self.iirX_dot=iir_filter.IIR_filter(signal.butter(4, 0.5, 'lowpass', output='sos'))
             self.iirTheta_dot.reset()
@@ -234,15 +241,20 @@ class CartPoleButter(gym.Env):
             self.state = np.zeros(shape=(5,))
             self.state[0] = self.np_random.uniform(low=-0.35, high=0.35)
             self.state[1] = self.np_random.uniform(low=-0.5, high=0.5)
-            self.state[4] = self.np_random.uniform(low=-10, high=10)
+            self.state[4] = self.np_random.uniform(low=-5, high=5)
             theta=self.np_random.uniform(-math.pi,math.pi)
             self.state[2] = np.cos(theta)
             self.state[3] = np.sin(theta)
         elif self.resetMode == 'random_theta_thetaDot':
-            theta = self.np_random.uniform(-math.pi, math.pi)
-            self.state=[xIni, x_ini_speed, np.cos(theta), np.sin(theta),self.np_random.uniform(low=-10, high=10)]
+            theta = self.np_random.uniform(-math.pi/18, math.pi/18)
+            self.state=[xIni, x_ini_speed, np.cos(theta), np.sin(theta),self.np_random.uniform(low=-0.05, high=0.05)]
         else:
             print('not defined, choose from experimental/goal/random')
+        if self.thetaDotReset is not None:
+            self.state[-1] = self.thetaDotReset
+        if self.thetaReset is not None:
+            self.state[3] = np.cos(self.thetaReset)
+            self.state[4] = np.sin(self.thetaReset)
         # print('reset state:{}'.format(self.state))
         return np.array(self.state)
     def rescale_angle(self,theta):
@@ -300,7 +312,7 @@ class CartPoleButter(gym.Env):
             self.viewer.close()
             self.viewer = None
 from env_wrappers import ResultsWriter
-class CartPoleCsv(gym.Env):
+class CartPoleDebug(gym.Env):
     def __init__(self,
                  Te=0.05,
                  discreteActions=True,

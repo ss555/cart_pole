@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Jan  5 13:27:33 2021
 
-@author: lfu
-"""
 #%%
 import numpy as np
 import matplotlib.pyplot as plt
@@ -40,7 +36,7 @@ def create_bins(x_threshold,theta_dot_threshold, nBins):
     ## 5 observations, x, x_dot, cos(theta), sin(theta), theta_dot
     # bins = np.zeros((5, nBins))
     bins1 = np.linspace(-x_threshold, x_threshold, nBins[0])
-    bins2 = np.linspace(-5, 5, nBins[1])
+    bins2 = np.linspace(-1, 1, nBins[1])
     bins3 = np.linspace(-1, 1, nBins[2])
     bins4 = np.linspace(-1, 1, nBins[3])
     bins5 = np.linspace(-theta_dot_threshold, theta_dot_threshold, nBins[4])
@@ -64,8 +60,8 @@ def assignBins(observation, bins, observationNum):
 def get_epsilon(t, min_epsilon, decay):
     return max(min_epsilon, min(1., 1. - math.log10((t + 1) / decay)))
 
-def get_learning_rate(t, min_lr, decay):
-    return max(min_lr, min(ALPHA0, 1. - math.log10((t + 1) / decay)))
+# def get_learning_rate(t, min_lr, decay):
+#     return max(min_lr, min(ALPHA0, 1. - math.log10((t + 1) / decay)))
 
 def choose_action(Q, state, EPS):
     if (np.random.random() < EPS):
@@ -122,9 +118,9 @@ def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon
     for n in range(numEpisode+1):
         # eps=0.5/(1+n*10e-3)
         EPS = get_epsilon(n, min_epsilon, decay)
-        ALPHA = get_learning_rate(n, min_lr, decay)
+        # ALPHA = 0.1get_learning_rate(n, min_lr, decay)
         # ALPHA = ALPHA0
-
+        ALPHA = 0.1
         episodeReward, episodeLength, state, act, Q = play_one_episode(bins, Q, EPS, ALPHA, observationNum)
 
         if n % 1000 == 0:
@@ -158,15 +154,15 @@ if __name__ == '__main__':
     observationNum = env.observation_space.shape[0]
 
     ALPHA0 = 1
-    GAMMA = 0.99
+    GAMMA = 0.95
     decay = 10000
     min_epsilon = 0.1
     min_lr = 0.1
 
     x_threshold = env.x_threshold
-    theta_dot_threshold = 2*np.pi
-    nBins = [10, 10, 10, 10, 10]
-    INFO = {'ALPHA0': ALPHA0, 'GAMMA': GAMMA, 'decay':decay, 'min_epsilon':min_epsilon, 'min_lr':min_lr, 'numEpisode': numEpisode, 'resetMode':resetMode, 'theta_dot_threshold':theta_dot_threshold, 'nBins':str(nBins), 'reward':'without limite theta dot'}
+    theta_dot_threshold = 12
+    nBins = [30, 30, 50, 50, 50]
+    INFO = {'ALPHA0': ALPHA0, 'GAMMA': GAMMA, 'decay':decay, 'min_epsilon':min_epsilon, 'min_lr':min_lr, 'numEpisode': numEpisode, 'resetMode':resetMode, 'theta_dot_threshold':theta_dot_threshold, 'nBins':str(nBins), 'reward':'without limit theta dot'}
 
 
 
