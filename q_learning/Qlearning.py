@@ -11,7 +11,7 @@ sys.path.insert(0, parent_dir)
 from env_custom import CartPoleButter
 import gym
 import pandas as pd
-pd.options.plotting.backend = "plotly"
+#pd.options.plotting.backend = "plotly"
 import itertools as it
 
 import plotly.express as px
@@ -142,12 +142,12 @@ def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon
 if __name__ == '__main__':
 
 
-    numEpisode=2000000
+    numEpisode=5000000
     EP_STEPS=800
     Te=0.05
     resetMode='experimental'
 
-    env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode=resetMode, sparseReward=False,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)#,integrator='ode')#,integrator='rk4')
+    env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode=resetMode, sparseReward=False)#,integrator='ode')#,integrator='rk4')
 
 
     actionNum = env.action_space.n
@@ -155,8 +155,8 @@ if __name__ == '__main__':
 
     ALPHA0 = 1
     GAMMA = 0.95
-    decay = 10000
-    min_epsilon = 0.1
+    decay = 20000
+    min_epsilon = 0.05
     min_lr = 0.1
 
     x_threshold = env.x_threshold
