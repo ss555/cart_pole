@@ -25,7 +25,7 @@ N_EVALUATIONS = 2
 N_TIMESTEPS = int(2e4)
 EVAL_FREQ = int(N_TIMESTEPS / N_EVALUATIONS)
 N_EVAL_EPISODES = 3
-TIMEOUT = int(60 * 15)  # 15 minutes
+#TIMEOUT = int(60 * 15)  # 15 minutes in study.optimize
 
 def sample_dqn_params(trial: optuna.Trial) -> Dict[str, Any]:
     """
@@ -206,7 +206,7 @@ if __name__ == "__main__":
     study = optuna.create_study(sampler=sampler, pruner=pruner, direction="maximize")
 
     try:
-        study.optimize(objective, n_trials=N_TRIALS, n_jobs=N_JOBS, timeout=TIMEOUT)
+        study.optimize(objective, n_trials=N_TRIALS, n_jobs=N_JOBS)
     except KeyboardInterrupt:
         pass
 
@@ -226,7 +226,7 @@ if __name__ == "__main__":
         print(f"    {key}: {value}")
 
     # Write report
-    study.trials_dataframe().to_csv("study_results_a2c_cartpole.csv")
+    study.trials_dataframe().to_csv("study_results_discrete_cartpole.csv")
 
     with open("study.pkl", "wb+") as f:
         pkl.dump(study, f)

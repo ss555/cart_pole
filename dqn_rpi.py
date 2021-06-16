@@ -1,13 +1,14 @@
 import sys
 import os
 import torch
+sys.path.append(os.path.abspath('./..'))
 sys.path.append(os.path.abspath('./'))
 from custom_callbacks import plot_results
 from env_wrappers import Monitor
 from stable_baselines3 import DQN
 # from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
 from custom_callbacks import EvalCustomCallback
-from custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback
+from custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
 from tcp_envV2 import CartPoleZmq
 import argparse
 from utils import read_hyperparameters
@@ -20,7 +21,7 @@ STEPS_TO_TRAIN=150000
 PWM = 150 #PWM command to apply 0-255
 INFERENCE_STEPS = 2000 #steps to test the model
 MANUAL_SEED=0 #seed to fix on the torch
-TRAIN = True #if true train, esle only inf
+TRAIN = True #if true train, else only inf
 x_threshold = 0.35 #limit on cart
 '''
 By defaut the agent in trained and inference test is recorded at the end, results of an inference are recorded to .npz
