@@ -18,7 +18,7 @@ from pendule_pi import PendulePy
 Te=0.05 #sampling time
 EP_STEPS=800 #num steps in an episode
 STEPS_TO_TRAIN=150000
-PWM = 255 #PWM command to apply 0-255
+PWM = 25 #PWM command to apply 0-255
 INFERENCE_STEPS = 2000 #steps to test the model
 MANUAL_SEED=0 #seed to fix on the torch
 TRAIN = True #if true train, else only inf
@@ -30,14 +30,14 @@ If the WEIGHTS variable is not None, we try to load the selected weights to the 
 '''
 
 #paths to save monitor, models...
-log_save=f'./weights/SAC50-real/pwm{PWM}'
+log_save=f'./weights/sac50-real/pwm{PWM}'
 Path(log_save).mkdir(parents=True, exist_ok=True)
-WEIGHTS = None#f'./weights/SAC50-real/pwm{PWM}/SAC_rpi.zip'# #SAC_rpi.zip
-REPLAY_BUFFER_WEIGHTS = None#f'./weights/SAC50-real/pwm{PWM}/SAC_rpi_buffer.pkl'  #None
+WEIGHTS = None#f'./weights/sac50-real/pwm{PWM}/sac_rpi.zip'# #sac_rpi.zip
+REPLAY_BUFFER_WEIGHTS = None#f'./weights/sac50-real/pwm{PWM}/sac_rpi_buffer.pkl'  #None
 
 #initialisaiton of a socket and a gym env
 pendulePy = PendulePy(wait=5, host='rpi5') #host:IP_ADRESS
-env = CartPoleZmq(pendulePy=pendulePy, x_threshold=x_threshold, max_pwm = PWM, monitor_filename = log_save+'/training_exp_SAC.csv')
+env = CartPoleZmq(pendulePy=pendulePy, discreteActions=False, x_threshold=x_threshold, max_pwm = PWM, monitor_filename = log_save+'/training_exp_sac.csv')
 torch.manual_seed(MANUAL_SEED)
 # evaluation environement may be different from training i.e different reinitialisation
 # envEval = CartPoleZmq(pendulePy=pendulePy,MAX_STEPS_PER_EPISODE=2000)
@@ -48,10 +48,10 @@ if __name__ == '__main__':
         # callbacks
         # Use deterministic actions for evaluation and SAVE the best model
         eval_callback = EvalCustomCallback(env, best_model_save_path=log_save + '/best.zip', log_path=log_save, eval_freq=10000, n_eval_episodes=1, deterministic=True, render=False)
-        callbackSave = SaveOnBestTrainingRewardCallback(log_dir=log_save, monitor_filename = log_save+'/training_exp_SAC.csv')
+        callbackSave = SaveOnBestTrainingRewardCallback(log_dir=log_save, monitor_filename = log_save+'/training_exp_sac.csv')
 
         if WEIGHTS == None:
-            hyperparams = read_hyperparameters('SAC_cartpole_50')
+            hyperparams = read_hyperparameters('sac_cartpole_50')
             model = SAC(env=env, **hyperparams)
 
         else:#transfer learning or inference
@@ -72,15 +72,27 @@ if __name__ == '__main__':
         model.env.MAX_STEPS_PER_EPISODE = INFERENCE_STEPS
         obs = env.reset()
         for i in range(INFERENCE_STEPS):
-            action, _states = model.predict(obs,deterministic=True)
+            action, _states = model.predict(obs, deterministic=True)
             obs, rewards, dones, info = env.step(action)
             if dones:
                 env.reset()
                 print('done reset')
 
+    except:
+        pendulePy.sendCommand(0)
+        if WEIGHTS == None:
+            model.save(f'./weights/sac50-real/pwm{PWM}/sac_rpi.zip')
+            model.save_replay_buffer(f'./weights/sac50-real/pwm{PWM}/sac_rpi_buffer.pkl')
+            plot_results(log_save)
     finally:
         pendulePy.sendCommand(0)
         if WEIGHTS == None:
-            model.save(f'./weights/SAC50-real/pwm{PWM}/SAC_rpi.zip')
-            model.save_replay_buffer(f'./weights/SAC50-real/pwm{PWM}/SAC_rpi_buffer.pkl')
+            model.save(f'./weights/sac50-real/pwm{PWM}/sac_rpi.zip')
+            model.save_replay_buffer(f'./weights/sac50-real/pwm{PWM}/sac_rpi_buffer.pkl')
             plot_results(log_save)
+'''
+import time
+s=time.time()
+pendulePy.sendCommand(-50)
+print(time.time()-time.time())
+'''

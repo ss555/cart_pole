@@ -4,9 +4,11 @@ from env_custom import CartPoleButter
 import time
 from utils import plot
 from matplotlib import pyplot as plt
+import cartpole
 Te = 5e-2
-N=20
-env = CartPoleButter(Te=Te,n=N,integrator='ode',resetMode='experimental')
+N = 1
+env = gym.make('cartpoleSwingD-v0')
+# env = CartPoleButter(Te=Te,n=N,integrator='ode',resetMode='experimental')
 actArr=[0.0]
 timeArr=[0.0]
 env.render()

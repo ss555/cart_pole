@@ -185,7 +185,7 @@ if __name__ == "__main__":
         print(f"    {key}: {value}")
 
     # Write report
-    study.trials_dataframe().to_csv("study_results_a2c_cartpole.csv")
+    study.trials_dataframe().to_csv("study_results_discrete_cartpole.csv")
 
     with open("study.pkl", "wb+") as f:
         pkl.dump(study, f)

@@ -1,6 +1,6 @@
 import sys
 import os
-STEPS_TO_TRAIN=40000
+STEPS_TO_TRAIN=180000
 sys.path.append(os.path.abspath('./'))
 from utils import linear_schedule
 from custom_callbacks import plot_results
@@ -24,6 +24,7 @@ env = CartPoleButter(Te=Te,N_STEPS=EP_STEPS,tensionMax=8.4706,resetMode='random'
 env = Monitor(env, filename=logdir+'basic_simulation_')
 envEvaluation = env
 NORMALISE=False
+
 
 if NORMALISE:
     ## Automatically normalize the input features and reward
