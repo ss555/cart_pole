@@ -5,7 +5,7 @@ from typing import Any, Dict
 import os
 import sys
 
-sys.path.append(os.path.abspath('./'))
+sys.path.append(os.path.abspath('./..'))
 from env_custom import CartPoleButter
 import gym
 import torch
@@ -22,7 +22,7 @@ N_TRIALS = 1000
 N_JOBS = 3
 N_STARTUP_TRIALS = 5
 N_EVALUATIONS = 3
-N_TIMESTEPS = int(9e4)
+N_TIMESTEPS = int(6e4)
 EVAL_FREQ = int(N_TIMESTEPS / N_EVALUATIONS)
 N_EVAL_EPISODES = 1
 TIMEOUT = int(60 * 15)  # 15 minutes
@@ -165,7 +165,7 @@ if __name__ == "__main__":
     study = optuna.create_study(sampler=sampler, pruner=pruner, direction="maximize")
 
     try:
-        study.optimize(objective, n_trials=N_TRIALS, n_jobs=N_JOBS, timeout=TIMEOUT)
+        study.optimize(objective, n_trials=N_TRIALS, n_jobs=N_JOBS)
     except KeyboardInterrupt:
         pass
 
