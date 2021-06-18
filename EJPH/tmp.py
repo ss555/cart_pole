@@ -1,42 +1,66 @@
 import numpy as np
-# import matplotlib as mpl
-#
-# ## agg backend is used to create plot as a .png file
-# mpl.use('agg')
 
-import matplotlib.pyplot as plt
+from moviepy.editor import *
+from moviepy.video.tools.segmenting import findObjects
 
+# WE CREATE THE TEXT THAT IS GOING TO MOVE, WE CENTER IT.
 
-import seaborn as sns
-import matplotlib.pyplot as plt
-import pandas as pd
-import os
-# print(os.getcwd())
-df = pd.read_csv('./EJPH/violin.csv')
+screensize = (720, 460)
+txtClip = TextClip('Cool effect', color='white', font="Amiri-Bold",
+                   kerning=5, fontsize=100)
+cvc = CompositeVideoClip([txtClip.set_pos('center')],
+                         size=screensize)
 
-sns.set(style="whitegrid", palette="pastel", color_codes=True)
-
-f, ax = plt.subplots(figsize=(8, 8))
-
-# Draw a nested violinplot and split the violins for easier comparison
-sns.violinplot(x="feed", y="weight", hue="sex", data=df, split=True, linewidth=2.5,
-               inner="quart", palette={"male": "b", "female": "y"})
-sns.despine(left=True)
+# THE NEXT FOUR FUNCTIONS DEFINE FOUR WAYS OF MOVING THE LETTERS
 
 
+# helper function
+rotMatrix = lambda a: np.array([[np.cos(a), np.sin(a)],
+                                [-np.sin(a), np.cos(a)]])
 
-f.suptitle('Chick weights by feed type', fontsize=18, fontweight='bold')
-ax.set_xlabel("Feed",size = 16,alpha=0.7)
-ax.set_ylabel("Weight (g)",size = 16,alpha=0.7)
-plt.legend(loc='upper left')
-plt.savefig('./EJPH/violin.pdf')
-plt.show()
 
-# N_TRIALS=10
-# THETA_DOT_THRESHOLD=10
-# theta=np.linspace(-np.pi,np.pi,N_TRIALS)
-# theta_dot=np.linspace(-THETA_DOT_THRESHOLD,THETA_DOT_THRESHOLD,N_TRIALS)
-# arr=np.transpose([np.tile(theta, len(theta_dot)), np.repeat(theta_dot, len(theta))])
-# plt.plot(arr[:,0],arr[:,1],'.')
-# plt.savefig('./EJPH/plots/iniSpace.pdf')
-# plt.show()
+def vortex(screenpos, i, nletters):
+    d = lambda t: 1.0 / (0.3 + t ** 8)  # damping
+    a = i * np.pi / nletters  # angle of the movement
+    v = rotMatrix(a).dot([-1, 0])
+    if i % 2: v[1] = -v[1]
+    return lambda t: screenpos + 400 * d(t) * rotMatrix(0.5 * d(t) * a).dot(v)
+
+
+def cascade(screenpos, i, nletters):
+    v = np.array([0, -1])
+    d = lambda t: 1 if t < 0 else abs(np.sinc(t) / (1 + t ** 4))
+    return lambda t: screenpos + v * 400 * d(t - 0.15 * i)
+
+
+def arrive(screenpos, i, nletters):
+    v = np.array([-1, 0])
+    d = lambda t: max(0, 3 - 3 * t)
+    return lambda t: screenpos - 400 * v * d(t - 0.2 * i)
+
+
+def vortexout(screenpos, i, nletters):
+    d = lambda t: max(0, t)  # damping
+    a = i * np.pi / nletters  # angle of the movement
+    v = rotMatrix(a).dot([-1, 0])
+    if i % 2: v[1] = -v[1]
+    return lambda t: screenpos + 400 * d(t - 0.1 * i) * rotMatrix(-0.2 * d(t) * a).dot(v)
+
+letters = findObjects(cvc)  # a list of ImageClips
+
+
+# WE ANIMATE THE LETTERS
+
+def moveLetters(letters, funcpos):
+    return [letter.set_pos(funcpos(letter.screenpos, i, len(letters)))
+            for i, letter in enumerate(letters)]
+
+
+clips = [CompositeVideoClip(moveLetters(letters, funcpos),
+                            size=screensize).subclip(0, 5)
+         for funcpos in [vortex, cascade, arrive, vortexout]]
+
+# WE CONCATENATE EVERYTHING AND WRITE TO A FILE
+
+final_clip = concatenate_videoclips(clips)
+final_clip.write_videofile('../../coolTextEffects.avi', fps=25, codec='mpeg4')
