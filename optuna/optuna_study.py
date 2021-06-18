@@ -21,48 +21,12 @@ from optuna.visualization import plot_optimization_history, plot_param_importanc
 N_TRIALS = 1000
 N_JOBS = 3
 N_STARTUP_TRIALS = 5
-N_EVALUATIONS = 2
-N_TIMESTEPS = int(2e4)
+N_EVALUATIONS = 4
+N_TIMESTEPS = int(8e4)
 EVAL_FREQ = int(N_TIMESTEPS / N_EVALUATIONS)
 N_EVAL_EPISODES = 3
 #TIMEOUT = int(60 * 15)  # 15 minutes in study.optimize
 
-def sample_dqn_params(trial: optuna.Trial) -> Dict[str, Any]:
-    """
-    Sampler for DQN hyperparams.
-
-    :param trial:
-    :return:
-    """
-    gamma = trial.suggest_categorical("gamma", [0.9, 0.95, 0.98, 0.99, 0.995, 0.999, 0.9999])
-    learning_rate = trial.suggest_loguniform("lr", 1e-5, 0.1)
-    batch_size = trial.suggest_categorical("batch_size", [16, 32, 64, 100, 128, 256, 512])
-    buffer_size = trial.suggest_categorical("buffer_size", [int(1e4), int(5e4), int(1e5), int(5e5)])
-    exploration_final_eps = trial.suggest_uniform("exploration_final_eps", 0, 0.2)
-    exploration_fraction = trial.suggest_uniform("exploration_fraction", 0, 0.5)
-    target_update_interval = trial.suggest_categorical("target_update_interval", [1, 1000, 5000, 10000, 15000, 20000])
-    learning_starts = trial.suggest_categorical("learning_starts", [0, 1000, 5000, 10000, 20000])
-
-    train_freq = [1, "episode"]
-    gradient_steps = -1
-
-    net_arch = trial.suggest_categorical("net_arch", ["small", "medium"])
-
-    net_arch = {"small": [128, 128], "medium": [256, 256]}[net_arch]
-
-    return {
-        "gamma": gamma,
-        "learning_rate": learning_rate,
-        "batch_size": batch_size,
-        "buffer_size": buffer_size,
-        "train_freq": train_freq,
-        "gradient_steps": gradient_steps,
-        "exploration_fraction": exploration_fraction,
-        "exploration_final_eps": exploration_final_eps,
-        "target_update_interval": target_update_interval,
-        "learning_starts": learning_starts,
-        "policy_kwargs": dict(net_arch=net_arch),
-    }
 def sample_sac_params(trial: optuna.Trial) -> Dict[str, Any]:
     """
     Sampler for SAC hyperparams.
@@ -156,7 +120,6 @@ def objective(trial: optuna.Trial) -> float:
     kwargs.update(sample_sac_params(trial))
     env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=False, tensionMax=8.4706,
                               resetMode='experimental', sparseReward=False)  # ,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)
-
     # Create the RL model
     model = SAC(**kwargs, env=env)
     # Create env used for evaluation
@@ -206,7 +169,7 @@ if __name__ == "__main__":
     study = optuna.create_study(sampler=sampler, pruner=pruner, direction="maximize")
 
     try:
-        study.optimize(objective, n_trials=N_TRIALS, n_jobs=N_JOBS)
+        study.optimize(objective, n_trials=N_TRIALS, n_jobs=-1)
     except KeyboardInterrupt:
         pass
 
@@ -226,7 +189,7 @@ if __name__ == "__main__":
         print(f"    {key}: {value}")
 
     # Write report
-    study.trials_dataframe().to_csv("study_results_discrete_cartpole.csv")
+    study.trials_dataframe().to_csv("study_results_continous_cartpole.csv")
 
     with open("study.pkl", "wb+") as f:
         pkl.dump(study, f)

@@ -92,9 +92,10 @@ class SaveOnBestTrainingRewardCallback(BaseCallback):
         # self.model.
         if self.check_freq==0:
             try:
-                if self.training_env.envs[0].COUNTER==0:
+                if self.locals['done']==True:
                     self.check_save()
             except:
+
                 print('Define COUNTER of steps in an episode in your environement')
         else:
             if self.n_calls % self.check_freq == 0:
@@ -297,7 +298,7 @@ class EvalThetaDotMetric(EventCallback):
         render: bool = False,
         verbose: int = 1,
         warn: bool = True,
-        THETA_DOT_THRESHOLD : float = 10.0,
+        THETA_DOT_THRESHOLD : float = 0.0,
         N_BINS : int = 10
     ):
         super(EvalThetaDotMetric, self).__init__(callback_on_new_best, verbose=verbose)
@@ -314,9 +315,15 @@ class EvalThetaDotMetric(EventCallback):
         self.evaluations_length = []
         self.evaluations_timesteps = []
         self.THETA_DOT_THRESHOLD = THETA_DOT_THRESHOLD
+        self.THETA_THRESHOLD = -np.pi/18
         self.N_BINS=N_BINS
-        theta = np.linspace(-np.pi, np.pi, self.N_BINS)
-        theta_dot = np.linspace(-self.THETA_DOT_THRESHOLD, self.THETA_DOT_THRESHOLD, self.N_BINS)
+        if THETA_DOT_THRESHOLD != 0:
+            theta_dot = np.linspace(-self.THETA_DOT_THRESHOLD, self.THETA_DOT_THRESHOLD, self.N_BINS)
+        else:
+            theta_dot = [0]
+
+        theta = np.linspace(self.THETA_THRESHOLD, self.THETA_THRESHOLD, self.N_BINS)
+
         self.arrTest = np.transpose([np.tile(theta, len(theta_dot)), np.repeat(theta_dot, len(theta))])
 
     def _init_callback(self) -> None:

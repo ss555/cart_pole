@@ -180,7 +180,7 @@ class CartPoleZmq(gym.Env):
                  MAX_STEPS_PER_EPISODE: int=800,
                  max_pwm=130,
                  discreteActions=True,
-                 x_threshold: float= 0.35,
+                 x_threshold: float= 0.34,
                  Te=0.05,
                  theta_dot_threshold_init:float=13,
                  monitor_filename:str = 'monitor.csv',
@@ -236,6 +236,7 @@ class CartPoleZmq(gym.Env):
             self.counter += 1
             self.pendulum.readState(blocking=True)#wait 1 step 25ms
             self.pendulum.readState(blocking=True)#50ms control
+
             angle=self.pendulum.angle
             costheta = np.cos(angle)
             self.state = [self.pendulum.position, self.pendulum.linvel, costheta,
@@ -282,7 +283,7 @@ class CartPoleZmq(gym.Env):
 
         self.pendulum.readState(blocking=True)
         angle=self.pendulum.angle
-        while np.cos(angle)<0.995 or abs(self.pendulum.angvel)>0.05:
+        while np.cos(angle)<0.995 or abs(self.pendulum.angvel)>0.02:
             time.sleep(5)
             self.pendulum.readState(blocking=True)
             angle = self.pendulum.angle

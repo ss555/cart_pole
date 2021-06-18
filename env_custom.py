@@ -11,6 +11,7 @@ from scipy.integrate import odeint
 from time import time
 import iir_filter
 import json
+from matplotlib import pyplot as plt
 #PWM 180
 [A,B,C,D]=[-21.30359185798466, 1.1088617953891196, -0.902272006611719, -0.03935160774012411]#20ms#(-7.794018686563599, 0.37538450501353504, -0.4891760779740128, -0.002568958116514183)
 wAngular=4.85658326956131
@@ -119,7 +120,7 @@ class CartPoleButter(gym.Env):
         self.seed(seed)
         self.viewer = None
         self.state = None
-        self.steps_beyond_done = None
+        
         self.wAngularIni = wAngular  # 4.488 #T=1.4285, w=
         self.reward = None
         self.resetMode = resetMode
@@ -140,8 +141,8 @@ class CartPoleButter(gym.Env):
         self.THETA_DOT_LIMIT = THETA_DOT_LIMIT
         if self.FILTER:
             self.iirTheta_dot = iir_filter.IIR_filter(signal.butter(4, 0.9, 'lowpass', output='sos'))#2nd param 0.3
-    def seed(self, seed=0):
-        self.np_random, seed = seeding.np_random()
+    def seed(self, seed=5):
+        self.np_random, seed = seeding.np_random(seed)
         return [seed]
     def _calculate_force(self,action):
         f=self.masscart*(self.fa*self.state[1]+self.fb*self.tensionMax*action[0]+self.fc*np.sign(self.state[1])+self.fd)  #PWM 180 : 7.437548494321268
@@ -225,7 +226,7 @@ class CartPoleButter(gym.Env):
             # self.iirX_dot=iir_filter.IIR_filter(signal.butter(4, 0.5, 'lowpass', output='sos'))
             self.iirTheta_dot.reset()
         self.COUNTER=0
-        self.steps_beyond_done = None
+        
         if self.resetMode=='experimental':
             self.state = np.zeros(shape=(5,))
             self.state[0] = xIni
@@ -303,7 +304,7 @@ class CartPoleButter(gym.Env):
         theta = math.atan2(x[3], x[2])
         cartx = x[0] * scale + screen_width / 2.0  # MIDDLE OF CART
         self.carttrans.set_translation(cartx, carty)
-        self.poletrans.set_rotation(theta)#old: +np.pi)
+        self.poletrans.set_rotation(theta + np.pi)
 
         return self.viewer.render(return_rgb_array=mode == 'rgb_array')
 
@@ -313,6 +314,10 @@ class CartPoleButter(gym.Env):
             self.viewer = None
 from env_wrappers import ResultsWriter
 class CartPoleDebug(gym.Env):
+    metadata = {
+        'render.modes': ['human', 'rgb_array'],
+        'video.frames_per_second': 50
+    }
     def __init__(self,
                  Te=0.05,
                  discreteActions=True,
@@ -395,7 +400,7 @@ class CartPoleDebug(gym.Env):
         self.seed(seed)
         self.viewer = None
         self.state = None
-        self.steps_beyond_done = None
+        
         self.wAngularIni = wAngular  # 4.488 #T=1.4285, w=
         self.reward = None
         self.resetMode = resetMode
@@ -419,9 +424,11 @@ class CartPoleDebug(gym.Env):
         self.file_handler.flush()
         # create the csv writer
         self.t_start=time()
+        self.tArray = np.zeros(self.MAX_STEPS_PER_EPISODE)
+
 
     def seed(self, seed=0):
-        self.np_random, seed = seeding.np_random()
+        self.np_random, seed = seeding.np_random(seed)
         return [seed]
     def _calculate_force(self,action):
         f=self.masscart*(self.fa*self.state[1]+self.fb*self.tensionMax*action[0]+self.fc*np.sign(self.state[1])+self.fd)  #PWM 180 : 7.437548494321268
@@ -482,6 +489,9 @@ class CartPoleDebug(gym.Env):
             x_dot = np.random.normal(x_dot, 6e-3*self.Km/self.tau, 1)[0]
             theta = np.random.normal(theta, self.Km, 1)[0]
         self.rewards.append(cost)
+        if self.COUNTER!=1:
+            self.tArray[self.COUNTER-1] = time()-self.t_start#self.tArray[self.COUNTER]-self.tArray[self.COUNTER-1]
+        self.t_start = time()
         if done:
             self.needs_reset = True
             ep_rew = sum(self.rewards)
@@ -508,7 +518,11 @@ class CartPoleDebug(gym.Env):
 
         self.COUNTER=0
         self.rewards = []
-        self.steps_beyond_done = None
+        self.t_start=time()
+        self.tArray = np.zeros(self.MAX_STEPS_PER_EPISODE)
+
+        # plt.plot(self.tArray)
+        # plt.show()
         if self.resetMode=='experimental':
             self.state = np.zeros(shape=(5,))
             self.state[0] = xIni
@@ -653,7 +667,7 @@ class CartPoleDiscreteHistory(gym.Env):
         self.seed(seed)
         self.viewer = None
         self.state = None
-        self.steps_beyond_done = None
+        
         self.tauMec = 0.1  # 05
         self.wAngularIni = wAngular  # 4.488 #T=1.4285, w=
         self.reward = None
@@ -667,7 +681,7 @@ class CartPoleDiscreteHistory(gym.Env):
         self.n=n
         self.Kp=Kp
     def seed(self, seed=0):
-        self.np_random, seed = seeding.np_random()
+        self.np_random, seed = seeding.np_random(seed)
         return [seed]
     def _calculate_force(self,action):
         f=self.masscart*(self.fa*self.state[1]+self.fb*self.tensionMax*action[0]+self.fc*np.sign(self.state[1])+self.fd)  #PWM 180 : 7.437548494321268
@@ -743,7 +757,7 @@ class CartPoleDiscreteHistory(gym.Env):
         return dqdt
     def reset(self, costheta=-1, sintheta=0, xIni=None,x_ini_speed=0.0):
         self.COUNTER=0
-        self.steps_beyond_done = None
+        
         if self.resetMode=='experimental':
             self.state = np.zeros(shape=(5,))
             if xIni!=None:

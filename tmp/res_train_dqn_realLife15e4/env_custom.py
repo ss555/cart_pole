@@ -107,7 +107,7 @@ class CartPoleContinous(gym.Env):
         self.tensionMax=tensionMax
         self.arr=[]
     def seed(self, seed=0):
-        self.np_random, seed = seeding.np_random()
+        self.np_random, seed = seeding.np_random(seed)
         return [seed]
     def _calculate_force(self,action):
         f=self.masscart*(self.fa*self.state[1]+self.fb*self.tensionMax*action+self.fc*np.sign(self.state[1])+self.fd)  #PWM 180 : 7.437548494321268
@@ -296,7 +296,7 @@ class CartPoleDiscrete(gym.Env):
         self.tensionMax=tensionMax
         self.arr=[]
     def seed(self, seed=0):
-        self.np_random, seed = seeding.np_random()
+        self.np_random, seed = seeding.np_random(seed)
         return [seed]
     def _calculate_force(self,action):
         f=self.masscart*(self.fa*self.state[1]+self.fb*self.tensionMax*action[0]+self.fc*np.sign(self.state[1])+self.fd)  #PWM 180 : 7.437548494321268
@@ -489,7 +489,7 @@ class CartPoleDiscrete5(gym.Env):
         self.fc=f_c
         self.tensionMax=8.4706
     def seed(self, seed=0):
-        self.np_random, seed = seeding.np_random()
+        self.np_random, seed = seeding.np_random(seed)
         return [seed]
     def _calculate_force(self,action):
         return self.masscart*(self.fa*self.state[1]+self.fb*self.tensionMax*action[0]+self.fc*np.sign(self.state[1]))
@@ -658,7 +658,7 @@ class CartPoleCosSinTensionD3(gym.Env):
         self.reward = None
         self.randomReset=randomReset
     def seed(self, seed=0):
-        self.np_random, seed = seeding.np_random()
+        self.np_random, seed = seeding.np_random(seed)
         return [seed]
     def gTension(self, u, x_dot=0, uMin=0.805, slope=0.0545): #u in volts, PWM 17.1/255 slope=1/19 m/s/V
         if abs(u)<uMin:
@@ -837,7 +837,7 @@ class CartPoleCosSinTensionD(gym.Env):
         self.wAngular = 4.4#4.488 #T=1.4285, w=
         self.reward = None
     def seed(self, seed=0):
-        self.np_random, seed = seeding.np_random()
+        self.np_random, seed = seeding.np_random(seed)
         return [seed]
     def gTension(self, u, x_dot=0, uMin=0.805, slope=0.0545): #u in volts, PWM 17.1/255 slope=1/19 m/s/V
         if abs(u)<uMin:

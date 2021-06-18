@@ -79,18 +79,16 @@ if EVAL_TENSION_FINAL_PERF:
     # train to generate data
     # inference to test the models
     # rainbow to plot in inference at different timesteps
-    MODE = 'RAINBOW'  # 'INFERENCE' 'RAINBOW'
+    MODE = 'TRAIN'   # 'TRAIN' 'INFERENCE' 'RAINBOW'
     if MODE == 'TRAIN':
         for i, tension in enumerate(TENSION_RANGE):
-            env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension,
-                                 resetMode='experimental', sparseReward=False)
+            env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension, resetMode='experimental', sparseReward=False)
             envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension,
-                                     resetMode='random_theta_thetaDot', sparseReward=False)
+                                     resetMode='experimental', sparseReward=False)
             filename = logdir + f'/tension-perf/tension_sim_{tension}_V_'
             env = Monitor(env, filename=filename)
             model = DQN(env=env, **hyperparams, seed=MANUAL_SEED)
-            eval_callback = EvalThetaDotMetric(envEval, best_model_save_path=filename[:-1], log_path=filename,
-                                               eval_freq=5000, deterministic=True)
+            eval_callback = EvalThetaDotMetric(envEval, best_model_save_path=filename[:-1], log_path=filename, eval_freq=5000, deterministic=True)
             print(f'simulation for {tension} V')
             with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
                 model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
