@@ -42,6 +42,7 @@ STATIC_FRICTION_CART = -0.902272006611719
 STATIC_FRICTION_ARR = np.array([0, 0.1, 1, 10]) * STATIC_FRICTION_CART
 
 # DONE temps d’apprentissage et note en fonction de l’amplitude du controle
+# TENSION_RANGE = [9.4]
 TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]
 
 # DONE temps  d’apprentissage  et  note  en  fonction  du  coefficient  de frottement dynamique
@@ -79,7 +80,7 @@ if EVAL_TENSION_FINAL_PERF:
     # train to generate data
     # inference to test the models
     # rainbow to plot in inference at different timesteps
-    MODE = 'TRAIN'   # 'TRAIN' 'INFERENCE' 'RAINBOW'
+    MODE = 'RAINBOW'   # 'TRAIN' 'INFERENCE' 'RAINBOW'
     if MODE == 'TRAIN':
         for i, tension in enumerate(TENSION_RANGE):
             env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension, resetMode='experimental', sparseReward=False)
@@ -88,7 +89,7 @@ if EVAL_TENSION_FINAL_PERF:
             filename = logdir + f'/tension-perf/tension_sim_{tension}_V_'
             env = Monitor(env, filename=filename)
             model = DQN(env=env, **hyperparams, seed=MANUAL_SEED)
-            eval_callback = EvalThetaDotMetric(envEval, best_model_save_path=filename[:-1], log_path=filename, eval_freq=5000, deterministic=True)
+            eval_callback = EvalThetaDotMetric(envEval, best_model_save_path=filename[:-2], log_path=filename, eval_freq=5000, deterministic=True)
             print(f'simulation for {tension} V')
             with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
                 model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
@@ -136,7 +137,8 @@ if EVAL_TENSION_FINAL_PERF:
         for j, tension in enumerate(TENSION_RANGE):
             env = CartPoleButter(Te=Te, N_STEPS=EP_LENGTH, discreteActions=True, tensionMax=tension,
                                  resetMode='experimental', sparseReward=False)
-            model = DQN.load(logdir + f'/tension-perf/tension_sim_{tension}_V_.zip_2', env=env)
+            model = DQN.load(logdir + f'/tension-perf/tension_sim_{tension}_V_2', env=env)
+            # model = DQN.load(logdir + f'/tension-perf/thetaDot10/tension_sim_{tension}_V_.zip_2', env=env)
             episode_rewards = 0
             obs = env.reset()
             for i in range(EP_LENGTH):
@@ -172,7 +174,7 @@ if EVAL_TENSION_FINAL_PERF:
         plt.fill_between(TENSION_RANGE, scoreArr4, scoreArr3, facecolor=colorArr[3], alpha=0.5)
         plt.plot(TENSION_RANGE, scoreArr5, 'o-y')
         plt.fill_between(TENSION_RANGE, scoreArr5, scoreArr4, facecolor=colorArr[4], alpha=0.5)
-        plt.hlines(1500)
+        plt.hlines(y=2*EP_LENGTH,xmin=min(TENSION_RANGE),xmax=max(TENSION_RANGE),linestyles='--')
         plt.grid()
         plt.xlabel('Tension (V)')
         plt.ylabel('Rewards')

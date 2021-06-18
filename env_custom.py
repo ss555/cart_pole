@@ -229,11 +229,6 @@ class CartPoleButter(gym.Env):
         
         if self.resetMode=='experimental':
             self.state = np.zeros(shape=(5,))
-            self.state[0] = xIni
-            self.state[1] = x_ini_speed
-            self.state[2] = costheta
-            self.state[3] = sintheta
-            self.state[4] = theta_ini_speed
         elif self.resetMode=='goal':
             self.state = np.zeros(shape=(5,))
             self.state[2] = -1
@@ -248,7 +243,7 @@ class CartPoleButter(gym.Env):
             self.state[3] = np.sin(theta)
         elif self.resetMode == 'random_theta_thetaDot':
             theta = self.np_random.uniform(-math.pi/18, math.pi/18)
-            self.state=[xIni, x_ini_speed, np.cos(theta), np.sin(theta),self.np_random.uniform(low=-0.05, high=0.05)]
+            self.state=[xIni, x_ini_speed, np.cos(theta), np.sin(theta), 0.0]
         else:
             print('not defined, choose from experimental/goal/random')
         if self.thetaDotReset is not None:
@@ -256,6 +251,11 @@ class CartPoleButter(gym.Env):
         if self.thetaReset is not None:
             self.state[3] = np.cos(self.thetaReset)
             self.state[4] = np.sin(self.thetaReset)
+        self.state[0] = xIni
+        self.state[1] = x_ini_speed
+        self.state[2] = costheta
+        self.state[3] = sintheta
+        self.state[4] = theta_ini_speed
         # print('reset state:{}'.format(self.state))
         return np.array(self.state)
     def rescale_angle(self,theta):

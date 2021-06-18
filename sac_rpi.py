@@ -18,7 +18,7 @@ from pendule_pi import PendulePy
 Te=0.05 #sampling time
 EP_STEPS=800 #num steps in an episode
 STEPS_TO_TRAIN=150000
-PWM = 25 #PWM command to apply 0-255
+PWM = 255 #PWM command to apply 0-255
 INFERENCE_STEPS = 2000 #steps to test the model
 MANUAL_SEED=0 #seed to fix on the torch
 TRAIN = True #if true train, else only inf
@@ -57,6 +57,7 @@ if __name__ == '__main__':
         else:#transfer learning or inference
             try:
                 model = SAC.load(WEIGHTS, env=env)
+                print(f'starting from weights {WEIGHTS}')
             except:
                 print(f'model not found on {WEIGHTS}')
             model.learning_starts = 0
@@ -68,7 +69,7 @@ if __name__ == '__main__':
             model.load_replay_buffer(REPLAY_BUFFER_WEIGHTS)
         if TRAIN:
             with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
-                model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback, callbackSave])
+                model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
         model.env.MAX_STEPS_PER_EPISODE = INFERENCE_STEPS
         obs = env.reset()
         for i in range(INFERENCE_STEPS):

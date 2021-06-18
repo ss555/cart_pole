@@ -16,6 +16,9 @@ from custom_callbacks import EvalCustomCallback
 import pandas as pd
 from matplotlib import pyplot as plt
 from time import time
+# sns.set_context("paper")
+# sns.set_style("whitegrid")
+
 start_time=time()
 TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]
 Te=0.05
@@ -24,14 +27,15 @@ scoreArr=np.zeros_like(TENSION_RANGE)
 stdArr=np.zeros_like(TENSION_RANGE)
 episodeArr=[]
 for i, tension in enumerate(TENSION_RANGE):
-    env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension,
-                         resetMode='random_theta_thetaDot', sparseReward=False)
-    model = DQN.load(f'./EJPH/tension-perf/tension_sim_{tension}_V_.zip_2', env=env)
+    env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension, resetMode='experimental', sparseReward=False)
+    # env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension, resetMode='random_theta_thetaDot', sparseReward=False)
+    # model = DQN.load(f'./EJPH/tension-perf/thetaDot10/tension_sim_{tension}_V_.zip_2', env=env)
+    model = DQN.load(f'./EJPH/tension-perf/tension_sim_{tension}_V_2', env=env)
     # model = DQN.load(f'./EJPH/tension-perf/tension-perf{tension}', env=env)
     # episode_rewards, episode_lengths = evaluate_policy_episodes(env=env,model=model,n_eval_episodes=100,episode_steps=EP_STEPS)
     THETA_DOT_THRESHOLD=0
     N_TRIALS=10
-    THETA_THRESHOLD = 0#np.pi/18
+    THETA_THRESHOLD = np.pi/18
 
     if THETA_DOT_THRESHOLD!=0:
         theta_dot = np.linspace(-THETA_DOT_THRESHOLD, THETA_DOT_THRESHOLD, N_TRIALS)
@@ -66,19 +70,23 @@ for i, tension in enumerate(TENSION_RANGE):
 plt.plot(arrTest[:,0], arrTest[:,1], '.')
 plt.show()
 c='red'
-# sns.set_context("paper")
-# sns.set_style("whitegrid")
+
 plt.boxplot(episodeArr, positions=TENSION_RANGE, patch_artist=True)
 plt.grid()
 # sns.boxplot(x=TENSION_RANGE,data=episodeArr)
 plt.ylabel('mean reward per step')
 plt.xlabel('Applied DC motor Tension (V)')
-plt.title('Effect of varying tension on greedy policy reward (Θ,Θ_dot)=(0,0)',fontsize = 9)
-# plt.title('boxplot distribution of the "greedy" policy reward depending on the tension')
-plt.savefig('boxplot-control.pdf')
+if THETA_THRESHOLD==0:
+    plt.title('Effect of varying tension on greedy policy reward (Θ,Θ_dot)=(0,0)',fontsize = 9)
+    plt.savefig('./EJPH/plots/boxplot-control.pdf')
+else:
+    plt.title('Effect of varying tension on greedy policy reward (Θ,Θ_dot)=(-10°:10°,0)',fontsize = 9)
+    plt.savefig('./EJPH/plots/boxplot-control10.pdf')
 plt.show()
 
-VIOLIN_PLOT =False
+
+TENSION_STD = False
+VIOLIN_PLOT =True
 if VIOLIN_PLOT:
     sns.violinplot(x='Voltage',y='Reward per step', data = episodeArr, scale_hue=True, positions=TENSION_RANGE, linewidth=0.5, bw=10, trim=True, inner="quart")
     plt.savefig('./EJPH/v.pdf')
@@ -95,16 +103,16 @@ if VIOLIN_PLOT:
     plt.savefig('./EJPH/v2.pdf')
     plt.show()
 
-# sns.violinplot(datasetArray = episodeArr, positions = TENSION_RANGE)
-# plt.show()
-plt.plot(episodeArr,TENSION_RANGE)
-plt.show()
+if TENSION_STD:
 
-tensionMax = np.array(TENSION_RANGE)
-plt.plot(tensionMax, scoreArr, 'ro-')
-plt.fill_between(tensionMax, scoreArr + stdArr, scoreArr - stdArr, facecolor='red', alpha=0.5)
-plt.xlabel('Tension (V)')
-plt.ylabel('Rewards')
-plt.title('Effect of the applied tension on the "greedy policy" reward')
-plt.savefig('./EJPH/plots/episode_rew_10000eps')
-plt.show()
+    plt.plot(episodeArr,TENSION_RANGE)
+    plt.show()
+
+    tensionMax = np.array(TENSION_RANGE)
+    plt.plot(tensionMax, scoreArr, 'ro-')
+    plt.fill_between(tensionMax, scoreArr + stdArr, scoreArr - stdArr, facecolor='red', alpha=0.5)
+    plt.xlabel('Tension (V)')
+    plt.ylabel('Rewards')
+    plt.title('Effect of the applied tension on the "greedy policy" reward')
+    plt.savefig('./EJPH/plots/episode_rew_10000eps')
+    plt.show()
