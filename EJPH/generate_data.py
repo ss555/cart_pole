@@ -170,7 +170,7 @@ if EVAL_TENSION_FINAL_PERF:
         plt.fill_between(TENSION_RANGE, scoreArr2, scoreArr1, facecolor='blue', alpha=0.5)
         plt.plot(TENSION_RANGE, scoreArr3, 'o-g')
         plt.fill_between(TENSION_RANGE, scoreArr3, scoreArr2, facecolor='green', alpha=0.5)
-        plt.plot(TENSION_RANGE, scoreArr4, 'o-c')`
+        plt.plot(TENSION_RANGE, scoreArr4, 'o-c')
         plt.fill_between(TENSION_RANGE, scoreArr4, scoreArr3, facecolor=colorArr[3], alpha=0.5)
         plt.plot(TENSION_RANGE, scoreArr5, 'o-y')
         plt.fill_between(TENSION_RANGE, scoreArr5, scoreArr4, facecolor=colorArr[4], alpha=0.5)
