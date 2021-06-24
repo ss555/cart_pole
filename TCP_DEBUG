@@ -1,0 +1,12 @@
+19:43:51,627 root INFO connecting
+19:43:52,838 root INFO reset
+19:44:01,300 root INFO reset
+19:44:11,604 root ERROR Fatal error in main loop
+Traceback (most recent call last):
+  File "tcp_env_interfaceContinous.py", line 192, in <module>
+    reset()
+  File "tcp_env_interfaceContinous.py", line 170, in reset
+    time.sleep(0.01)
+KeyboardInterrupt
+19:44:11,606 root INFO smth went wrong
+19:44:11,606 root INFO time passed: 19.98111605644226

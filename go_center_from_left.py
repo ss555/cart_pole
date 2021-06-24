@@ -92,7 +92,7 @@ if __name__ == "__main__":
 		info('posChariot initiale: {}'.format(posChariot))
 		pi.write(16,1); #1-right 0-left
 		lock.acquire()
-		pi.set_PWM_dutycycle(24,  50)
+		pi.set_PWM_dutycycle(24,  60)
 		lock.release() 
 		while 1:
 			time.sleep(0.01)
@@ -102,8 +102,7 @@ if __name__ == "__main__":
 			PWM_magnitude = 180			
 		#time.sleep(20)
 		pi.write(16,1);
-		pi.set_PWM_dutycycle(24,  0)
-		
+		pi.set_PWM_dutycycle(24,  0)		
 	finally:
 		info('smth went wrong')
 		# en cas de CTRL+C ou ERREUR dans le programme mise a zero Pmoteur

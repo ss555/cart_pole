@@ -159,7 +159,7 @@ def reset():
 	info('reset')
 	data_state = getState()
 	x=data_state[0]
-	reset_time_start=time.time()	
+		
 	if x > 0:
 		pi.write(16,1); #1-right 0-left
 		lock.acquire()
@@ -181,6 +181,7 @@ def reset():
 	done=0
 	print(reset_counter)
 	if reset_counter>1:
+		reset_time_start=time.time()
 		print('restarting in init values')	
 		while time.time()-reset_time_start<RESET_TIME:
 			time.sleep(0.01)

@@ -40,8 +40,8 @@ def cbf(gpio, level, tick):
 	pi.stop()
 	info("capteur fin course")
 	lock.release()	
-pi.set_glitch_filter(17, 0)
-pi.set_glitch_filter(18, 0)
+pi.set_glitch_filter(17, 10)
+pi.set_glitch_filter(18, 10)
 pi.set_glitch_filter(20, 0)
 pi.set_glitch_filter(21, 0)
 
@@ -53,12 +53,11 @@ def applyForce(PWM):
 posChariot = 0
 def callbackChariot(way):
 	global posChariot
-	posChariot += way*0.00006671695598673524
-#info("pos chariot={}".format(posChariot))
+	posChariot += way*1.667923899668381e-05
 if __name__ == "__main__":
 	cb1 = pi.callback(17, pigpio.FALLING_EDGE, cbf)
 	cb2 = pi.callback(18, pigpio.FALLING_EDGE, cbf)
-	decoderChariot = decoder(pi, 20, 21, callbackChariot) #chariot
+	decoderChariot = decoder_quadrature(pi, 20, 21, callbackChariot) #chariot
 	tension=[]
 	position=[]
 	times=[]
@@ -74,7 +73,7 @@ if __name__ == "__main__":
 		PWM=50
 		pi.write(16,0); #1-right 0-left
 		start_time=time.time()
-		while PWM<190:
+		while PWM<256:
 			applyForce(PWM)
 			info("puissance={}".format(PWM))
 			info("pos chariot={}".format(posChariot))
