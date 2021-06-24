@@ -16,3 +16,11 @@ register(
     reward_threshold=10000.0,
     nondeterministic = True,
 )
+
+register(
+    id='CartPoleImageC-v0',
+    entry_point='cartpole.envs:CartPoleContinousImage',
+    reward_threshold=10000.0,
+    nondeterministic = True,
+)
+

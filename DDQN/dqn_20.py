@@ -38,8 +38,7 @@ else:
 
 #callbacks
 # Use deterministic actions for evaluation and SAVE the best model
-eval_callback = EvalCustomCallback(envEvaluation, best_model_save_path='./logs/',log_path=logdir, eval_freq=15000, n_eval_episodes=30,
-							 deterministic=True, render=False)
+eval_callback = EvalCustomCallback(envEvaluation, best_model_save_path='./logs/',log_path=logdir, eval_freq=15000, n_eval_episodes=30, deterministic=True, render=False)
 callbackSave = SaveOnBestTrainingRewardCallback(check_freq=1000, log_dir=logdir)
 
 # from parameters import dqn_sim50

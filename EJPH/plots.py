@@ -157,3 +157,4 @@ if PLOT_EVAL_REWARD:
     plt.show()
 
 
+#TODO subplot: apprentissage, inference, boxplot

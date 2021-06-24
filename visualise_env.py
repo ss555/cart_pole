@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 import cartpole
 Te = 5e-2
 N = 1
-env = gym.make('cartpoleSwingD-v0')
+env = gym.make('CartPoleImageC-v0')
 # env = CartPoleButter(Te=Te,n=N,integrator='ode',resetMode='experimental')
 actArr=[0.0]
 timeArr=[0.0]
@@ -56,7 +56,7 @@ elif mode=='iniSpeed':
             print('reset: '+str(time.time()-start_time))
             env.reset()
             break
-elif mode=='oscillate':
+elif mode == 'oscillate':
     obsArr = [env.reset()]
     # action=[100/180]
     action=[1]

@@ -14,6 +14,8 @@ import argparse
 from utils import read_hyperparameters
 from pathlib import Path
 from pendule_pi import PendulePy
+from stable_baselines3.common.callbacks import CheckpointCallback
+
 #Simulation parameters
 Te=0.05 #sampling time
 EP_STEPS=800 #num steps in an episode
@@ -23,6 +25,7 @@ INFERENCE_STEPS = 2000 #steps to test the model
 MANUAL_SEED=0 #seed to fix on the torch
 TRAIN = True #if true train, else only inf
 x_threshold = 0.35 #limit on cart
+MANUAL_SEED = 5
 '''
 By defaut the agent in trained and inference test is recorded at the end, results of an inference are recorded to .npz
 If the WEIGHTS variable is not None, we try to load the selected weights to the model.
@@ -32,7 +35,7 @@ If the WEIGHTS variable is not None, we try to load the selected weights to the 
 #paths to save monitor, models...
 log_save=f'./weights/DQN50-real/pwm{PWM}'
 Path(log_save).mkdir(parents=True, exist_ok=True)
-WEIGHTS = f'./weights/dqn50-real/pwm{PWM}/dqn_rpi.zip'#None #dqn_rpi.zip
+WEIGHTS = None#f'./weights/dqn50-real/pwm{PWM}/dqn_rpi.zip'#None #dqn_rpi.zip
 REPLAY_BUFFER_WEIGHTS = f'./weights/dqn50-real/pwm{PWM}/dqn_rpi_buffer.pkl'  #None
 
 #initialisaiton of a socket and a gym env
@@ -47,27 +50,27 @@ if __name__ == '__main__':
     try:
         # callbacks
         # Use deterministic actions for evaluation and SAVE the best model
-        eval_callback = EvalCustomCallback(env, best_model_save_path=log_save + '/best.zip', log_path=log_save, eval_freq=10000, n_eval_episodes=1, deterministic=True, render=False)
-        callbackSave = SaveOnBestTrainingRewardCallback(log_dir=log_save, monitor_filename = log_save+'/training_exp_dqn.csv')
-
+        #eval_callback = EvalCustomCallback(env, best_model_save_path=log_save + '/best.zip', log_path=log_save, eval_freq=10000, n_eval_episodes=1, deterministic=True, render=False)
+        #callbackSave = SaveOnBestTrainingRewardCallback(log_dir=log_save, monitor_filename = log_save+'/training_exp_dqn.csv')
+        checkpoint = CheckpointCallback(save_freq=10000, save_path=log_save)
         if WEIGHTS == None:
             hyperparams = read_hyperparameters('dqn_cartpole_50')
             model = DQN(env=env, **hyperparams)
 
         else:#transfer learning or inference
             try:
-                model = DQN.load(WEIGHTS, env=env)
+                model = DQN.load(WEIGHTS, env=env, seed=MANUAL_SEED)
             except:
                 print(f'model not found on {WEIGHTS}')
             model.learning_starts = 0
             model.env.MAX_STEPS_PER_EPISODE = EP_STEPS
             model.exploration_final_eps = 0.0
             model.exploration_initial_eps = 0.0
-        if REPLAY_BUFFER_WEIGHTS is not None and WEIGHTS is not None:
-            model.load_replay_buffer(REPLAY_BUFFER_WEIGHTS)
+            if REPLAY_BUFFER_WEIGHTS is not None and WEIGHTS is not None:
+                model.load_replay_buffer(REPLAY_BUFFER_WEIGHTS)
         if TRAIN:
             with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
-                model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback, callbackSave])
+                model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, checkpoint])
         model.env.MAX_STEPS_PER_EPISODE = INFERENCE_STEPS
         obs = env.reset()
         for i in range(INFERENCE_STEPS):

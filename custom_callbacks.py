@@ -265,7 +265,7 @@ class EvalCustomCallback(EventCallback):
                 if self.callback is not None:
                     return self._on_event()
                 if mean_reward > self.stop_training_reward_threshold:
-                    self.model._total_timesteps=self.s
+                    self.model._total_timesteps=1e7#end
 
         return True
 

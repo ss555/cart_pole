@@ -280,7 +280,6 @@ class CartPoleZmq(gym.Env):
                 self.pendulum.readState(blocking=True)
 
         self.pendulum.sendCommand(0)
-
         self.pendulum.readState(blocking=True)
         angle=self.pendulum.angle
         while np.cos(angle)<0.995 or abs(self.pendulum.angvel)>0.02:

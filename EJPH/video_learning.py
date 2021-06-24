@@ -19,12 +19,15 @@ import argparse
 from utils import read_hyperparameters
 from pathlib import Path
 from gym.wrappers.monitoring.video_recorder import VideoRecorder
+from stable_baselines3.common.callbacks import CheckpointCallback
 # os.system("Xvfb :1 -screen 0 1024x768x24 &")
 # os.environ['DISPLAY'] = ':1'
 
-def play(env, model, steps: int = 50, deterministic: bool =True, video_path:str='./logs/video/dqn.mp4'):
+def play(eval_env_id, model, steps: int = 50, deterministic: bool =True, video_path:str='./logs/video/dqn.mp4'):
     num_episodes = 0
     video_recorder = None
+    env0 = gym.make(eval_env_id)
+    env = DummyVecEnv([lambda: env0])
     video_recorder = VideoRecorder(
         env, video_path, enabled=video_path is not None)
     obs = env.reset()
@@ -41,37 +44,28 @@ def play(env, model, steps: int = 50, deterministic: bool =True, video_path:str=
         video_recorder.close()
         video_recorder.enabled = False
 
-def record_video(eval_env, model, video_length=500, prefix='dqn', video_folder='./logs/video'):
-  """
-  :param env_id: (str)
-  :param model: (RL model)
-  :param video_length: (int)
-  :param prefix: (str)
-  :param video_folder: (str)
-  """
-    # Start the video at step=0 and record 500 steps
-  eval_env = VecVideoRecorder(eval_env, video_folder=video_folder, record_video_trigger=lambda step: step == 0, video_length=video_length, name_prefix=prefix)
+#TODO CSI 15 minutes : resultats 1er annee: 2 juillet
 
-  obs = eval_env.reset()
-  for _ in range(video_length):
-    action = [1]
-    # action, _ = model.predict(obs)
-    obs, _, _, _ = eval_env.step(action)
-
-  # Close the video recorder
-  eval_env.close()
 
 if __name__=='__main__':
-    EP_STEPS = 100
+    EP_STEPS = 10
     path_weights = './weights/dqn50-sim/best_model.zip'
     model = DQN.load(path_weights)
     Te = 0.05
-    eval_env = CartPoleButter(Te=Te, x_threshold=0.35, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706,
-                         resetMode='experimental', sparseReward=False, Km=0.0,
-                         n=1)  # ,integrator='ode')#,integrator='rk4')
+    eval_env = DummyVecEnv([lambda: gym.make('cartpoleSwingD-v0')])
+    num_steps = 6e4
+    prefix = 'dqn-learn'
+    video_folder = './logs/video'
+    # record_video_learning(eval_env, model, video_length=EP_STEPS, video_folder='./logs/video')
+    os.makedirs(video_folder,exist_ok=True)
+    # # Start the video at step=0 and record 500 steps
+    eval_env = VecVideoRecorder(eval_env, video_folder=video_folder, record_video_trigger=lambda step: step == 0, video_length=num_steps, name_prefix=prefix)
+    model.env = eval_env
+    checkpoint = CheckpointCallback(save_freq=10000, save_path=video_folder)
+    with ProgressBarManager(num_steps) as cus_callback:
+        model.learn(total_timesteps=num_steps, callback=[cus_callback, checkpoint])
+    # Close the video recorder
+    eval_env.close()
 
-    # eval_env = DummyVecEnv([lambda: gym.make('CartPole-v1')])
-    env0 = gym.make('cartpoleSwingD-v0')
-    eval_env = DummyVecEnv([lambda: env0])
-    # record_video(eval_env, model, video_length=EP_STEPS, video_folder='./logs/video')
-    play(eval_env, model, video_path='./logs/video/dqn_model.mp4')
+
+    # play(eval_env_id='cartpoleSwingD-v0', model=model, video_path='./logs/video/dqn_model.mp4')

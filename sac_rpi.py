@@ -23,6 +23,7 @@ INFERENCE_STEPS = 2000 #steps to test the model
 MANUAL_SEED=0 #seed to fix on the torch
 TRAIN = True #if true train, else only inf
 x_threshold = 0.35 #limit on cart
+MANUAL_SEED = 5
 '''
 By defaut the agent in trained and inference test is recorded at the end, results of an inference are recorded to .npz
 If the WEIGHTS variable is not None, we try to load the selected weights to the model.
@@ -56,7 +57,7 @@ if __name__ == '__main__':
 
         else:#transfer learning or inference
             try:
-                model = SAC.load(WEIGHTS, env=env)
+                model = SAC.load(WEIGHTS, env=env, seed=MANUAL_SEED)
                 print(f'starting from weights {WEIGHTS}')
             except:
                 print(f'model not found on {WEIGHTS}')

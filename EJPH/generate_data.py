@@ -16,9 +16,9 @@ from env_custom import CartPoleButter
 from utils import read_hyperparameters
 from pathlib import Path
 from custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
-from custom_callbacks import EvalCustomCallback, EvalThetaDotMetric
-from matplotlib import pyplot as plt
-
+from custom_callbacks import EvalCustomCallback, EvalThetaDotMetric, moving_average
+from matplotlib import rcParams, pyplot as plt
+from bokeh.palettes import d3
 STEPS_TO_TRAIN = 100000
 EP_STEPS = 800
 Te = 0.05
@@ -44,13 +44,22 @@ STATIC_FRICTION_ARR = np.array([0, 0.1, 1, 10]) * STATIC_FRICTION_CART
 # DONE temps d’apprentissage et note en fonction de l’amplitude du controle
 # TENSION_RANGE = [9.4]
 TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]
-
+colorArr = ['red', 'blue', 'green', 'cyan', 'yellow', 'tan', 'navy', 'black']
 # DONE temps  d’apprentissage  et  note  en  fonction  du  coefficient  de frottement dynamique
 DYNAMIC_FRICTION_PENDULUM = 0.11963736650935591
 DYNAMIC_FRICTION_ARR = np.array([0, 0.1, 1, 10]) * DYNAMIC_FRICTION_PENDULUM
 
 # DONE encoder noise
 NOISE_TABLE = np.array([0, 0.01, 0.05, 0.1, 0.15, 0.5, 1, 5, 10]) * np.pi / 180
+
+#plot params
+plt.rcParams['font.family'] = "serif"
+plt.rcParams['font.serif'] = 'Georgia'
+plt.rcParams['font.size'] = 18
+plt.rcParams['mathtext.fontset'] = 'stix'
+plt.rcParams["figure.dpi"] = 100
+
+colorPalette = d3['Category20'][8]
 
 if qLearningVsDQN:
     # DONE figure:  note as a function of steps.  3 curves:  1 DQN, 1 Q-learning with learning, 1Q - learning without learning
@@ -73,6 +82,7 @@ sns.set_style("whitegrid")
 # DONE graphique la fonction de recompense qui depends de la tension a 40000 pas
 # DONE valeur de MAX recompense en fonction de tension
 if EVAL_TENSION_FINAL_PERF:
+
     Path('./EJPH/tension-perf').mkdir(parents=True, exist_ok=True)
     filenames = []
     scoreArr = np.zeros_like(TENSION_RANGE)
@@ -80,7 +90,7 @@ if EVAL_TENSION_FINAL_PERF:
     # train to generate data
     # inference to test the models
     # rainbow to plot in inference at different timesteps
-    MODE = 'RAINBOW'   # 'TRAIN' 'INFERENCE' 'RAINBOW'
+    MODE = 'INFERENCE'   # 'TRAIN' 'INFERENCE' 'RAINBOW'
     if MODE == 'TRAIN':
         for i, tension in enumerate(TENSION_RANGE):
             env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension, resetMode='experimental', sparseReward=False)
@@ -95,35 +105,59 @@ if EVAL_TENSION_FINAL_PERF:
                 model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
             # scoreArr[i] = eval_callback.best_mean_reward # eval_callback.evaluations_results
     elif MODE == 'INFERENCE':
+        PLOT_EPISODE_REWARD = True
         for i, tension in enumerate(TENSION_RANGE):
-            env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension,
-                                 resetMode='random_theta_thetaDot', sparseReward=False)
-            model = DQN.load(logdir + f'/tension-perf/tension_sim_{tension}_V_.zip_2', env=env)
-            episode_rewards, episode_lengths = evaluate_policy(
-                model,
-                env,
-                n_eval_episodes=10000,
-                deterministic=True,
-                return_episode_rewards=True,
-            )
-            scoreArr[i] = np.mean(episode_rewards)
-            stdArr[i] = np.std(episode_rewards)
-            print('done')
+            if PLOT_EPISODE_REWARD:
+                env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension,
+                                     resetMode='random_theta_thetaDot', sparseReward=False)
+                model = DQN.load(logdir + f'/tension-perf/tension_sim_{tension}_V_2', env=env)
+                theta = 0#np.pi/18
+                cosThetaIni = np.cos(theta)
+                sinThetaIni = np.sin(theta)
+                rewArr = []
+                obs = env.reset(costheta=cosThetaIni, sintheta=sinThetaIni)
+                for j in range(EP_STEPS):
+                    act,_ = model.predict(obs)
+                    obs, rew, done, _ = env.step(act)
+                    rewArr.append(rew)
+                    if done:
+                        print('ended episode')
 
-        tensionMax = np.array(TENSION_RANGE)
-        plt.plot(tensionMax, scoreArr, 'ro-')
-        plt.fill_between(tensionMax, scoreArr + stdArr, scoreArr - stdArr, facecolor='red', alpha=0.5)
-        plt.xlabel('Tension (V)')
-        plt.ylabel('Rewards')
-        plt.title('Effect of the applied tension on the "greedy policy" reward')
-        plt.savefig('./EJPH/plots/episode_rew_10000eps')
-        plt.show()
-        np.savez(
-            './EJPH/plots/tension-perf10000ep',
-            tensionRange=tensionMax,
-            results=scoreArr,
-            resultsStd=stdArr
-        )
+                plt.plot(moving_average(rewArr,20), color = colorPalette[i])
+            else:
+                episode_rewards, episode_lengths = evaluate_policy(
+                    model,
+                    env,
+                    n_eval_episodes=100,
+                    deterministic=True,
+                    return_episode_rewards=True,
+                )
+                scoreArr[i] = np.mean(episode_rewards)
+                stdArr[i] = np.std(episode_rewards)
+                print('done')
+        if PLOT_EPISODE_REWARD:
+            plt.legend(TENSION_RANGE,loc='right')
+            plt.xlabel('timesteps')
+            plt.ylabel('Rewards')
+            plt.title('Effect of the applied tension on the "greedy policy" reward')
+            plt.savefig('./EJPH/plots/episode_rew_10000eps')
+            plt.show()
+        else:
+            tensionMax = np.array(TENSION_RANGE)
+            plt.plot(tensionMax, scoreArr, 'ro-')
+            plt.fill_between(tensionMax, scoreArr + stdArr, scoreArr - stdArr, facecolor='red', alpha=0.5)
+            plt.xlabel('Tension (V)')
+            plt.ylabel('Rewards')
+            plt.title('Effect of the applied tension on the "greedy policy" reward')
+            plt.savefig('./EJPH/plots/episode_rew_10000eps')
+            plt.show()
+            np.savez(
+                './EJPH/plots/tension-perf10000ep',
+                tensionRange=tensionMax,
+                results=scoreArr,
+                resultsStd=stdArr
+            )
+        print('done inference on voltages')
     elif MODE == 'RAINBOW':
         print('plotting in rainbow for different voltages applied')
         EP_LENGTH = 1500
@@ -135,12 +169,13 @@ if EVAL_TENSION_FINAL_PERF:
         p1, p2, p3, p4, p5 = 0.2, 0.4, 0.6, 0.8, 1
 
         for j, tension in enumerate(TENSION_RANGE):
-            env = CartPoleButter(Te=Te, N_STEPS=EP_LENGTH, discreteActions=True, tensionMax=tension,
-                                 resetMode='experimental', sparseReward=False)
+            env = CartPoleButter(Te=Te, N_STEPS=EP_LENGTH, discreteActions=True, tensionMax=tension, resetMode='experimental', sparseReward=False)
             model = DQN.load(logdir + f'/tension-perf/tension_sim_{tension}_V_2', env=env)
             # model = DQN.load(logdir + f'/tension-perf/thetaDot10/tension_sim_{tension}_V_.zip_2', env=env)
             episode_rewards = 0
-            obs = env.reset()
+            # THETA_THRESHOLD = np.pi/18
+            # theta = np.linspace(-THETA_THRESHOLD, THETA_THRESHOLD, N_TRIALS)
+            obs = env.reset(costheta=0.984807753012208,sintheta=-0.17364817766693033)
             for i in range(EP_LENGTH):
                 action, _state = model.predict(obs)
                 obs, cost, done, _ = env.step(action)
@@ -161,15 +196,15 @@ if EVAL_TENSION_FINAL_PERF:
                     break
 
             print('done')
-        colorArr = ['red', 'blue', 'green', 'cyan', 'yellow']
+
 
         fillArr = np.zeros_like(scoreArr1)
         plt.plot(TENSION_RANGE, scoreArr1, 'o-r')
-        plt.fill_between(TENSION_RANGE, scoreArr1, fillArr, facecolor='red', alpha=0.5)
+        plt.fill_between(TENSION_RANGE, scoreArr1, fillArr, facecolor=colorArr[0], alpha=0.5)
         plt.plot(TENSION_RANGE, scoreArr2, 'o-b')
-        plt.fill_between(TENSION_RANGE, scoreArr2, scoreArr1, facecolor='blue', alpha=0.5)
+        plt.fill_between(TENSION_RANGE, scoreArr2, scoreArr1, facecolor=colorArr[1], alpha=0.5)
         plt.plot(TENSION_RANGE, scoreArr3, 'o-g')
-        plt.fill_between(TENSION_RANGE, scoreArr3, scoreArr2, facecolor='green', alpha=0.5)
+        plt.fill_between(TENSION_RANGE, scoreArr3, scoreArr2, facecolor=colorArr[2], alpha=0.5)
         plt.plot(TENSION_RANGE, scoreArr4, 'o-c')
         plt.fill_between(TENSION_RANGE, scoreArr4, scoreArr3, facecolor=colorArr[3], alpha=0.5)
         plt.plot(TENSION_RANGE, scoreArr5, 'o-y')
@@ -185,6 +220,7 @@ if EVAL_TENSION_FINAL_PERF:
                    loc='best')
         plt.savefig('./EJPH/plots/episode_rainbow')
         plt.show()
+    # elif MODE == '':
 
     plot_results(logdir + 'tension-perf', paperMode=True)
 

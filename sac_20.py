@@ -15,6 +15,7 @@ from stable_baselines3.common.noise import NormalActionNoise
 from custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback
 NORMALISE=False
 EP_STEPS = 800#*2
+MANUAL_SEED = 5
 logdir='./logs/sac/'
 # env = CartPoleCosSinTension(Te=0.05)#
 env = CartPoleButter(Te=0.02,discreteActions=False,N_STEPS=EP_STEPS,f_a=-7.794018686563599, f_b=0.37538450501353504, f_c=-0.4891760779740128, f_d=-0.002568958116514183,sparseReward=False,tensionMax=12)#integrator='rk4')#
@@ -69,7 +70,7 @@ if __name__ == '__main__':
 		from utils import read_hyperparameters
 		hyperparams = read_hyperparameters('sac_cartpole_20')
 		# from parameters import dqn_sim50
-		model = SAC(env=env, **hyperparams)
+		model = SAC(env=env, **hyperparams, seed=MANUAL_SEED)
 	try:
 		# model for pendulum starting from bottom
 		with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:

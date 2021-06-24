@@ -1,3 +1,6 @@
 import os
 from cartpole.envs.cartpole_swingup_continous import CartPoleContinous
+from cartpole.envs.cartpole_swingup_continous import CartPoleContinousImage
 from cartpole.envs.cartpole_swingup_discrete import CartPoleDiscrete
+from cartpole.envs.cartpole_swingup_discrete import CartPoleDiscreteImage
+

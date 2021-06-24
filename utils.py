@@ -60,8 +60,11 @@ def read_hyperparameters(name, path="parameters.yml",additional_params=None):
             hyperparams["train_freq"] = tuple(hyperparams["train_freq"])
             print('parameters loaded')
         # Convert to python object if needed
-        if isinstance(hyperparams["policy_kwargs"], str):
-            hyperparams["policy_kwargs"] = eval(hyperparams["policy_kwargs"])
+        try:
+            if isinstance(hyperparams["policy_kwargs"], str):
+                hyperparams["policy_kwargs"] = eval(hyperparams["policy_kwargs"])
+        except:
+            pass
         # Overwrite hyperparams if needed
         # hyperparams.update(self.custom_hyperparams)
     return hyperparams
