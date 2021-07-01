@@ -20,6 +20,7 @@ from utils import read_hyperparameters
 from pathlib import Path
 from gym.wrappers.monitoring.video_recorder import VideoRecorder
 from stable_baselines3.common.callbacks import CheckpointCallback
+
 # os.system("Xvfb :1 -screen 0 1024x768x24 &")
 # os.environ['DISPLAY'] = ':1'
 
@@ -52,7 +53,9 @@ if __name__=='__main__':
     path_weights = './weights/dqn50-sim/best_model.zip'
     model = DQN.load(path_weights)
     Te = 0.05
-    eval_env = DummyVecEnv([lambda: gym.make('cartpoleSwingD-v0')])
+    # env = CartPoleButter()
+    env = gym.make('cartpoleSwingD-v0')
+    eval_env = DummyVecEnv([lambda: env])
     num_steps = 6e4
     prefix = 'dqn-learn'
     video_folder = './logs/video'

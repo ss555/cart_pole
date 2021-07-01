@@ -1,14 +1,15 @@
 
-#TODO bug with long episode
+
 dqn_cartpole_50:
     policy: 'MlpPolicy'
     learning_starts : 0
     #10000
     gamma : 0.995
     learning_rate : 0.0003
-    exploration_final_eps : 0
+    exploration_final_eps : 0.01
+    exploration_initial_eps : 0.2
     #0.17787752200089602
-    exploration_initial_eps : 0.17787752200089602
+    exploration_fraction: 1
     target_update_interval : 1000
     buffer_size : 50000
     train_freq : [1, "episode"]
@@ -17,6 +18,19 @@ dqn_cartpole_50:
     batch_size : 1024
     policy_kwargs : 'dict(net_arch=[256, 256])'
 
+dqn_50:
+    policy: 'MlpPolicy'
+    gamma: 0.98
+    learning_rate: 0.001454525407321179
+    batch_size: 1024
+    buffer_size: 10000
+    exploration_final_eps: 0.1618829266994123
+    exploration_fraction: 0.3118336888288918
+    target_update_interval: 1
+    learning_starts: 1000
+    #Ve: 10.19394294013548
+    train_freq : [1, "episode"]
+    policy_kwargs: 'dict(net_arch=[256, 256])'
 
 sac_cartpole_50:
     policy: 'MlpPolicy'

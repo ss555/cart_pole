@@ -145,6 +145,8 @@ class CartPoleDiscrete(gym.Env):
         self.thetaDotReset = thetaDotReset
         self.thetaReset = thetaReset
         self.THETA_DOT_LIMIT = THETA_DOT_LIMIT
+        self.episodeNum = 0
+        self.total_count = 0
         if self.FILTER:
             self.iirTheta_dot = iir_filter.IIR_filter(signal.butter(4, 0.9, 'lowpass', output='sos'))  # 2nd param 0.3
 
@@ -237,6 +239,8 @@ class CartPoleDiscrete(gym.Env):
         return dqdt
 
     def reset(self, costheta=1, sintheta=0, xIni=0.0, x_ini_speed=0.0, theta_ini_speed=0.0):
+        self.episodeNum+=1
+        self.total_count += self.COUNTER
         if self.FILTER:
             # self.iirX_dot=iir_filter.IIR_filter(signal.butter(4, 0.5, 'lowpass', output='sos'))
             self.iirTheta_dot.reset()
@@ -291,7 +295,11 @@ class CartPoleDiscrete(gym.Env):
 
         if self.viewer is None:
             from gym.envs.classic_control import rendering
+
             self.viewer = rendering.Viewer(screen_width, screen_height)
+            self.track = rendering.Line((0, carty), (screen_width, carty))
+            self.track.set_color(0, 0, 0)
+            self.viewer.add_geom(self.track)
             l, r, t, b = -cartwidth / 2, cartwidth / 2, cartheight / 2, -cartheight / 2
             axleoffset = cartheight / 4.0
             cart = rendering.FilledPolygon([(l, b), (l, t), (r, t), (r, b)])
@@ -310,9 +318,7 @@ class CartPoleDiscrete(gym.Env):
             self.axle.add_attr(self.carttrans)
             self.axle.set_color(.5, .5, .8)
             self.viewer.add_geom(self.axle)
-            self.track = rendering.Line((0, carty), (screen_width, carty))
-            self.track.set_color(0, 0, 0)
-            self.viewer.add_geom(self.track)
+
 
         if self.state is None: return None
 
@@ -321,8 +327,9 @@ class CartPoleDiscrete(gym.Env):
         cartx = x[0] * scale + screen_width / 2.0  # MIDDLE OF CART
         self.carttrans.set_translation(cartx, carty)
         self.poletrans.set_rotation(theta + np.pi)
+        text=f'physical time: {round((self.COUNTER+self.total_count)*self.tau,1)} seconds, episode: {self.episodeNum}'
 
-        return self.viewer.render(return_rgb_array=mode == 'rgb_array')
+        return self.viewer.render(return_rgb_array= mode == 'rgb_array',text_to_show=text)
 
     def close(self):
         if self.viewer:
@@ -421,7 +428,6 @@ class CartPoleDiscreteImage(gym.Env):
         self.seed(seed)
         self.viewer = None
         self.state = None
-
         self.wAngularIni = wAngular  # 4.488 #T=1.4285, w=
         self.reward = None
         self.resetMode = resetMode
@@ -608,6 +614,7 @@ class CartPoleDiscreteImage(gym.Env):
             self.track = rendering.Line((0, carty), (screen_width, carty))
             self.track.set_color(0, 0, 0)
             self.viewer.add_geom(self.track)
+
 
         if self.state is None: return None
 

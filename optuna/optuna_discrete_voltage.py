@@ -5,14 +5,14 @@ from typing import Any, Dict
 import os
 import sys
 
+sys.path.append(os.path.abspath('./..'))
 sys.path.append(os.path.abspath('./'))
 from env_custom import CartPoleButter
 import gym
 import torch
 import torch.nn as nn
-from stable_baselines3 import SAC,DQN
+from stable_baselines3 import DQN
 from stable_baselines3.common.callbacks import EvalCallback
-
 import optuna
 from optuna.pruners import MedianPruner
 from optuna.samplers import TPESampler
@@ -21,57 +21,54 @@ from optuna.visualization import plot_optimization_history, plot_param_importanc
 N_TRIALS = 1000
 N_JOBS = 3
 N_STARTUP_TRIALS = 5
-N_EVALUATIONS = 4
-N_TIMESTEPS = int(8e4)
+N_EVALUATIONS = 3
+N_TIMESTEPS = int(1.5e4)
 EVAL_FREQ = int(N_TIMESTEPS / N_EVALUATIONS)
-N_EVAL_EPISODES = 3
-#TIMEOUT = int(60 * 15)  # 15 minutes in study.optimize
+N_EVAL_EPISODES = 1
+TIMEOUT = int(60 * 15)  # 15 minutes
+Te = 0.05
+EP_STEPS = 800
 
-def sample_sac_params(trial: optuna.Trial) -> Dict[str, Any]:
+
+# def q_learning(trial: optuna.Trial) -> Dict[str,Any]:
+#     gamma = trial.suggest_uniform("gamma",0.8,0.9999)
+#     lr =
+def sample_dqn_params(trial: optuna.Trial) -> Dict[str, Any]:
     """
-    Sampler for SAC hyperparams.
+    Sampler for DQN hyperparams.
+
     :param trial:
     :return:
     """
-    gamma = trial.suggest_categorical("gamma", [0.95, 0.98, 0.99, 0.995, 0.999, 0.9999])
+    gamma = trial.suggest_categorical("gamma", [0.9, 0.95, 0.98, 0.99, 0.995, 0.999, 0.9999])
     learning_rate = trial.suggest_loguniform("lr", 1e-5, 0.1)
-    batch_size = trial.suggest_categorical("batch_size", [16, 32, 64, 128, 256, 512, 1024, 2048])
+    batch_size = trial.suggest_categorical("batch_size", [64, 128, 256, 512, 1024])#16, 32, 64, 100,
     buffer_size = trial.suggest_categorical("buffer_size", [int(1e4), int(5e4), int(1e5), int(5e5)])
-    learning_starts = trial.suggest_categorical("learning_starts", [0, 1000, 10000, 20000])
+    exploration_final_eps = trial.suggest_uniform("exploration_final_eps", 0, 0.2)
+    exploration_fraction = trial.suggest_uniform("exploration_fraction", 0, 0.5)
+    target_update_interval = trial.suggest_categorical("target_update_interval", [1, 1000, 5000, 10000, 1500, 200])
+    learning_starts = trial.suggest_categorical("learning_starts", [0, 1000, 5000, 10000, 20000])
+    Ve = trial.suggest_uniform("Ve", 4.7,12)
     train_freq = (1, "episode")
-    # Polyak coeff
-    tau = trial.suggest_categorical("tau", [0.001, 0.005, 0.01, 0.02, 0.05])
     gradient_steps = -1
-    # ent_coef = trial.suggest_categorical('ent_coef', ['auto', 0.5, 0.1, 0.05, 0.01, 0.0001])
-    ent_coef = "auto"
-    # You can comment that out when not using gSDE
-    log_std_init = trial.suggest_uniform("log_std_init", -4, 1)
-    # NOTE: Add "verybig" to net_arch when tuning HER
-    net_arch = trial.suggest_categorical("net_arch", ["small", "medium", "big"])
-    # activation_fn = trial.suggest_categorical('activation_fn', [nn.Tanh, nn.ReLU, nn.ELU, nn.LeakyReLU])
 
-    net_arch = {
-        "small": [128, 128],
-        "medium": [256, 256],
-        "big": [400, 300],
-        # Uncomment for tuning HER
-        # "verybig": [256, 256, 256],
-    }[net_arch]
+    net_arch = trial.suggest_categorical("net_arch", ["small", "medium"])
 
-    target_entropy = "auto"
+    net_arch = {"small": [128, 128], "medium": [256, 256]}[net_arch]
 
     return {
         "gamma": gamma,
         "learning_rate": learning_rate,
         "batch_size": batch_size,
         "buffer_size": buffer_size,
-        "learning_starts": learning_starts,
         "train_freq": train_freq,
         "gradient_steps": gradient_steps,
-        "ent_coef": ent_coef,
-        "tau": tau,
-        "target_entropy": target_entropy,
-        "policy_kwargs": dict(log_std_init=log_std_init, net_arch=net_arch),
+        "exploration_fraction": exploration_fraction,
+        "exploration_final_eps": exploration_final_eps,
+        "target_update_interval": target_update_interval,
+        "learning_starts": learning_starts,
+        "policy_kwargs": dict(net_arch=net_arch),
+        "Ve" : Ve
     }
 DEFAULT_HYPERPARAMS = {
     "policy": "MlpPolicy"
@@ -83,7 +80,7 @@ class TrialEvalCallback(EvalCallback):
         self,
         eval_env: gym.Env,
         trial: optuna.Trial,
-        n_eval_episodes: int = 5,
+        n_eval_episodes: int = 1,
         eval_freq: int = 10000,
         deterministic: bool = True,
         verbose: int = 0,
@@ -113,17 +110,18 @@ class TrialEvalCallback(EvalCallback):
 
 
 def objective(trial: optuna.Trial) -> float:
-    Te=0.05
-    EP_STEPS=1e5
+
     kwargs = DEFAULT_HYPERPARAMS.copy()
     # Sample hyperparameters
-    kwargs.update(sample_sac_params(trial))
-    env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=False, tensionMax=8.4706,
+
+    kwargs.update(sample_dqn_params(trial))
+    env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=kwargs["Ve"],
                               resetMode='experimental', sparseReward=False)  # ,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)
+    del kwargs["Ve"]
     # Create the RL model
-    model = SAC(**kwargs, env=env)
+    model = DQN(**kwargs, env=env)
     # Create env used for evaluation
-    eval_env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=False, tensionMax=8.4706, resetMode='experimental', sparseReward=False)#,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)
+    eval_env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS*3, discreteActions=True, tensionMax=8.4706, resetMode='experimental', sparseReward=False)#,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)
     # Create the callback that will periodically evaluate
     # and report the performance
     eval_callback = TrialEvalCallback(
@@ -159,7 +157,7 @@ def objective(trial: optuna.Trial) -> float:
 if __name__ == "__main__":
     # Set pytorch num threads to 1 for faster training
     torch.set_num_threads(1)
-'''
+
     sampler = TPESampler(n_startup_trials=N_STARTUP_TRIALS)
     # Do not prune before 1/3 of the max budget is used
     pruner = MedianPruner(
@@ -169,7 +167,7 @@ if __name__ == "__main__":
     study = optuna.create_study(sampler=sampler, pruner=pruner, direction="maximize")
 
     try:
-        study.optimize(objective, n_trials=N_TRIALS, n_jobs=-1)
+        study.optimize(objective, n_trials=N_TRIALS, n_jobs=N_JOBS)
     except KeyboardInterrupt:
         pass
 
@@ -189,25 +187,13 @@ if __name__ == "__main__":
         print(f"    {key}: {value}")
 
     # Write report
-    study.trials_dataframe().to_csv("study_results_continous_cartpole.csv")
+    study.trials_dataframe().to_csv("study_results_discrete_cartpole.csv")
 
     with open("study.pkl", "wb+") as f:
         pkl.dump(study, f)
-    
+
     fig1 = plot_optimization_history(study)
     fig2 = plot_param_importances(study)
-    
+
     fig1.show()
-    fig2.show()'''
-LOAD_PLOT = True
-
-if LOAD_PLOT:
-    with open("./optuna/study.pkl", "rb") as f:
-        study = pkl.load(f)
-
-
-fig1 = plot_optimization_history(study)
-fig2 = plot_param_importances(study)
-
-fig1.show()
-fig2.show()
+    fig2.show()

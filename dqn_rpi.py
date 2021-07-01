@@ -10,7 +10,6 @@ from stable_baselines3 import DQN
 from custom_callbacks import EvalCustomCallback
 from custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
 from tcp_envV2 import CartPoleZmq
-import argparse
 from utils import read_hyperparameters
 from pathlib import Path
 from pendule_pi import PendulePy
@@ -23,7 +22,8 @@ STEPS_TO_TRAIN=150000
 PWM = 150 #PWM command to apply 0-255
 INFERENCE_STEPS = 2000 #steps to test the model
 MANUAL_SEED=0 #seed to fix on the torch
-TRAIN = True #if true train, else only inf
+
+TRAIN = False#True #if true train, else only inf
 x_threshold = 0.35 #limit on cart
 MANUAL_SEED = 5
 '''
@@ -35,8 +35,8 @@ If the WEIGHTS variable is not None, we try to load the selected weights to the 
 #paths to save monitor, models...
 log_save=f'./weights/DQN50-real/pwm{PWM}'
 Path(log_save).mkdir(parents=True, exist_ok=True)
-WEIGHTS = None#f'./weights/dqn50-real/pwm{PWM}/dqn_rpi.zip'#None #dqn_rpi.zip
-REPLAY_BUFFER_WEIGHTS = f'./weights/dqn50-real/pwm{PWM}/dqn_rpi_buffer.pkl'  #None
+WEIGHTS = f'./weights/DQN50-real/pwm{PWM}/rl_model_90000_steps.zip'#None#f'./weights/dqn50-real/pwm{PWM}/dqn_rpi.zip'
+REPLAY_BUFFER_WEIGHTS = None#f'./weights/dqn50-real/pwm{PWM}/dqn_rpi_buffer.pkl'  #None
 
 #initialisaiton of a socket and a gym env
 pendulePy = PendulePy(wait=5, host='rpi5') #host:IP_ADRESS

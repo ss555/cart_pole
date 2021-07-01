@@ -20,10 +20,10 @@ STEPS_TO_TRAIN=90000
 LOAD_MODEL_PATH=None#"./logs/best_model"
 LOAD_BUFFER_PATH=None#"dqn_pi_swingup_bufferN"
 logdir = './logs/'
-env = CartPoleButter(Te=Te, x_threshold = 0.35, N_STEPS=EP_STEPS,discreteActions=True,tensionMax=8.4706,resetMode='experimental',sparseReward=False,Km=0.0,n=1)#,integrator='ode')#,integrator='rk4')
+env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS,discreteActions=True,tensionMax=8.4706,resetMode='experimental',)#,integrator='ode')#,integrator='rk4')
 env = Monitor(env, filename=logdir+'basic_simulation_')
 # env = DummyVecEnv([lambda: env])
-envEvaluation = CartPoleButter(Te=Te,N_STEPS=EP_STEPS,discreteActions=True,tensionMax=8.4706,resetMode='experimental',sparseReward=False,Km=0.0,n=1)#,integrator='ode')#,integrator='rk4')
+envEvaluation = CartPoleButter(Te=Te,N_STEPS=EP_STEPS,discreteActions=True,tensionMax=10.19394294013548,resetMode='experimental')#,integrator='ode')#,integrator='rk4')
 NORMALISE = False
 if NORMALISE:
     ## Automatically normalize the input features and reward
@@ -42,8 +42,8 @@ log_save='./weights/dqn50-sim'
 Path(log_save).mkdir(exist_ok=True)
 #callbacks
 # Use deterministic actions for evaluation and SAVE the best model
-eval_callback = EvalCustomCallback(envEvaluation, best_model_save_path=log_save, log_path=logdir+'/evals', eval_freq=15000, n_eval_episodes=30,deterministic=True, render=False)
-hyperparams=read_hyperparameters('dqn_cartpole_50')
+eval_callback = EvalCustomCallback(envEvaluation, best_model_save_path=log_save, log_path=logdir+'/evals', eval_freq=5000, n_eval_episodes=30,deterministic=True, render=False)
+hyperparams=read_hyperparameters('dqn_50')
 model = DQN(env=env,**hyperparams)
 callbackSave = SaveOnBestTrainingRewardCallback(log_dir=log_save, monitor_filename=logdir+'basic_simulation_monitor.csv')
 

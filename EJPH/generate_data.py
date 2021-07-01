@@ -3,7 +3,6 @@ import os
 import numpy as np
 import seaborn as sns
 import time
-
 sys.path.append(os.path.abspath('./'))
 sys.path.append(os.path.abspath('./..'))
 from utils import linear_schedule, plot
@@ -19,6 +18,7 @@ from custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallbac
 from custom_callbacks import EvalCustomCallback, EvalThetaDotMetric, moving_average
 from matplotlib import rcParams, pyplot as plt
 from bokeh.palettes import d3
+import plotly.express as px
 STEPS_TO_TRAIN = 100000
 EP_STEPS = 800
 Te = 0.05
@@ -33,7 +33,6 @@ RESET_EFFECT = False  # True#False
 EVAL_TENSION_FINAL_PERF = True  # evaluate final PERFORMANCE of a cartpole for different voltages
 PLOT_FINAL_PERFORMANCE_STD = False  # False#
 SEED_TRAIN = False
-
 logdir = './EJPH/'
 hyperparams = read_hyperparameters('dqn_cartpole_50')
 
@@ -75,7 +74,7 @@ if qLearningVsDQN:
     with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
         model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
 
-    # TODO Q_learning
+    # DONE Q_learning
     plot_results(logdir + 'basic')
 sns.set_context("paper")
 sns.set_style("whitegrid")
@@ -105,25 +104,61 @@ if EVAL_TENSION_FINAL_PERF:
                 model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
             # scoreArr[i] = eval_callback.best_mean_reward # eval_callback.evaluations_results
     elif MODE == 'INFERENCE':
+        def calculate_angle(prev_value,cos,sin,count=0):
+            '''
+            :param prev_value:
+            :param cos: cosinus
+            :param sin: sinus
+            :return:
+            '''
+            if prev_value - np.arctan2(sin,cos) > np.pi:
+                count += 1
+                return np.arctan2(sin, cos), count
+            elif np.arctan2(sin,cos) - prev_value > np.pi:
+                count -= 1
+                return np.arctan2(sin, cos), count
+            return np.arctan2(sin, cos), count
         PLOT_EPISODE_REWARD = True
+        _, ax1 = plt.subplots()
+        _, ax2 = plt.subplots()
+        fig = px.scatter()
+        # fig = px.scatter(x=[0], y=[0])
         for i, tension in enumerate(TENSION_RANGE):
+            prev_angle_value = 0.0
+            count_tours = 0
+
             if PLOT_EPISODE_REWARD:
-                env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension,
-                                     resetMode='random_theta_thetaDot', sparseReward=False)
+                # env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension, resetMode='experimental', sparseReward=False)
+                env = CartPoleButter(Te=Te, n=2, integrator='ode', resetMode='experimental')
                 model = DQN.load(logdir + f'/tension-perf/tension_sim_{tension}_V_2', env=env)
-                theta = 0#np.pi/18
+                theta = np.pi/36
                 cosThetaIni = np.cos(theta)
                 sinThetaIni = np.sin(theta)
                 rewArr = []
-                obs = env.reset(costheta=cosThetaIni, sintheta=sinThetaIni)
+                # obs = env.reset(costheta=cosThetaIni, sintheta=sinThetaIni)
+                env.reset()
+                env.render()
+                thetaArr, thetaDotArr, xArr, xDotArr = [], [], [], []
                 for j in range(EP_STEPS):
                     act,_ = model.predict(obs)
                     obs, rew, done, _ = env.step(act)
                     rewArr.append(rew)
+                    if tension==12:
+                        env.render()
+                    angle, count_tours = calculate_angle(prev_angle_value, obs[2], obs[3], count_tours)
+                    prev_angle_value = angle
+                    thetaArr.append(angle+count_tours*np.pi*2)
+                    thetaDotArr.append(obs[4])
+                    xArr.append(obs[0])
+                    xDotArr.append(obs[1])
                     if done:
-                        print('ended episode')
-
-                plt.plot(moving_average(rewArr,20), color = colorPalette[i])
+                        print(f'ended episode {tension} with {count_tours}')
+                        ax1.plot(thetaArr, '.')
+                        fig.add_scatter(x=np.linspace(1,EP_STEPS,EP_STEPS), y=thetaArr, name=f'volt: {tension}')
+                        # ax1.savefig(logdir+'/thetaA.pdf')
+                #TODO theta tensions
+                #TODO time at the training
+                ax2.plot(moving_average(rewArr,20), color = colorPalette[i])
             else:
                 episode_rewards, episode_lengths = evaluate_policy(
                     model,
@@ -136,11 +171,14 @@ if EVAL_TENSION_FINAL_PERF:
                 stdArr[i] = np.std(episode_rewards)
                 print('done')
         if PLOT_EPISODE_REWARD:
-            plt.legend(TENSION_RANGE,loc='right')
+            fig.show()
+            ax1.show()
+            # ax2.show()
+            plt.legend([str(t)+'V' for t in TENSION_RANGE],loc='upper right')
             plt.xlabel('timesteps')
             plt.ylabel('Rewards')
             plt.title('Effect of the applied tension on the "greedy policy" reward')
-            plt.savefig('./EJPH/plots/episode_rew_10000eps')
+            plt.savefig('./EJPH/plots/episode_rew_tension.pdf')
             plt.show()
         else:
             tensionMax = np.array(TENSION_RANGE)
@@ -167,7 +205,6 @@ if EVAL_TENSION_FINAL_PERF:
         scoreArr4 = np.zeros_like(TENSION_RANGE)
         scoreArr5 = np.zeros_like(TENSION_RANGE)
         p1, p2, p3, p4, p5 = 0.2, 0.4, 0.6, 0.8, 1
-
         for j, tension in enumerate(TENSION_RANGE):
             env = CartPoleButter(Te=Te, N_STEPS=EP_LENGTH, discreteActions=True, tensionMax=tension, resetMode='experimental', sparseReward=False)
             model = DQN.load(logdir + f'/tension-perf/tension_sim_{tension}_V_2', env=env)
@@ -190,7 +227,6 @@ if EVAL_TENSION_FINAL_PERF:
                     scoreArr4[j] = episode_rewards
                 elif i == int(EP_LENGTH * p5 - 1):
                     scoreArr5[j] = episode_rewards
-
                 if done:
                     print(f'observations: {obs} and i: {i}')
                     break

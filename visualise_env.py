@@ -7,10 +7,11 @@ from matplotlib import pyplot as plt
 import cartpole
 Te = 5e-2
 N = 1
-env = gym.make('CartPoleImageC-v0')
-# env = CartPoleButter(Te=Te,n=N,integrator='ode',resetMode='experimental')
+# env = gym.make('CartPoleImageC-v0')
+env = CartPoleButter(discreteActions=False)#Te=Te,n=N,integrator='semi-euler',resetMode='experimental')
 actArr=[0.0]
 timeArr=[0.0]
+env.reset(xIni=0)
 env.render()
 start_time=time.time()
 mode='simplePi'
@@ -18,12 +19,12 @@ mode='simplePi'
 # mode='oscillate'
 DISCRETE=type(env.action_space)==gym.spaces.discrete.Discrete
 if mode=='simplePi':
-    obsIni = [env.reset(costheta=0, sintheta=1)]
+    obsIni = [env.reset(costheta=0, sintheta=1,xIni=0)]
     # obsIni=env.reset(costheta=-math.sqrt(2)/2, sintheta=math.sqrt(2)/2)
     print(obsIni)
     # time.sleep(Te/N)
     obsArr = [obsIni]
-    for i in range(1000):
+    for i in range(2000):
         if DISCRETE:
             obs, rewards, dones, _ = env.step(1)#FOR DISCRETE
         else:
@@ -58,9 +59,8 @@ elif mode=='iniSpeed':
             break
 elif mode == 'oscillate':
     obsArr = [env.reset()]
-    # action=[100/180]
-    action=[1]
-    for i in range(1):
+    action=[1.0]
+    for i in range(10):
         for i in range(8):
             # action, _states = model.predict(obs, deterministic=True)
             env.render()

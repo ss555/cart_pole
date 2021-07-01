@@ -15,6 +15,10 @@ def parce_csv(absPath,PLOT=False,fitTensionMin=None,fitTensionMax=None,weightedS
     namesRaw = glob.glob(absPath+'/*.csv')
     namesRaw.sort()
     dt=None
+    if namesRaw==[]:
+        print(f'no files found on {absPath}')
+        raise Exception
+
     for filename in namesRaw:
         # fileData=pd.read_csv(filename)
         fileData=np.genfromtxt(filename, delimiter=',')
@@ -175,7 +179,7 @@ expData,dt,weightedData = parce_csv(absPath,weightedStartRegression=0,weight=200
 # (-19.355136863835682, 0.925594504005501, 0.15323233104506603, -0.19643065915299515)
 
 # weighted_data
-[fA,fB,fC,fD,error] = regression_chariot(weightedData,symmetricTension=False)
+[fA,fB,fC,fD,error] = regression_chariot(weightedData,symmetricTension=True)
 
 plot_experimental_fitted(absPath+'/chariot_iden.csv',fA,fB,fC,fD,applyFiltering=False,Nf = 4,fc=2)
 
