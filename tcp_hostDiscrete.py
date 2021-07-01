@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 #wifi latency aller-retour can go up to 0.1s, alors que par fil: moins de 1ms
 import socket
-HOST = '169.254.161.71'#'c0:3e:ba:6c:9e:eb'#'10.42.0.1'#wifi-hotspot  # The server's hostname or IP address
+HOST = '134.59.131.77'#'c0:3e:ba:6c:9e:eb'#'10.42.0.1'#wifi-hotspot  # The server's hostname or IP address
 PORT = 65432        # The port used by the server
 import math
 import numpy as np
-#rpi
 import time
 from matplotlib import pyplot as plt
 from rotary_encoder import decoder_quadrature
@@ -77,13 +76,13 @@ def getVitChariot():
     
 def getVitPendule():
 	global posPendule, oldPosPendule, Te, done
-	if posPendule-math.pi>oldPosPendule:#discontinuity
-		posPendule-=math.pi*2
-	elif posPendule+math.pi<oldPosPendule:
-		posPendule+=math.pi*2	
+	# if posPendule-math.pi>oldPosPendule:#discontinuity
+	# 	posPendule-=math.pi*2
+	# elif posPendule+math.pi<oldPosPendule:
+	# 	posPendule+=math.pi*2
 	vitPendule = (posPendule-oldPosPendule)/Te
 	oldPosPendule = posPendule
-	if abs(vitPendule)>11 and not done:
+	if abs(vitPendule)>12 and not done:
 		done=1
 	return vitPendule
 
@@ -158,7 +157,6 @@ def reset():
 	info('reset')
 	data_state = getState()
 	x=data_state[0]
-		
 	if x > 0:
 		pi.write(16,1); #1-right 0-left
 		lock.acquire()
@@ -181,10 +179,12 @@ def reset():
 	print(reset_counter)
 	if reset_counter>1:
 		reset_time_start=time.time()
-		print('restarting in init values')	
-		while time.time()-reset_time_start<RESET_TIME:
-			time.sleep(0.01)
-		initVariables()
+		print('restarting in init values')
+		vPendule = getVitPendule()
+		while np.cos(posPendule)<0.99 and vPendule<0.01:
+			time.sleep(0.1)
+			vPendule = getVitPendule()
+		#initVariables()
 	print('initialised variables')
 def sendState():
 	data_state = getState()				
@@ -192,7 +192,6 @@ def sendState():
 	conn.sendall(data_send.encode(FORMAT))
 if __name__ == '__main__':
 	try:
-		
 		cb1 = pi.callback(17, pigpio.FALLING_EDGE, cbf)
 		cb2 = pi.callback(18, pigpio.FALLING_EDGE, cbf)
 		decoderPendule = decoder_quadrature(pi, 19, 26, callbackPendule) #pendule
