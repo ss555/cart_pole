@@ -14,6 +14,7 @@ from env_custom import CartPoleDebug
 import argparse
 from utils import read_hyperparameters
 from pathlib import Path
+
 Te=0.05
 EP_STEPS=800
 STEPS_TO_TRAIN=90000
@@ -41,8 +42,7 @@ log_save='./weights/dqn50-sim'
 Path(log_save).mkdir(exist_ok=True)
 #callbacks
 # Use deterministic actions for evaluation and SAVE the best model
-eval_callback = EvalCustomCallback(envEvaluation, best_model_save_path=log_save,
-							 log_path=logdir+'/evals', eval_freq=15000, n_eval_episodes=30,deterministic=True, render=False)
+eval_callback = EvalCustomCallback(envEvaluation, best_model_save_path=log_save, log_path=logdir+'/evals', eval_freq=15000, n_eval_episodes=30,deterministic=True, render=False)
 callbackSave = SaveOnBestTrainingRewardCallback(check_freq=1000, log_dir=logdir)
 hyperparams=read_hyperparameters('dqn_cartpole_50')
 model = DQN(env=env,**hyperparams)

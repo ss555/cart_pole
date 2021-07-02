@@ -1,6 +1,5 @@
 import sys
 import os
-
 STEPS_TO_TRAIN = 300000
 logdir = './logs/'
 sys.path.append(os.path.abspath('./'))

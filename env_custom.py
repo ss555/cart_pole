@@ -21,8 +21,7 @@ def reward_fnCos(x, costheta, sintheta=0, theta_dot=0, sparse=False, Kx=5):
         if abs(np.arctan2(sintheta,costheta))<np.pi*30/180 and abs(x)<0.2:
             reward += 1
     else:
-        # reward = 1 - costheta - (1-costheta)* Kx * x ** 2
-        reward = 1 - costheta - Kx * x ** 2
+        reward = (1 - costheta - Kx * x ** 2)/2
     return reward
 
 

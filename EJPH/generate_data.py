@@ -65,8 +65,8 @@ if qLearningVsDQN:
     Path('./EJPH/basic').mkdir(parents=True, exist_ok=True)
     env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.47, resetMode='experimental',
                          sparseReward=False, f_a=0, f_c=0, f_d=0,
-                         kPendViscous=0.0)  # ,integrator='ode')#,integrator='rk4')
-    # envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.47, resetMode='random', sparseReward=False,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)#,integrator='ode')#,integrator='rk4')
+                         kPendViscous=0.0)  # ,integrator='semi-euler')#,integrator='rk4')
+    # envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.47, resetMode='random', sparseReward=False,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)#,integrator='semi-euler')#,integrator='rk4')
     env = Monitor(env, filename=logdir + 'basic/basic_simulation_')
     model = DQN(env=env, **hyperparams, seed=MANUAL_SEED)
     eval_callback = EvalCustomCallback(env, eval_freq=5000, n_eval_episodes=1, deterministic=True)
@@ -78,6 +78,9 @@ if qLearningVsDQN:
     plot_results(logdir + 'basic')
 sns.set_context("paper")
 sns.set_style("whitegrid")
+#TODO plot the x, theta component of reward
+#TODO normalise for 1
+
 # DONE graphique la fonction de recompense qui depends de la tension a 40000 pas
 # DONE valeur de MAX recompense en fonction de tension
 if EVAL_TENSION_FINAL_PERF:
@@ -104,6 +107,7 @@ if EVAL_TENSION_FINAL_PERF:
                 model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
             # scoreArr[i] = eval_callback.best_mean_reward # eval_callback.evaluations_results
     elif MODE == 'INFERENCE':
+
         def calculate_angle(prev_value,cos,sin,count=0):
             '''
             :param prev_value:
@@ -126,25 +130,25 @@ if EVAL_TENSION_FINAL_PERF:
         for i, tension in enumerate(TENSION_RANGE):
             prev_angle_value = 0.0
             count_tours = 0
-
+            done = False
             if PLOT_EPISODE_REWARD:
                 # env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension, resetMode='experimental', sparseReward=False)
-                env = CartPoleButter(Te=Te, n=2, integrator='ode', resetMode='experimental')
+                env = CartPoleButter(Te=Te, n=2, integrator='semi-euler', resetMode='experimental')
                 model = DQN.load(logdir + f'/tension-perf/tension_sim_{tension}_V_2', env=env)
                 theta = np.pi/36
                 cosThetaIni = np.cos(theta)
                 sinThetaIni = np.sin(theta)
                 rewArr = []
-                # obs = env.reset(costheta=cosThetaIni, sintheta=sinThetaIni)
-                env.reset()
-                env.render()
+                obs = env.reset(costheta=cosThetaIni, sintheta=sinThetaIni)
+                # env.reset()
+                # env.render()
                 thetaArr, thetaDotArr, xArr, xDotArr = [], [], [], []
                 for j in range(EP_STEPS):
                     act,_ = model.predict(obs)
                     obs, rew, done, _ = env.step(act)
                     rewArr.append(rew)
-                    if tension==12:
-                        env.render()
+                    # if tension==12:
+                    #     env.render()
                     angle, count_tours = calculate_angle(prev_angle_value, obs[2], obs[3], count_tours)
                     prev_angle_value = angle
                     thetaArr.append(angle+count_tours*np.pi*2)
@@ -265,7 +269,7 @@ if STATIC_FRICTION_SIM:
     filenames = []
     for frictionValue in STATIC_FRICTION_ARR:
         env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental',
-                             sparseReward=False, f_c=frictionValue)  # ,integrator='ode')#,integrator='rk4')
+                             sparseReward=False, f_c=frictionValue)  # ,integrator='semi-euler')#,integrator='rk4')
         envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='random_theta_thetaDot',
                                  sparseReward=False, f_c=frictionValue)
         eval_callback = EvalCustomCallback(envEval, log_path=filename, eval_freq=5000, n_eval_episodes=51,
@@ -284,10 +288,10 @@ if DYNAMIC_FRICTION_SIM:
     filenames = []
     for frictionValue in DYNAMIC_FRICTION_ARR:
         env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental',
-                             sparseReward=False, kPendViscous=frictionValue)  # ,integrator='ode')#,integrator='rk4')
+                             sparseReward=False, kPendViscous=frictionValue)  # ,integrator='semi-euler')#,integrator='rk4')
         envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='random_theta_thetaDot',
                                  sparseReward=False,
-                                 kPendViscous=frictionValue)  # ,integrator='ode')#,integrator='rk4')
+                                 kPendViscous=frictionValue)  # ,integrator='semi-euler')#,integrator='rk4')
         filename = logdir + f'dynamic-friction/dynamic_friction_sim_{frictionValue}_'
         # filenames.append(filename)#NOT USED
         env = Monitor(env, filename=filename)
@@ -304,9 +308,9 @@ if encNoiseVarSim:
     filenames = []
     for encNoise in NOISE_TABLE:
         env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental',
-                             sparseReward=False, Km=encNoise)  # ,integrator='ode')#,integrator='rk4')
+                             sparseReward=False, Km=encNoise)  # ,integrator='semi-euler')#,integrator='rk4')
         envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='random_theta_thetaDot',
-                                 sparseReward=False, Km=encNoise)  # ,integrator='ode')#,integrator='rk4')
+                                 sparseReward=False, Km=encNoise)  # ,integrator='semi-euler')#,integrator='rk4')
         filename = logdir + f'encoder-noise/enc_noise_sim_{encNoise}_rad_'
         # filenames.append(filename)#NOT USED
         env = Monitor(env, filename=filename)
@@ -323,7 +327,7 @@ if RESET_EFFECT:
     filenames = []
     filename = logdir + f'experimental-vs-random/experimental'
     env0 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental',
-                          sparseReward=False)  # ,integrator='ode')#,integrator='rk4')
+                          sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
     env = Monitor(env0, filename=filename)
     envEval0 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='random_theta_thetaDot',
                               sparseReward=False)
@@ -349,7 +353,7 @@ if RESET_EFFECT:
 
     filename = logdir + f'experimental-vs-random/iniThetaDot'
     envTheta0 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental',
-                               thetaDotReset=13, sparseReward=False)  # ,integrator='ode')#,integrator='rk4')
+                               thetaDotReset=13, sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
     envTheta = Monitor(envTheta0, filename=filename)
     # with ini speed 3rad/s
     model = DQN(env=envTheta, **hyperparams)
@@ -384,10 +388,10 @@ if SEED_TRAIN:
     Path('./EJPH/seeds').mkdir(parents=True, exist_ok=True)
     for seed in range(10):
         env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode='experimental',
-                             sparseReward=False)  # ,integrator='ode')#,integrator='rk4')
+                             sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
         envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706,
                                  resetMode='random_theta_thetaDot',
-                                 sparseReward=False)  # ,integrator='ode')#,integrator='rk4')
+                                 sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
         filename = logdir + f'seeds/basic_{seed}'
         env = Monitor(env, filename)
         eval_callback = EvalCustomCallback(envEval, log_path=filename, eval_freq=5000, n_eval_episodes=51,

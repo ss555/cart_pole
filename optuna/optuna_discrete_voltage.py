@@ -45,9 +45,9 @@ def sample_dqn_params(trial: optuna.Trial) -> Dict[str, Any]:
     learning_rate = trial.suggest_loguniform("lr", 1e-5, 0.1)
     batch_size = trial.suggest_categorical("batch_size", [64, 128, 256, 512, 1024])#16, 32, 64, 100,
     buffer_size = trial.suggest_categorical("buffer_size", [int(1e4), int(5e4), int(1e5), int(5e5)])
-    exploration_final_eps = trial.suggest_uniform("exploration_final_eps", 0, 0.2)
-    exploration_fraction = trial.suggest_uniform("exploration_fraction", 0, 0.5)
-    target_update_interval = trial.suggest_categorical("target_update_interval", [4,5,10, 16, 50, 100, 1000, 5000])#1,2,
+    exploration_final_eps = 0.05 #trial.suggest_uniform("exploration_final_eps", 0, 0.2)
+    exploration_fraction = 1 #trial.suggest_uniform("exploration_fraction", 0, 0.5)
+    target_update_interval = trial.suggest_categorical("target_update_interval", [4,5,10, 16, 50, 100, 500, 800, 1000, 5000])#1,2,
     learning_starts = trial.suggest_categorical("learning_starts", [0, 1000, 5000, 10000, 20000])
     Ve = trial.suggest_uniform("Ve", 4.7,12)
     train_freq = (1, "episode")
@@ -151,7 +151,7 @@ def objective(trial: optuna.Trial) -> float:
 
     kwargs.update(sample_dqn_params(trial))
     env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=kwargs["Ve"],
-                              resetMode='experimental', sparseReward=False)  # ,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)
+                              resetMode='experimental', sparseReward=False)
     del kwargs["Ve"]
     # Create the RL model
     model = DQN(**kwargs, seed=5, env=env)

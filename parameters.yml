@@ -1,39 +1,38 @@
 #from utils import linear_schedule
 
+
 dqn_cartpole_50:
     policy: 'MlpPolicy'
     learning_starts : 0
-    #10000
     gamma : 0.995
     learning_rate : 0.0003
     exploration_final_eps : 0.01
-    exploration_initial_eps : 0.2
-    #0.17787752200089602
     exploration_fraction: 1
+    exploration_initial_eps : 0.17787752200089602
     target_update_interval : 1000
     buffer_size : 50000
     train_freq : [1, "episode"]
     gradient_steps : -1
     verbose : 0
-    batch_size : 1024
+    batch_size : 512
+    #policy_kwargs : dict(net_arch=[256, 256])}
     policy_kwargs : 'dict(net_arch=[256, 256])'
-#'gamma': 0.99, 'lr': 0.00027513266216777307, 'batch_size': 256, 'buffer_size': 100000, 'exploration_final_eps': 0.1899800072068773, 'exploration_fraction': 0.4074600419964691, 'target_update_interval': 5, 'learning_starts': 0, 'Ve': 8.84087822135742, 'net_arch': 'medium'
-#bad 'gamma': 0.999, 'lr': 0.0007234964304931689, 'batch_size': 256, 'buffer_size': 500000, 'exploration_final_eps': 0.18767657087928216, 'exploration_fraction': 0.04627172943204261, 'target_update_interval': 100, 'learning_starts': 0, 'Ve': 7.72648235387897, 'net_arch': 'medium'}. Best is trial 135 with value: 1411.5275512534718.
+
 dqn_50:
     policy: 'MlpPolicy'
-    gamma: 0.99
-    learning_rate: 0.001
-#    learning_rate: linear_schedule(0.001)
+    gamma: 0.995
+    learning_rate: 0.0012186785606740538
     batch_size: 256
-    buffer_size: 100000
-    exploration_final_eps: 0.1899800072068773
-    exploration_fraction: 0.4074600419964691
-    target_update_interval: 5
+    buffer_size: 10000
+    exploration_final_eps: 0.16961315591755904
+    exploration_fraction: 0.30509773867413825
+    target_update_interval: 16
     learning_starts: 0
-    gradient_steps : -1
-    #Ve: 10.19394294013548
-    train_freq : [1, "episode"]
+    gradient_steps: -1
+    train_freq: [ 1, "episode" ]
     policy_kwargs: 'dict(net_arch=[256, 256])'
+
+
 
 sac_cartpole_50:
     policy: 'MlpPolicy'

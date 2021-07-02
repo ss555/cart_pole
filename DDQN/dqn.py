@@ -19,7 +19,7 @@ STEPS_TO_TRAIN=30000
 LOAD_MODEL_PATH=None#"./logs/best_model"
 LOAD_BUFFER_PATH=None#"dqn_pi_swingup_bufferN"
 logdir = './logs/'
-env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.84087822135742,
+env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=10.867664969452305,
                               resetMode='experimental', sparseReward=False)
 env = Monitor(env, filename=logdir+'basic_simulation_')
 # env = DummyVecEnv([lambda: env])
@@ -38,7 +38,7 @@ else:
 
 
 
-log_save='./weights/dqn50-sim'
+log_save='./weights/dqn50'
 Path(log_save).mkdir(exist_ok=True)
 #callbacks
 # Use deterministic actions for evaluation and SAVE the best model
