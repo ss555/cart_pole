@@ -22,7 +22,7 @@ N_TRIALS = 1000
 N_JOBS = 3
 N_STARTUP_TRIALS = 5
 N_EVALUATIONS = 3
-N_TIMESTEPS = int(1.5e4)
+N_TIMESTEPS = int(1.8e4)
 EVAL_FREQ = int(N_TIMESTEPS / N_EVALUATIONS)
 N_EVAL_EPISODES = 1
 TIMEOUT = int(60 * 15)  # 15 minutes
@@ -46,7 +46,7 @@ def sample_dqn_params(trial: optuna.Trial) -> Dict[str, Any]:
     buffer_size = trial.suggest_categorical("buffer_size", [int(1e4), int(5e4), int(1e5), int(5e5)])
     exploration_final_eps = trial.suggest_uniform("exploration_final_eps", 0, 0.2)
     exploration_fraction = trial.suggest_uniform("exploration_fraction", 0, 0.5)
-    target_update_interval = trial.suggest_categorical("target_update_interval", [1, 10, 50, 100, 1000, 5000])
+    target_update_interval = trial.suggest_categorical("target_update_interval", [1,2,4,5, 10,16, 50, 100, 1000, 5000])
     learning_starts = trial.suggest_categorical("learning_starts", [0, 1000, 5000, 10000, 20000])
     Ve = trial.suggest_uniform("Ve", 4.7,12)
     train_freq = (1, "episode")
@@ -116,7 +116,7 @@ def objective(trial: optuna.Trial) -> float:
 
     kwargs.update(sample_dqn_params(trial))
     env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=kwargs["Ve"],
-                              resetMode='experimental', sparseReward=False)  # ,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)
+                              resetMode='random_theta_thetaDot', sparseReward=False)  # ,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)
     del kwargs["Ve"]
     # Create the RL model
     model = DQN(**kwargs, seed=5, env=env)
