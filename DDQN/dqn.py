@@ -8,19 +8,18 @@ from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 from stable_baselines3 import DQN
 # from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
-from custom_callbacks import EvalCustomCallback
-from custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback
+from custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback, EvalCustomCallback, EvalThetaDotMetric
 from env_custom import CartPoleButter, CartPoleDebug, CartPoleDiscreteHistory#,CartPoleContinous,CartPoleDiscreteHistory#,CartPoleDiscreteButter2
 import argparse
 from utils import read_hyperparameters
 from pathlib import Path
 Te=0.05
 EP_STEPS=800
-STEPS_TO_TRAIN=15000
+STEPS_TO_TRAIN=30000
 LOAD_MODEL_PATH=None#"./logs/best_model"
 LOAD_BUFFER_PATH=None#"dqn_pi_swingup_bufferN"
 logdir = './logs/'
-env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=10.19394294013548,
+env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.84087822135742,
                               resetMode='experimental', sparseReward=False)
 env = Monitor(env, filename=logdir+'basic_simulation_')
 # env = DummyVecEnv([lambda: env])
@@ -43,8 +42,9 @@ log_save='./weights/dqn50-sim'
 Path(log_save).mkdir(exist_ok=True)
 #callbacks
 # Use deterministic actions for evaluation and SAVE the best model
-eval_callback = EvalCustomCallback(envEvaluation, best_model_save_path=log_save, log_path=logdir+'/evals', eval_freq=5000, n_eval_episodes=30,deterministic=True, render=False)
-hyperparams=read_hyperparameters('dqn_50')
+eval_callback = EvalThetaDotMetric(envEvaluation, eval_freq=6000, deterministic=True,verbose=1)
+# eval_callback = EvalCustomCallback(envEvaluation, best_model_save_path=log_save, log_path=logdir+'/evals', eval_freq=STEPS_TO_TRAIN/3, n_eval_episodes=30,deterministic=True, render=False)
+hyperparams = read_hyperparameters('dqn_50')
 model = DQN(env=env,**hyperparams)
 callbackSave = SaveOnBestTrainingRewardCallback(log_dir=log_save, monitor_filename=logdir+'basic_simulation_monitor.csv')
 

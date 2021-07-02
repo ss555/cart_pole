@@ -253,6 +253,7 @@ class CartPoleButter(gym.Env):
             self.state[2] = np.cos(theta)
             self.state[3] = np.sin(theta)
         elif self.resetMode == 'random_theta_thetaDot':
+            self.state = np.zeros(shape=(5,))
             theta = self.np_random.uniform(-math.pi/18, math.pi/18)
             self.state=[xIni, x_ini_speed, np.cos(theta), np.sin(theta), 0.0]
         else:

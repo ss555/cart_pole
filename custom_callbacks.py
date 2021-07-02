@@ -289,14 +289,14 @@ class EvalThetaDotMetric(EventCallback):
     """
     def __init__(
         self,
-        eval_env: CartPoleButter,
+        eval_env: Union[gym.Env, VecEnv],
         callback_on_new_best: Optional[BaseCallback] = None,
         eval_freq: int = 10000,
         log_path: str = None,
         best_model_save_path: str = None,
         deterministic: bool = True,
         render: bool = False,
-        verbose: int = 1,
+        verbose: int = 0,
         warn: bool = True,
         THETA_DOT_THRESHOLD : float = 0.0,
         N_BINS : int = 10
@@ -328,8 +328,8 @@ class EvalThetaDotMetric(EventCallback):
 
     def _init_callback(self) -> None:
         # Does not work in some corner cases, where the wrapper is not the same
-        if not isinstance(self.training_env, type(self.eval_env)):
-            warnings.warn("Training and eval env are not of the same type" f"{self.training_env} != {self.eval_env}")
+        # if not isinstance(self.training_env, type(self.eval_env)):
+        #     warnings.warn("Training and eval env are not of the same type" f"{self.training_env} != {self.eval_env}")
 
         # Create folders if needed
         if self.best_model_save_path is not None:
@@ -377,5 +377,7 @@ class EvalThetaDotMetric(EventCallback):
                 # Trigger callback if needed
                 if self.callback is not None:
                     return self._on_event()
+
+            self.eval_env.reset()
 
         return True
