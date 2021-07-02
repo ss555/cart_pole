@@ -180,6 +180,8 @@ class CheckPointEpisode(BaseCallback):
         if self.n_episodes%self.save_freq_ep == 0 and self.n_episodes!=0:
             try:
                 self.model.save(self.save_path)
+            except:
+                print('error occured while saving checkpoint')
     def _on_step(self) -> bool:
         pass
 class EvalCustomCallback(EventCallback):
