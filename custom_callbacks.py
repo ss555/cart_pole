@@ -163,7 +163,25 @@ def plot_results(log_folder, window_size=30, title='Learning Curve',only_return_
         print(f'saved to {log_folder}')
     return x_varArr,y_varArr,legends
 
-
+class CheckPointEpisode(BaseCallback):
+    '''
+    callback for saving every n episodes
+    '''
+    def __init__(self, save_freq_ep: int,
+                 save_path: str=None):
+        super(CheckPointEpisode, self).__init__()
+        self.save_path = save_path
+        self.save_freq_ep = save_freq_ep
+        self.n_episodes=0
+    def _init_callback(self) -> None:
+        assert self.save_path is not None, "path for checkpoint callback is not specified"
+    def _on_rollout_start(self) -> None:
+        self.n_episodes += 1
+        if self.n_episodes%self.save_freq_ep == 0 and self.n_episodes!=0:
+            try:
+                self.model.save(self.save_path)
+    def _on_step(self) -> bool:
+        pass
 class EvalCustomCallback(EventCallback):
     """
     Callback for evaluating an agent.

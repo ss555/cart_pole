@@ -1,21 +1,17 @@
 #from utils import linear_schedule
-
-
 dqn_cartpole_50:
     policy: 'MlpPolicy'
     learning_starts : 0
     gamma : 0.995
     learning_rate : 0.0003
-    exploration_final_eps : 0.01
-    exploration_fraction: 1
+    exploration_final_eps : 0.17787752200089602
     exploration_initial_eps : 0.17787752200089602
     target_update_interval : 1000
     buffer_size : 50000
     train_freq : [1, "episode"]
     gradient_steps : -1
     verbose : 0
-    batch_size : 512
-    #policy_kwargs : dict(net_arch=[256, 256])}
+    batch_size : 1024
     policy_kwargs : 'dict(net_arch=[256, 256])'
 
 dqn_50:
