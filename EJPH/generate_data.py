@@ -269,8 +269,9 @@ if STATIC_FRICTION_SIM:
     for frictionValue in STATIC_FRICTION_ARR:
         env0 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, resetMode='experimental', f_c=frictionValue)
         envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, resetMode='experimental', f_c=frictionValue)
-        eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000)
+
         filename = logdir + f'static-friction/static_friction_sim_{frictionValue}_'
+        eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000)
         # filenames.append(filename)#NOT USED
         env = Monitor(env0, filename=filename)
         model = DQN(env=env, **hyperparams)
