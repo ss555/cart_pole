@@ -10,7 +10,6 @@ from custom_callbacks import plot_results
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3 import DQN, SAC
-from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
 from env_custom import CartPoleButter
 from utils import read_hyperparameters
 from pathlib import Path
@@ -19,18 +18,18 @@ from custom_callbacks import EvalCustomCallback, EvalThetaDotMetric, moving_aver
 from matplotlib import rcParams, pyplot as plt
 from bokeh.palettes import d3
 import plotly.express as px
-STEPS_TO_TRAIN = 100000
+STEPS_TO_TRAIN = 90000
 EP_STEPS = 800
 Te = 0.05
 MANUAL_SEED = 5
 # simulation results
 qLearningVsDQN = False  # compare q-learn and dqn
-DYNAMIC_FRICTION_SIM = False  # True
-STATIC_FRICTION_SIM = False
-encNoiseVarSim = False
-ACTION_NOISE_SIM = False
-RESET_EFFECT = False  # True#False
-EVAL_TENSION_FINAL_PERF = True  # evaluate final PERFORMANCE of a cartpole for different voltages
+DYNAMIC_FRICTION_SIM = True  # True
+STATIC_FRICTION_SIM = True
+encNoiseVarSim = True
+ACTION_NOISE_SIM = True
+RESET_EFFECT = True  # True#False
+EVAL_TENSION_FINAL_PERF = False  # evaluate final PERFORMANCE of a cartpole for different voltages
 PLOT_FINAL_PERFORMANCE_STD = False  # False#
 SEED_TRAIN = False
 logdir = './EJPH/'
@@ -92,12 +91,11 @@ if EVAL_TENSION_FINAL_PERF:
     # train to generate data
     # inference to test the models
     # rainbow to plot in inference at different timesteps
-    MODE = 'INFERENCE'   # 'TRAIN' 'INFERENCE' 'RAINBOW'
+    MODE = 'TRAIN'   # 'TRAIN' 'INFERENCE' 'RAINBOW'
     if MODE == 'TRAIN':
         for i, tension in enumerate(TENSION_RANGE):
-            env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension, resetMode='experimental', sparseReward=False)
-            envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension,
-                                     resetMode='experimental', sparseReward=False)
+            env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')
+            envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')
             filename = logdir + f'/tension-perf/tension_sim_{tension}_V_'
             env = Monitor(env, filename=filename)
             model = DQN(env=env, **hyperparams, seed=MANUAL_SEED)
@@ -159,6 +157,7 @@ if EVAL_TENSION_FINAL_PERF:
                         print(f'ended episode {tension} with {count_tours}')
                         ax1.plot(thetaArr, '.')
                         fig.add_scatter(x=np.linspace(1,EP_STEPS,EP_STEPS), y=thetaArr, name=f'volt: {tension}')
+                        break
                         # ax1.savefig(logdir+'/thetaA.pdf')
                 #TODO theta tensions
                 #TODO time at the training
@@ -268,15 +267,12 @@ if STATIC_FRICTION_SIM:
     Path('./EJPH/static-friction').mkdir(exist_ok=True)
     filenames = []
     for frictionValue in STATIC_FRICTION_ARR:
-        env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental',
-                             sparseReward=False, f_c=frictionValue)  # ,integrator='semi-euler')#,integrator='rk4')
-        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='random_theta_thetaDot',
-                                 sparseReward=False, f_c=frictionValue)
-        eval_callback = EvalCustomCallback(envEval, log_path=filename, eval_freq=5000, n_eval_episodes=51,
-                                           deterministic=True)
+        env0 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, resetMode='experimental', f_c=frictionValue)
+        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, resetMode='experimental', f_c=frictionValue)
+        eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000)
         filename = logdir + f'static-friction/static_friction_sim_{frictionValue}_'
         # filenames.append(filename)#NOT USED
-        env = Monitor(env, filename=filename)
+        env = Monitor(env0, filename=filename)
         model = DQN(env=env, **hyperparams)
         print(f'simulation with static friciton {frictionValue} coef')
         with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
@@ -287,17 +283,13 @@ if DYNAMIC_FRICTION_SIM:
     Path('./EJPH/dynamic-friction').mkdir(exist_ok=True)
     filenames = []
     for frictionValue in DYNAMIC_FRICTION_ARR:
-        env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental',
-                             sparseReward=False, kPendViscous=frictionValue)  # ,integrator='semi-euler')#,integrator='rk4')
-        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='random_theta_thetaDot',
-                                 sparseReward=False,
-                                 kPendViscous=frictionValue)  # ,integrator='semi-euler')#,integrator='rk4')
+        env0 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental', sparseReward=False, kPendViscous=frictionValue)
+        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental', sparseReward=False, kPendViscous=frictionValue)
         filename = logdir + f'dynamic-friction/dynamic_friction_sim_{frictionValue}_'
         # filenames.append(filename)#NOT USED
-        env = Monitor(env, filename=filename)
+        env = Monitor(env0, filename=filename)
         model = DQN(env=env, **hyperparams)
-        eval_callback = EvalCustomCallback(envEval, log_path=filename, eval_freq=5000, n_eval_episodes=51,
-                                           deterministic=True)
+        eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000)
         print(f'simulation with dynamic friciton {frictionValue} coef')
         with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
             model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
@@ -307,35 +299,28 @@ if encNoiseVarSim:
     Path('./EJPH/encoder-noise').mkdir(exist_ok=True)
     filenames = []
     for encNoise in NOISE_TABLE:
-        env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental',
-                             sparseReward=False, Km=encNoise)  # ,integrator='semi-euler')#,integrator='rk4')
-        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='random_theta_thetaDot',
-                                 sparseReward=False, Km=encNoise)  # ,integrator='semi-euler')#,integrator='rk4')
+        env0 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental', sparseReward=False, Km=encNoise)
+        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental', sparseReward=False, Km=encNoise)
         filename = logdir + f'encoder-noise/enc_noise_sim_{encNoise}_rad_'
         # filenames.append(filename)#NOT USED
-        env = Monitor(env, filename=filename)
-        eval_callback = EvalCustomCallback(envEval, log_path=filename, eval_freq=5000, n_eval_episodes=51,
-                                           deterministic=True)
+        env = Monitor(env0, filename=filename)
+        eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000)
         model = DQN(env=env, **hyperparams)
         print(f'simulation with noise {encNoise * 180 / np.pi} degree')
         with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
             model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
     plot_results(logdir + 'encoder-noise')
+
 # TODO effect of initialisation with eval callback
 if RESET_EFFECT:
+
     Path('./EJPH/experimental-vs-random').mkdir(exist_ok=True)
     filenames = []
     filename = logdir + f'experimental-vs-random/experimental'
-    env0 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental',
-                          sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
+    env0 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental', sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
+    envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental', sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
     env = Monitor(env0, filename=filename)
-    envEval0 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='random_theta_thetaDot',
-                              sparseReward=False)
-    envEval = Monitor(envEval0, filename=filename)
-
-    # filenames.append(filename)#NOT USED
-    eval_callback = EvalCustomCallback(envEval0, log_path=filename, eval_freq=5000, n_eval_episodes=51,
-                                       deterministic=True)
+    eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5, deterministic=True)
     model = DQN(env=env, **hyperparams)
     print(f'simulation with experimental reset')
     with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
@@ -343,25 +328,24 @@ if RESET_EFFECT:
 
     print(f'simulation with random reset')
     filename = logdir + f'experimental-vs-random/random'
-    eval_callback2 = EvalCustomCallback(envEval0, log_path=filename, eval_freq=5000, n_eval_episodes=51,
-                                        deterministic=True)
-
-    model = DQN(env=envEval, **hyperparams)
+    env0 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='random', sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
+    envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='random', sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
+    env = Monitor(env0, filename=filename)
+    eval_callback2 = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000, deterministic=True)
+    model = DQN(env=env, **hyperparams)
     print(f'simulation with random reset')
     with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
         model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback2])
 
-    filename = logdir + f'experimental-vs-random/iniThetaDot'
-    envTheta0 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental',
-                               thetaDotReset=13, sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
-    envTheta = Monitor(envTheta0, filename=filename)
-    # with ini speed 3rad/s
-    model = DQN(env=envTheta, **hyperparams)
-    eval_callback3 = EvalCustomCallback(envTheta0, log_path=filename, eval_freq=5000, n_eval_episodes=51,
-                                        deterministic=True)
-    print(f'simulation with random reset')
-    with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
-        model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback3])
+    # filename = logdir + f'experimental-vs-random/iniThetaDot'
+    # envTheta0 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental', thetaDotReset=13, sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
+    # envTheta = Monitor(envTheta0, filename=filename)
+    # # with ini speed 3rad/s
+    # model = DQN(env=envTheta, **hyperparams)
+    # eval_callback3 = EvalThetaDotMetric(envTheta0, log_path=filename, eval_freq=5000, deterministic=True)
+    # print(f'simulation with random reset')
+    # with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
+    #     model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback3])
 
     plot_results(logdir + 'experimental-vs-random')
 
@@ -370,13 +354,10 @@ if ACTION_NOISE_SIM:
     FORCE_STD_ARR = [0, 0.1, 1, 10]
     for forceStd in FORCE_STD_ARR:
         Path('./EJPH/action-noise').mkdir(exist_ok=True)
-        env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental',
-                             sparseReward=False, forceStd=forceStd)
-        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='random_theta_thetaDot',
-                                 sparseReward=False, forceStd=forceStd)
+        env0 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental',sparseReward=False, forceStd=forceStd)
+        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental',sparseReward=False, forceStd=forceStd)
         env = Monitor(env, filename=logdir + f'action-noise/actionStd%-{forceStd}')
-        eval_callback = EvalCustomCallback(envEval, log_path=filename, eval_freq=5000,
-                                           n_eval_episodes=51, deterministic=True)
+        eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000)
         model = DQN(env=env, **hyperparams)
         print(f'simulation with action noise in {forceStd}%')
         with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:

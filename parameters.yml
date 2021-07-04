@@ -2,12 +2,10 @@
 dqn_cartpole_50:
     policy: 'MlpPolicy'
     learning_starts : 0
-    #10000
     gamma : 0.995
     learning_rate : 0.0003
-    exploration_final_eps : 0.01
-    exploration_initial_eps : 0.2
-    #0.17787752200089602
+    exploration_final_eps : 0.17787752200089602
+    exploration_initial_eps : 0.17787752200089602
     exploration_fraction: 1
     target_update_interval : 1000
     buffer_size : 50000

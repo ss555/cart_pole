@@ -1,22 +1,14 @@
+'''
+2 modes: PLOT_TRAINING_REWARD: plots the training reward from the .csv files
+PLOT_EVAL_REWARD: plots evaluation reward from .npz files
+'''
+
 import sys
 import os
 import matplotlib.pyplot as plt
 import numpy as np
 sys.path.append(os.path.abspath('./'))
 sys.path.append(os.path.abspath('./..'))
-from utils import linear_schedule
-from custom_callbacks import plot_results
-from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
-from stable_baselines3.dqn import MlpPolicy
-# from stable_baselines3.sac import MlpPolicy
-from stable_baselines3 import DQN,SAC
-from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
-from custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback
-from env_custom import CartPoleButter
-# from utils import plot_results
-import argparse
-import yaml
 import glob
 import seaborn as sns
 PLOT_TRAINING_REWARD=False
@@ -90,6 +82,7 @@ if PLOT_EVAL_REWARD:
     dirAction='./EJPH/plots/action-eval'
     dirReset='./EJPH/plots/exp-vs-rand-eval'
 
+    data = np.load('./EJPH/experimental-vs-random/experimental.npz')
     # dirTension='./EJPH/plots/tension-eval'
     # dirStatic='./EJPH/plots/static-eval'
     # dirNoise='./EJPH/plots/noise-eval'

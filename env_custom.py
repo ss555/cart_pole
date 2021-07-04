@@ -5,16 +5,16 @@ from gym.utils import seeding
 import numpy as np
 import csv
 from scipy import signal
-from scipy.fft import fft,fftfreq
 from collections import deque
 from scipy.integrate import odeint
 from time import time
 import iir_filter
 import json
 from matplotlib import pyplot as plt
+
 #PWM 180
-[A,B,C,D]=[-21.30359185798466, 1.1088617953891196, -0.902272006611719, -0.03935160774012411]#20ms#(-7.794018686563599, 0.37538450501353504, -0.4891760779740128, -0.002568958116514183)
-wAngular=4.85658326956131
+[A,B,C,D] = [-21.30359185798466, 1.1088617953891196, -0.902272006611719, -0.03935160774012411]#20ms#(-7.794018686563599, 0.37538450501353504, -0.4891760779740128, -0.002568958116514183)
+wAngular = 4.85658326956131
 def reward_fnCos(x, costheta, sintheta=0, theta_dot=0, sparse=False, Kx=5):
     if sparse:
         reward = 0.0
@@ -96,7 +96,7 @@ class CartPoleButter(gym.Env):
         self.masspoleIni = Mpole
         self.total_mass = (self.masspoleIni + self.masscart)
         self.length = length  # center of mass
-        # self.polemass_length = (self.masspole * self.length)
+        # 
         self.tau = Te  # seconds between state updates
         self.kinematics_integrator = integrator  # 'rk'#
         self.theta_threshold_radians = math.pi
@@ -146,10 +146,13 @@ class CartPoleButter(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
     def _calculate_force(self,action):
-        if action[0]!=0.0:
-            f = self.masscart*(self.fa*self.state[1] + self.fb*(self.tensionMax*action[0]+self.fd/self.fb)+self.fc*np.sign(self.state[1]))  #PWM 180 : 7.437548494321268
-        else:
-            f = self.masscart*(self.fa*self.state[1] + self.fc*np.sign(self.state[1]))
+        try:
+            if action[0]!=0.0:
+                f = self.masscart*(self.fa*self.state[1] + self.fb*(self.tensionMax*action[0]+self.fd/self.fb)+self.fc*np.sign(self.state[1]))  #PWM 180 : 7.437548494321268
+            else:
+                f = self.masscart*(self.fa*self.state[1] + self.fc*np.sign(self.state[1]))
+        except:
+            print('error')
         return f
     def step(self, action):
         [x, x_dot, costheta, sintheta, theta_dot]=self.state
@@ -166,7 +169,7 @@ class CartPoleButter(gym.Env):
             pass
         self.wAngularUsed = np.random.normal(self.wAngularIni, self.wAngularStd, 1)[0]
         self.masspole = np.random.normal(self.masspoleIni, self.masspoleStd, 1)[0]
-        self.polemass_length = (self.masspole * self.length)
+        
         if self.kinematics_integrator=='semi-euler':
             for i in range(self.n):
                 force = self._calculate_force(action)
@@ -396,7 +399,7 @@ class CartPoleTabular(gym.Env):
         self.masspoleIni = Mpole
         self.total_mass = (self.masspoleIni + self.masscart)
         self.length = length  # center of mass
-        # self.polemass_length = (self.masspole * self.length)
+        # 
         self.tau = Te  # seconds between state updates
         self.kinematics_integrator = integrator  # 'rk'#
         self.theta_threshold_radians = math.pi
@@ -467,7 +470,7 @@ class CartPoleTabular(gym.Env):
             pass
         self.wAngularUsed = np.random.normal(self.wAngularIni, self.wAngularStd, 1)[0]
         self.masspole = np.random.normal(self.masspoleIni, self.masspoleStd, 1)[0]
-        self.polemass_length = (self.masspole * self.length)
+        
         if self.kinematics_integrator == 'semi-euler':
             for i in range(self.n):
                 force = self._calculate_force(action)
@@ -665,7 +668,7 @@ class CartPoleImage(gym.Env):
         self.masspoleIni = Mpole
         self.total_mass = (self.masspoleIni + self.masscart)
         self.length = length  # center of mass
-        # self.polemass_length = (self.masspole * self.length)
+        # 
         self.tau = Te  # seconds between state updates
         self.kinematics_integrator = integrator  # 'rk'#
         self.theta_threshold_radians = math.pi
@@ -735,7 +738,7 @@ class CartPoleImage(gym.Env):
             pass
         self.wAngularUsed = np.random.normal(self.wAngularIni, self.wAngularStd, 1)[0]
         self.masspole = np.random.normal(self.masspoleIni, self.masspoleStd, 1)[0]
-        self.polemass_length = (self.masspole * self.length)
+        
         if self.kinematics_integrator == 'semi-euler':
             for i in range(self.n):
                 force = self._calculate_force(action)
@@ -937,7 +940,7 @@ class CartPole(gym.Env):
         self.masspoleIni = Mpole
         self.total_mass = (self.masspoleIni + self.masscart)
         self.length = length  # center of mass
-        # self.polemass_length = (self.masspole * self.length)
+        # 
         self.tau = Te  # seconds between state updates
         self.kinematics_integrator = integrator  # 'rk'#
         self.theta_threshold_radians = math.pi
@@ -1003,7 +1006,7 @@ class CartPole(gym.Env):
             pass
         self.wAngularUsed = np.random.normal(self.wAngularIni, self.wAngularStd, 1)[0]
         self.masspole = np.random.normal(self.masspoleIni, self.masspoleStd, 1)[0]
-        self.polemass_length = (self.masspole * self.length)
+        
         if self.kinematics_integrator == 'semi-euler':
             for i in range(self.n):
                 force = self._calculate_force(action)
@@ -1205,7 +1208,7 @@ class CartPoleDebug(gym.Env):
         self.masspoleIni = Mpole
         self.total_mass = (self.masspoleIni + self.masscart)
         self.length = length  # center of mass
-        # self.polemass_length = (self.masspole * self.length)
+        # 
         self.tau = Te  # seconds between state updates
         self.kinematics_integrator = integrator  # 'rk'#
         self.theta_threshold_radians = math.pi
@@ -1276,7 +1279,7 @@ class CartPoleDebug(gym.Env):
             pass
         self.wAngularUsed = np.random.normal(self.wAngularIni, self.wAngularStd, 1)[0]
         self.masspole = np.random.normal(self.masspoleIni, self.masspoleStd, 1)[0]
-        self.polemass_length = (self.masspole * self.length)
+        
         if self.kinematics_integrator=='semi-euler':
             for i in range(self.n):
                 force = self._calculate_force(action)
@@ -1467,7 +1470,7 @@ class CartPoleDiscreteHistory(gym.Env):
         self.masspoleIni = Mpole
         self.total_mass = (self.masspoleIni + self.masscart)
         self.length = 0.4611167818372032  # center of mass
-        # self.polemass_length = (self.masspole * self.length)
+        # 
         self.tau = Te  # seconds between state updates
         self.kinematics_integrator = integrator  # 'rk'#
         self.theta_threshold_radians = math.pi
@@ -1529,7 +1532,7 @@ class CartPoleDiscreteHistory(gym.Env):
             pass
         self.wAngularUsed = np.random.normal(self.wAngularIni, 0.1, 1)[0]
         self.masspole=np.random.normal(self.masspoleIni, 0.01, 1)[0]
-        self.polemass_length = (self.masspole * self.length)
+        
         if self.kinematics_integrator=='semi-euler':
             for i in range(self.n):
                 force = self._calculate_force(action)
