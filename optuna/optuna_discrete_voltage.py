@@ -17,13 +17,13 @@ import optuna
 from optuna.pruners import MedianPruner
 from optuna.samplers import TPESampler
 from optuna.visualization import plot_optimization_history, plot_param_importances
-from custom_callbacks import EvalThetaDotMetric
+from custom_callbacks import EvalThetaDotMetric,EvalX_ThetaMetric
 
 N_TRIALS = 1000
 N_JOBS = 3
 N_STARTUP_TRIALS = 5
-N_EVALUATIONS = 3
-N_TIMESTEPS = int(30000)
+N_EVALUATIONS = 2
+N_TIMESTEPS = int(20000)
 EVAL_FREQ = int(N_TIMESTEPS / N_EVALUATIONS)
 N_EVAL_EPISODES = 1
 TIMEOUT = int(60 * 15)  # 15 minutes
@@ -76,7 +76,7 @@ DEFAULT_HYPERPARAMS = {
 }
 
 
-class TrialEvalCallback(EvalThetaDotMetric):
+class TrialEvalCallback(EvalX_ThetaMetric):
     """Callback used for evaluating and reporting a trial."""
 
     def __init__(
