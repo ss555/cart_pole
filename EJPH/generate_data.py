@@ -7,7 +7,8 @@ sys.path.append(os.path.abspath('./'))
 sys.path.append(os.path.abspath('./..'))
 from utils import linear_schedule, plot
 from custom_callbacks import plot_results
-from stable_baselines3.common.monitor import Monitor
+from env_wrappers import Monitor
+# from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3 import DQN, SAC
 from env_custom import CartPoleButter
@@ -24,12 +25,12 @@ Te = 0.05
 MANUAL_SEED = 5
 # simulation results
 qLearningVsDQN = False  # compare q-learn and dqn
-DYNAMIC_FRICTION_SIM = True  # True
-STATIC_FRICTION_SIM = True
-encNoiseVarSim = True
+DYNAMIC_FRICTION_SIM = False  # True
+STATIC_FRICTION_SIM = False
+encNoiseVarSim = False
 ACTION_NOISE_SIM = True
 RESET_EFFECT = True  # True#False
-EVAL_TENSION_FINAL_PERF = False  # evaluate final PERFORMANCE of a cartpole for different voltages
+EVAL_TENSION_FINAL_PERF = True  # evaluate final PERFORMANCE of a cartpole for different voltages
 PLOT_FINAL_PERFORMANCE_STD = False  # False#
 SEED_TRAIN = False
 logdir = './EJPH/'
