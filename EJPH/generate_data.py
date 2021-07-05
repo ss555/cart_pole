@@ -27,10 +27,10 @@ MANUAL_SEED = 5
 qLearningVsDQN = False  # compare q-learn and dqn
 DYNAMIC_FRICTION_SIM = False  # True
 STATIC_FRICTION_SIM = False
-encNoiseVarSim = True
-ACTION_NOISE_SIM = True
-RESET_EFFECT = True  # True#False
-EVAL_TENSION_FINAL_PERF = False  # evaluate final PERFORMANCE of a cartpole for different voltages
+encNoiseVarSim = False
+ACTION_NOISE_SIM = False
+RESET_EFFECT = False  # True#False
+EVAL_TENSION_FINAL_PERF = True  # evaluate final PERFORMANCE of a cartpole for different voltages
 PLOT_FINAL_PERFORMANCE_STD = False  # False#
 SEED_TRAIN = False
 logdir = './EJPH/'
@@ -50,7 +50,6 @@ DYNAMIC_FRICTION_ARR = np.array([0, 0.1, 1, 10]) * DYNAMIC_FRICTION_PENDULUM
 
 # DONE encoder noise
 NOISE_TABLE = np.array([0, 0.01, 0.05, 0.1, 0.15, 0.5, 1, 5, 10]) * np.pi / 180
-# NOISE_TABLE = np.array([0, 0.01, 0.05, 0.1, 0.15, 0.5, 1, 5, 10]) * np.pi / 180
 
 #plot params
 plt.rcParams['font.family'] = "serif"
@@ -106,7 +105,6 @@ if EVAL_TENSION_FINAL_PERF:
                 model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
             # scoreArr[i] = eval_callback.best_mean_reward # eval_callback.evaluations_results
     elif MODE == 'INFERENCE':
-
         def calculate_angle(prev_value,cos,sin,count=0):
             '''
             :param prev_value:
@@ -133,7 +131,7 @@ if EVAL_TENSION_FINAL_PERF:
             if PLOT_EPISODE_REWARD:
                 # env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension, resetMode='experimental', sparseReward=False)
                 env = CartPoleButter(Te=Te, n=2, integrator='semi-euler', resetMode='experimental')
-                model = DQN.load(logdir + f'/tension-perf/tension_sim_{tension}_V_2', env=env)
+                model = DQN.load(logdir + f'/tension-perf/tension_sim_{tension}_V__best', env=env)
                 theta = np.pi/36
                 cosThetaIni = np.cos(theta)
                 sinThetaIni = np.sin(theta)
@@ -147,7 +145,7 @@ if EVAL_TENSION_FINAL_PERF:
                     obs, rew, done, _ = env.step(act)
                     rewArr.append(rew)
                     # if tension==12:
-                    #     env.render()
+                    env.render()
                     angle, count_tours = calculate_angle(prev_angle_value, obs[2], obs[3], count_tours)
                     prev_angle_value = angle
                     thetaArr.append(angle+count_tours*np.pi*2)
@@ -322,7 +320,7 @@ if RESET_EFFECT:
     env0 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental', sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
     envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental', sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
     env = Monitor(env0, filename=filename)
-    eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5, deterministic=True)
+    eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000, deterministic=True)
     model = DQN(env=env, **hyperparams)
     print(f'simulation with experimental reset')
     with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:

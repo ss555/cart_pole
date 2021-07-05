@@ -43,13 +43,13 @@ class CartPoleButter(gym.Env):
                  f_a=-21.30359185798466,
                  f_b=1.1088617953891196,
                  f_c=-0.902272006611719,
-                 f_d=-0.0393516077401241,
+                 f_d= 0.0393516077401241, #0.0,#
                  wAngular = 4.85658326956131,
                  kPendViscous = 0.11963736650935591,#0.0,#
                  integrator="semi-euler",
                  tensionMax=12, #8.4706
                  FILTER=False,
-                 n=10, #2,5
+                 n=1, #2,5
                  Kp=0,
                  sparseReward=False,
                  Km=0,#1.2,
@@ -151,6 +151,9 @@ class CartPoleButter(gym.Env):
                 f = self.masscart*(self.fa*self.state[1] + self.fb*(self.tensionMax*action[0]+self.fd/self.fb)+self.fc*np.sign(self.state[1]))  #PWM 180 : 7.437548494321268
             else:
                 f = self.masscart*(self.fa*self.state[1] + self.fc*np.sign(self.state[1]))
+            # f = self.masscart * (self.fa * self.state[1] + self.fb * (
+            #             self.tensionMax * action[0] + self.fd / self.fb) + self.fc * np.sign(
+            #     self.state[1]))  # PWM 180 : 7.437548494321268
         except:
             print('error')
         return f

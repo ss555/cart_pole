@@ -20,9 +20,10 @@ STEPS_TO_TRAIN=90000
 LOAD_MODEL_PATH=None#"./logs/best_model"
 LOAD_BUFFER_PATH=None#"dqn_pi_swingup_bufferN"
 logdir = './logs/'
-env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS,discreteActions=True,tensionMax=8.4706, resetMode='experimental',sparseReward=False,Km=0.0,n=1)
+VOLTAGE = 12 #8.4706
+env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS,discreteActions=True,tensionMax=VOLTAGE, resetMode='experimental',sparseReward=False,Km=0.0,n=1)
 env = Monitor(env, filename=logdir+'basic_simulation_')
-envEvaluation = CartPoleButter(Te=Te,N_STEPS=EP_STEPS,discreteActions=True,tensionMax=8.4706, resetMode='experimental',sparseReward=False,Km=0.0,n=1)
+envEvaluation = CartPoleButter(Te=Te,N_STEPS=EP_STEPS,discreteActions=True,tensionMax=VOLTAGE, resetMode='experimental',sparseReward=False,Km=0.0,n=1)
 NORMALISE = False
 if NORMALISE:
     ## Automatically normalize the input features and reward
