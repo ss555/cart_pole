@@ -91,7 +91,7 @@ if EVAL_TENSION_FINAL_PERF:
     # train to generate data
     # inference to test the models
     # rainbow to plot in inference at different timesteps
-    MODE = 'TRAIN'   # 'TRAIN' 'INFERENCE' 'RAINBOW'
+    MODE = 'INFERENCE'   # 'TRAIN' 'INFERENCE' 'RAINBOW'
     if MODE == 'TRAIN':
         for i, tension in enumerate(TENSION_RANGE):
             env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')
