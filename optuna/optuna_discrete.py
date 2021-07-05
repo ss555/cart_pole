@@ -22,7 +22,7 @@ N_TRIALS = 1000
 N_JOBS = 3
 N_STARTUP_TRIALS = 5
 N_EVALUATIONS = 3
-N_TIMESTEPS = int(6e4)
+N_TIMESTEPS = int(9e4)
 EVAL_FREQ = int(N_TIMESTEPS / N_EVALUATIONS)
 N_EVAL_EPISODES = 1
 TIMEOUT = int(60 * 15)  # 15 minutes
@@ -113,7 +113,7 @@ def objective(trial: optuna.Trial) -> float:
     kwargs = DEFAULT_HYPERPARAMS.copy()
     # Sample hyperparameters
     kwargs.update(sample_dqn_params(trial))
-    env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706,
+    env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=4.7,
                               resetMode='experimental', sparseReward=False)  # ,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)
 
     # Create the RL model
