@@ -130,7 +130,7 @@ if EVAL_TENSION_FINAL_PERF:
             done = False
             if PLOT_EPISODE_REWARD:
                 # env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension, resetMode='experimental', sparseReward=False)
-                env = CartPoleButter(Te=Te, n=2, integrator='semi-euler', resetMode='experimental')
+                env = CartPoleButter(tensionMax=tension,resetMode='experimental')
                 model = DQN.load(logdir + f'/tension-perf/tension_sim_{tension}_V__best', env=env)
                 theta = np.pi/36
                 cosThetaIni = np.cos(theta)
@@ -145,7 +145,7 @@ if EVAL_TENSION_FINAL_PERF:
                     obs, rew, done, _ = env.step(act)
                     rewArr.append(rew)
                     # if tension==12:
-                    env.render()
+                    # env.render()
                     angle, count_tours = calculate_angle(prev_angle_value, obs[2], obs[3], count_tours)
                     prev_angle_value = angle
                     thetaArr.append(angle+count_tours*np.pi*2)

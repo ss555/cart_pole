@@ -36,7 +36,7 @@ class CartPoleButter(gym.Env):
     def __init__(self,
                  Te=0.05,
                  discreteActions=True,
-                 resetMode='random',
+                 resetMode='experimental',
                  Mcart=0.5,
                  Mpole = 0.075,
                  length=0.416,
@@ -151,9 +151,6 @@ class CartPoleButter(gym.Env):
                 f = self.masscart*(self.fa*self.state[1] + self.fb*(self.tensionMax*action[0]+self.fd/self.fb)+self.fc*np.sign(self.state[1]))  #PWM 180 : 7.437548494321268
             else:
                 f = self.masscart*(self.fa*self.state[1] + self.fc*np.sign(self.state[1]))
-            # f = self.masscart * (self.fa * self.state[1] + self.fb * (
-            #             self.tensionMax * action[0] + self.fd / self.fb) + self.fc * np.sign(
-            #     self.state[1]))  # PWM 180 : 7.437548494321268
         except:
             print('error')
         return f
