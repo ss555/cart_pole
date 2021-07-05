@@ -337,6 +337,8 @@ class EvalThetaDotMetric(EventCallback):
         self.THETA_DOT_THRESHOLD = THETA_DOT_THRESHOLD
         self.THETA_THRESHOLD = -np.pi/18
         self.N_BINS=N_BINS
+        if self.best_model_save_path is None:
+            self.best_model_save_path = log_path
         if THETA_DOT_THRESHOLD != 0:
             theta_dot = np.linspace(-self.THETA_DOT_THRESHOLD, self.THETA_DOT_THRESHOLD, self.N_BINS)
         else:
@@ -350,10 +352,10 @@ class EvalThetaDotMetric(EventCallback):
         # Does not work in some corner cases, where the wrapper is not the same
         # if not isinstance(self.training_env, type(self.eval_env)):
         #     warnings.warn("Training and eval env are not of the same type" f"{self.training_env} != {self.eval_env}")
-
+        pass
         # Create folders if needed
-        if self.best_model_save_path is not None:
-            os.makedirs(self.best_model_save_path, exist_ok=True)
+        # if self.best_model_save_path is not None:
+        #     os.makedirs(self.best_model_save_path, exist_ok=True)
 
 
     def _on_step(self) -> bool:
@@ -390,9 +392,11 @@ class EvalThetaDotMetric(EventCallback):
             if mean_reward > self.best_mean_reward:
                 if self.verbose > 0:
                     print("New best mean reward!")
-                if self.best_model_save_path is not None:
-                    self.model.save(self.best_model_save_path)
+                # save best model
+
+                self.model.save(self.best_model_save_path+'_best.zip')
                 self.best_mean_reward = mean_reward
+
                 # Trigger callback if needed
                 if self.callback is not None:
                     return self._on_event()

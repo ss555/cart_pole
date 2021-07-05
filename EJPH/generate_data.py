@@ -27,10 +27,10 @@ MANUAL_SEED = 5
 qLearningVsDQN = False  # compare q-learn and dqn
 DYNAMIC_FRICTION_SIM = False  # True
 STATIC_FRICTION_SIM = False
-encNoiseVarSim = False
+encNoiseVarSim = True
 ACTION_NOISE_SIM = True
 RESET_EFFECT = True  # True#False
-EVAL_TENSION_FINAL_PERF = True  # evaluate final PERFORMANCE of a cartpole for different voltages
+EVAL_TENSION_FINAL_PERF = False  # evaluate final PERFORMANCE of a cartpole for different voltages
 PLOT_FINAL_PERFORMANCE_STD = False  # False#
 SEED_TRAIN = False
 logdir = './EJPH/'
@@ -50,6 +50,7 @@ DYNAMIC_FRICTION_ARR = np.array([0, 0.1, 1, 10]) * DYNAMIC_FRICTION_PENDULUM
 
 # DONE encoder noise
 NOISE_TABLE = np.array([0, 0.01, 0.05, 0.1, 0.15, 0.5, 1, 5, 10]) * np.pi / 180
+# NOISE_TABLE = np.array([0, 0.01, 0.05, 0.1, 0.15, 0.5, 1, 5, 10]) * np.pi / 180
 
 #plot params
 plt.rcParams['font.family'] = "serif"
@@ -84,7 +85,6 @@ sns.set_style("whitegrid")
 # DONE graphique la fonction de recompense qui depends de la tension a 40000 pas
 # DONE valeur de MAX recompense en fonction de tension
 if EVAL_TENSION_FINAL_PERF:
-
     Path('./EJPH/tension-perf').mkdir(parents=True, exist_ok=True)
     filenames = []
     scoreArr = np.zeros_like(TENSION_RANGE)
