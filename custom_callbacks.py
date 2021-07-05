@@ -209,7 +209,7 @@ class EvalCustomCallback(EventCallback):
         callback_on_new_best: Optional[BaseCallback] = None,
         n_eval_episodes: int = 5,
         eval_freq: int = 10000,
-        log_path: str=None,
+        log_path: str = None,
         best_model_save_path: str = None,
         deterministic: bool = True,
         stop_training_reward_threshold : bool = np.inf,
@@ -291,8 +291,7 @@ class EvalCustomCallback(EventCallback):
 
 class EvalThetaDotMetric(EventCallback):
     """
-    Callback for evaluating a cartpole systematically on a given metric(grid on THETA and THETA_DOT.
-
+    Callback for evaluating a cartpole systematically on a given metric (grid on THETA and THETA_DOT.
     :param eval_env: The environment used for initialization
     :param callback_on_new_best: Callback to trigger
         when there is a new best model according to the ``mean_reward``
@@ -330,23 +329,26 @@ class EvalThetaDotMetric(EventCallback):
         self.warn = warn
         self.log_path=log_path
         self.eval_env = eval_env
-        self.best_model_save_path = best_model_save_path
         self.evaluations_results = []
         self.evaluations_length = []
         self.evaluations_timesteps = []
         self.THETA_DOT_THRESHOLD = THETA_DOT_THRESHOLD
         self.THETA_THRESHOLD = -np.pi/18
         self.N_BINS=N_BINS
-        if self.best_model_save_path is None:
-            self.best_model_save_path = log_path
+        if best_model_save_path is None:
+            self.best_model_save_path = log_path+'_best.zip'
+        else:
+            self.best_model_save_path = best_model_save_path
+
         if THETA_DOT_THRESHOLD != 0:
             theta_dot = np.linspace(-self.THETA_DOT_THRESHOLD, self.THETA_DOT_THRESHOLD, self.N_BINS)
         else:
             theta_dot = [0]
 
-        theta = np.linspace(self.THETA_THRESHOLD, self.THETA_THRESHOLD, self.N_BINS)
+        theta = np.linspace(-self.THETA_THRESHOLD, self.THETA_THRESHOLD, self.N_BINS)
 
         self.arrTest = np.transpose([np.tile(theta, len(theta_dot)), np.repeat(theta_dot, len(theta))])
+
 
     def _init_callback(self) -> None:
         # Does not work in some corner cases, where the wrapper is not the same
@@ -394,7 +396,7 @@ class EvalThetaDotMetric(EventCallback):
                     print("New best mean reward!")
                 # save best model
 
-                self.model.save(self.best_model_save_path+'_best.zip')
+                self.model.save(self.best_model_save_path)
                 self.best_mean_reward = mean_reward
 
                 # Trigger callback if needed

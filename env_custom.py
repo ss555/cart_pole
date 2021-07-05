@@ -145,12 +145,13 @@ class CartPoleButter(gym.Env):
     def seed(self, seed=5):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
-    def _calculate_force(self,action):
+    def _calculate_force(self,action): #TODO fc a 0
         try:
-            if action[0]!=0.0:
-                f = self.masscart*(self.fa*self.state[1] + self.fb*(self.tensionMax*action[0]+self.fd/self.fb)+self.fc*np.sign(self.state[1]))  #PWM 180 : 7.437548494321268
-            else:
-                f = self.masscart*(self.fa*self.state[1] + self.fc*np.sign(self.state[1]))
+            # if action[0]!=0.0:
+            #     f = self.masscart*(self.fa*self.state[1] + self.fb*(self.tensionMax*action[0]+self.fd/self.fb)+self.fc*np.sign(self.state[1]))  #PWM 180 : 7.437548494321268
+            # else:
+            #     f = self.masscart*(self.fa*self.state[1] + self.fc*np.sign(self.state[1]))
+            f = self.masscart * (self.fa * self.state[1] + self.fb * (self.tensionMax * action[0]) + self.fc * np.sign(self.state[1]))
         except:
             print('error')
         return f
@@ -257,7 +258,8 @@ class CartPoleButter(gym.Env):
         elif self.resetMode == 'random_theta_thetaDot':
             self.state = np.zeros(shape=(5,))
             theta = self.np_random.uniform(-math.pi/18, math.pi/18)
-            self.state=[xIni, x_ini_speed, np.cos(theta), np.sin(theta), 0.0]
+            self.state[2] = np.cos(theta)
+            self.state[3] = np.sin(theta)
         else:
             print('not defined, choose from experimental/goal/random')
         if self.thetaDotReset is not None:

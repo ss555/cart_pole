@@ -11,7 +11,7 @@ sys.path.append(os.path.abspath('./'))
 sys.path.append(os.path.abspath('./..'))
 import glob
 import seaborn as sns
-PLOT_TRAINING_REWARD=False
+PLOT_TRAINING_REWARD=True
 PLOT_EVAL_REWARD=True
 
 def save_show_fig(xArr,yArr,legs,title,savename):

@@ -19,20 +19,20 @@ from custom_callbacks import EvalCustomCallback, EvalThetaDotMetric, moving_aver
 from matplotlib import rcParams, pyplot as plt
 from bokeh.palettes import d3
 import plotly.express as px
-STEPS_TO_TRAIN = 90000
+STEPS_TO_TRAIN = 150000
 EP_STEPS = 800
 Te = 0.05
 MANUAL_SEED = 5
 # simulation results
 qLearningVsDQN = False  # compare q-learn and dqn
-DYNAMIC_FRICTION_SIM = False  # True
-STATIC_FRICTION_SIM = False
-encNoiseVarSim = False
-ACTION_NOISE_SIM = False
-RESET_EFFECT = False  # True#False
-EVAL_TENSION_FINAL_PERF = True  # evaluate final PERFORMANCE of a cartpole for different voltages
+DYNAMIC_FRICTION_SIM = True  # True
+STATIC_FRICTION_SIM = True
+encNoiseVarSim = True
+ACTION_NOISE_SIM = True
+RESET_EFFECT = True  # True#False
+EVAL_TENSION_FINAL_PERF = False  # evaluate final PERFORMANCE of a cartpole for different voltages
 PLOT_FINAL_PERFORMANCE_STD = False  # False#
-SEED_TRAIN = False
+SEED_TRAIN = True
 logdir = './EJPH/'
 hyperparams = read_hyperparameters('dqn_cartpole_50')
 
@@ -42,7 +42,7 @@ STATIC_FRICTION_ARR = np.array([0, 0.1, 1, 10]) * STATIC_FRICTION_CART
 
 # DONE temps d’apprentissage et note en fonction de l’amplitude du controle
 # TENSION_RANGE = [9.4]
-TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]
+TENSION_RANGE = [4.7]#[2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]#
 colorArr = ['red', 'blue', 'green', 'cyan', 'yellow', 'tan', 'navy', 'black']
 # DONE temps  d’apprentissage  et  note  en  fonction  du  coefficient  de frottement dynamique
 DYNAMIC_FRICTION_PENDULUM = 0.11963736650935591
@@ -99,7 +99,8 @@ if EVAL_TENSION_FINAL_PERF:
             filename = logdir + f'/tension-perf/tension_sim_{tension}_V_'
             env = Monitor(env, filename=filename)
             model = DQN(env=env, **hyperparams, seed=MANUAL_SEED)
-            eval_callback = EvalThetaDotMetric(envEval, best_model_save_path=filename[:-2], log_path=filename, eval_freq=5000, deterministic=True)
+            # eval_callback = EvalThetaDotMetric(envEval, best_model_save_path=filename[:-2], log_path=filename, eval_freq=5000, deterministic=True)
+            eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000, deterministic=True)
             print(f'simulation for {tension} V')
             with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
                 model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
@@ -120,9 +121,10 @@ if EVAL_TENSION_FINAL_PERF:
                 return np.arctan2(sin, cos), count
             return np.arctan2(sin, cos), count
         PLOT_EPISODE_REWARD = True
-        _, ax1 = plt.subplots()
-        _, ax2 = plt.subplots()
+        figm1, ax1 = plt.subplots()
+        figm2, ax2 = plt.subplots()
         fig = px.scatter()
+        fig2 = px.scatter()
         # fig = px.scatter(x=[0], y=[0])
         for i, tension in enumerate(TENSION_RANGE):
             prev_angle_value = 0.0
@@ -130,22 +132,21 @@ if EVAL_TENSION_FINAL_PERF:
             done = False
             if PLOT_EPISODE_REWARD:
                 # env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension, resetMode='experimental', sparseReward=False)
-                env = CartPoleButter(tensionMax=tension,resetMode='experimental')
-                model = DQN.load(logdir + f'/tension-perf/tension_sim_{tension}_V__best', env=env)
-                theta = np.pi/36
+                env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')#CartPoleButter(tensionMax=tension,resetMode='experimental')
+                model = DQN.load(logdir + f'/tension-perf/tension_sim_{tension}_V__best.zip', env=env)
+                theta = 0
                 cosThetaIni = np.cos(theta)
                 sinThetaIni = np.sin(theta)
                 rewArr = []
                 obs = env.reset(costheta=cosThetaIni, sintheta=sinThetaIni)
                 # env.reset()
-                # env.render()
                 thetaArr, thetaDotArr, xArr, xDotArr = [], [], [], []
                 for j in range(EP_STEPS):
-                    act,_ = model.predict(obs)
+                    act,_ = model.predict(obs,deterministic=True)
                     obs, rew, done, _ = env.step(act)
                     rewArr.append(rew)
-                    # if tension==12:
-                    # env.render()
+                    if tension==4.7:
+                        env.render()
                     angle, count_tours = calculate_angle(prev_angle_value, obs[2], obs[3], count_tours)
                     prev_angle_value = angle
                     thetaArr.append(angle+count_tours*np.pi*2)
@@ -153,9 +154,10 @@ if EVAL_TENSION_FINAL_PERF:
                     xArr.append(obs[0])
                     xDotArr.append(obs[1])
                     if done:
-                        print(f'ended episode {tension} with {count_tours}')
+                        print(f'ended episode {tension} with {count_tours} tours and {np.sum(rewArr)} reward')
                         ax1.plot(thetaArr, '.')
                         fig.add_scatter(x=np.linspace(1,EP_STEPS,EP_STEPS), y=thetaArr, name=f'volt: {tension}')
+                        fig2.add_scatter(x=np.linspace(1,EP_STEPS,EP_STEPS), y=xArr, name=f'volt: {tension}')
                         break
                         # ax1.savefig(logdir+'/thetaA.pdf')
                 #TODO theta tensions
@@ -174,14 +176,18 @@ if EVAL_TENSION_FINAL_PERF:
                 print('done')
         if PLOT_EPISODE_REWARD:
             fig.show()
-            ax1.show()
-            # ax2.show()
-            plt.legend([str(t)+'V' for t in TENSION_RANGE],loc='upper right')
-            plt.xlabel('timesteps')
-            plt.ylabel('Rewards')
-            plt.title('Effect of the applied tension on the "greedy policy" reward')
-            plt.savefig('./EJPH/plots/episode_rew_tension.pdf')
-            plt.show()
+            fig2.show()
+
+            ax1.legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
+            ax2.legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
+            ax1.set_xlabel('timesteps')
+            ax2.set_xlabel('timesteps')
+            ax2.set_ylabel('Rewards')
+            # plt.title('Effect of the applied tension on the "greedy policy" reward')
+            figm2.savefig('./EJPH/plots/episode_rew_tension.pdf')
+            figm2.show()
+            figm1.savefig('./EJPH/plots/episode_theta.pdf')
+            figm1.show()
         else:
             tensionMax = np.array(TENSION_RANGE)
             plt.plot(tensionMax, scoreArr, 'ro-')

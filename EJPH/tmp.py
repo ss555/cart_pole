@@ -1,19 +1,7 @@
 import pyglet
-window = pyglet.window.Window()
-label = pyglet.text.Label('Hello, world',
-                          font_name='Times New Roman',
-                          font_size=36,
-                          x=window.width//2, y=window.height//2,
-                          anchor_x='center', anchor_y='center')
-
-@window.event
-def on_draw():
-    window.clear()
-    label.draw()
-
-pyglet.app.run()
-
-
+import numpy as np
+data = np.load('./EJPH/tension-perf/tension_sim_5.9_V_.npz')
+print('tes')
 # import numpy as np
 #
 # from moviepy.editor import *
