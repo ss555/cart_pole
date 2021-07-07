@@ -45,7 +45,7 @@ def play(eval_env_id, model, steps: int = 50, deterministic: bool =True, video_p
         video_recorder.close()
         video_recorder.enabled = False
 
-#TODO CSI 15 minutes : resultats 1er annee: 2 juillet
+
 
 
 if __name__=='__main__':

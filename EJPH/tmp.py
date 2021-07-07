@@ -1,70 +1,27 @@
-import pyglet
 import numpy as np
-data = np.load('./EJPH/tension-perf/tension_sim_5.9_V_.npz')
-print('tes')
-# import numpy as np
-#
-# from moviepy.editor import *
-# from moviepy.video.tools.segmenting import findObjects
-#
-# # WE CREATE THE TEXT THAT IS GOING TO MOVE, WE CENTER IT.
-#
-# screensize = (720, 460)
-# txtClip = TextClip('Cool effect', color='white', font="Amiri-Bold",
-#                    kerning=5, fontsize=100)
-# cvc = CompositeVideoClip([txtClip.set_pos('center')],
-#                          size=screensize)
-#
-# # THE NEXT FOUR FUNCTIONS DEFINE FOUR WAYS OF MOVING THE LETTERS
-#
-#
-# # helper function
-# rotMatrix = lambda a: np.array([[np.cos(a), np.sin(a)],
-#                                 [-np.sin(a), np.cos(a)]])
-#
-#
-# def vortex(screenpos, i, nletters):
-#     d = lambda t: 1.0 / (0.3 + t ** 8)  # damping
-#     a = i * np.pi / nletters  # angle of the movement
-#     v = rotMatrix(a).dot([-1, 0])
-#     if i % 2: v[1] = -v[1]
-#     return lambda t: screenpos + 400 * d(t) * rotMatrix(0.5 * d(t) * a).dot(v)
-#
-#
-# def cascade(screenpos, i, nletters):
-#     v = np.array([0, -1])
-#     d = lambda t: 1 if t < 0 else abs(np.sinc(t) / (1 + t ** 4))
-#     return lambda t: screenpos + v * 400 * d(t - 0.15 * i)
-#
-#
-# def arrive(screenpos, i, nletters):
-#     v = np.array([-1, 0])
-#     d = lambda t: max(0, 3 - 3 * t)
-#     return lambda t: screenpos - 400 * v * d(t - 0.2 * i)
-#
-#
-# def vortexout(screenpos, i, nletters):
-#     d = lambda t: max(0, t)  # damping
-#     a = i * np.pi / nletters  # angle of the movement
-#     v = rotMatrix(a).dot([-1, 0])
-#     if i % 2: v[1] = -v[1]
-#     return lambda t: screenpos + 400 * d(t - 0.1 * i) * rotMatrix(-0.2 * d(t) * a).dot(v)
-#
-# letters = findObjects(cvc)  # a list of ImageClips
-#
-#
-# # WE ANIMATE THE LETTERS
-#
-# def moveLetters(letters, funcpos):
-#     return [letter.set_pos(funcpos(letter.screenpos, i, len(letters)))
-#             for i, letter in enumerate(letters)]
-#
-#
-# clips = [CompositeVideoClip(moveLetters(letters, funcpos),
-#                             size=screensize).subclip(0, 5)
-#          for funcpos in [vortex, cascade, arrive, vortexout]]
-#
-# # WE CONCATENATE EVERYTHING AND WRITE TO A FILE
-#
-# final_clip = concatenate_videoclips(clips)
-# final_clip.write_videofile('../../coolTextEffects.avi', fps=25, codec='mpeg4')
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes,mark_inset
+
+
+#  random  walk read
+
+random_walk = np.loadtxt("random_walk_for_pict.txt")
+
+
+if __name__=='__main__':
+
+    fig = plt.figure(figsize = (8,16))
+    ax = plt.subplot(111) #whole path
+    ax.plot(random_walk)
+    ax.set_xlim(0,5000)
+    ax.set_ylim(-130,55)
+
+    axins = zoomed_inset_axes(ax,2,loc='lower right')
+    axins.plot(random_walk)
+
+    x1,x2,y1,y2 = 1000,2000, -60,-15
+    axins.set_xlim(x1,x2)
+    axins.set_ylim(y1,y2)
+
+    mark_inset(ax,axins,loc1=1,loc2=3)
+    plt.show()

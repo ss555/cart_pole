@@ -134,12 +134,12 @@ def plot_experimental_fitted(filename,fA,fB,fC,fD):
     fig.show()
 
 print(os.getcwd())
-absPath='/home/sardor/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/chariot_data'#+'./chariot_iden.csv'
+# absPath='/home/sardor/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/chariot_data'#+'./chariot_iden.csv'
+absPath='/home/sardor/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/chariot_data_180PWM'
 # absPath='/home/sardor/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/chariot_data_150_180PWM'
 #initial data:
 #pwm speed acceleration
 
-#processed:
 #acceleration speed pwm
 # expData,dt =parce_csv(absPath,False,None,None)
 expData,dt = parce_csv(absPath)#,fitTensionMin=150,fitTensionMax=170) #-22.713789110751794, 1.0325247560625972, 0.5808162775799824

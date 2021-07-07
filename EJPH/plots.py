@@ -10,12 +10,18 @@ sys.path.append(os.path.abspath('./'))
 sys.path.append(os.path.abspath('./..'))
 import glob
 import seaborn as sns
-from bokeh.palettes import d3
+from stable_baselines3.common.evaluation import evaluate_policy
+from stable_baselines3 import DQN, SAC
+from env_custom import CartPoleButter
+from custom_callbacks import EvalCustomCallback, EvalThetaDotMetric, moving_average
+from matplotlib import rcParams, pyplot as plt
 from custom_callbacks import plot_results
-
-PLOT_TRAINING_REWARD=True
+import plotly.express as px
+from bokeh.palettes import d3
+PLOT_TRAINING_REWARD=False
 PLOT_EVAL_REWARD=True
-
+TENSION_PLOT = False
+TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]
 #plot params
 plt.rcParams['font.family'] = "serif"
 plt.rcParams['font.serif'] = 'Georgia'
@@ -23,6 +29,13 @@ plt.rcParams['font.size'] = 10
 plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams["figure.dpi"] = 100
 colorPalette = d3['Category20'][20]
+
+NUM_TIMESTEPS = 150000
+EVAL_NUM_STEPS = 5000
+timesteps = np.linspace(EVAL_NUM_STEPS, NUM_TIMESTEPS, int(NUM_TIMESTEPS / EVAL_NUM_STEPS))
+
+xl = 'Timesteps'
+yl = 'Rewards'
 
 #UNCOMMENT SNS for nicer visual plots, comment above plt
 # sns.set_context("paper")
@@ -57,7 +70,7 @@ dirTension = './EJPH/tension-perf'
 dirStatic = './EJPH/static-friction'
 dirDynamic = './EJPH/dynamic-friction'
 dirNoise = './EJPH/encoder-noise'
-dirAction = './EJPH/plots/action-noise'
+dirAction = './EJPH/action-noise'
 dirReset = './EJPH/experimental-vs-random'
 #TITLES IF NEEDED
 t1="Effect of applied tension on training reward"
@@ -67,7 +80,7 @@ t4='Effect of measurement noise on training reward'
 t5='Effect of action noise on training reward (std in %)'
 t6='Effect of initialisation on training reward'
 
-
+#helper fcs
 def plot_from_npz(filenames, xlabel, ylabel, legends, title=None, plot_std=False,saveName=None):
 
     for i,filename in enumerate(filenames):
@@ -85,131 +98,148 @@ def plot_from_npz(filenames, xlabel, ylabel, legends, title=None, plot_std=False
         plt.savefig(saveName)
     plt.show()
 
-    # return filenames
+# return filenames
+def reaarange_arr_from_idx(xArr, yArr, idx):
+    return [xArr[i] for i in idx], [yArr[i] for i in idx]
 
 
-'''
-PLOT THE TRAINING reward from csv log, namely monitor files
-'''
-def reaarange_arr_from_idx(xArr,yArr,idx):
-    return [xArr[i] for i in idx],[yArr[i] for i in idx]
-def sort_arr_from_legs(xArr,yArr,legs):
+def sort_arr_from_legs(xArr, yArr, legs):
     idx = sorted(range(len(legs)), key=lambda k: legs[k])
     legs = [legs[i] for i in idx]
-    return [xArr[i] for i in idx],[yArr[i] for i in idx],legs
-if PLOT_TRAINING_REWARD:
-    xArr,yArr,legs=plot_results('./EJPH/tension-perf',only_return_data=True)#,title=t1) #'Effect of varying tension on the learning'
-    legs = [float(leg) for leg in legs[:,-3]]
-    xArr, yArr, legs = sort_arr_from_legs(xArr,yArr,legs)
-    save_show_fig(xArr,yArr,legs,savename='./EJPH/plots/tension.pdf')#,title=t1
+    return [xArr[i] for i in idx], [yArr[i] for i in idx], legs
 
-    xArr,yArr,legs=plot_results('./EJPH/static-friction',title=t2,only_return_data=True)
-    legs=[round(float(leg[1:]),4) for leg in legs[:,-2]]
-    xArr, yArr, legs = sort_arr_from_legs(xArr,yArr,legs)
-    save_show_fig(xArr,yArr,legs,savename='./EJPH/plots/static.pdf')#,title=t2
 
-    xArr,yArr,legs= plot_results('./EJPH/dynamic-friction',title=t3,only_return_data=True)
-    legs=[float(leg) for leg in legs[:,-2]]
-    xArr, yArr, legs = sort_arr_from_legs(xArr,yArr,legs)
-    save_show_fig(xArr,yArr,legs,savename='./EJPH/plots/dynamic.pdf')#,title=t3
+xArr, yArr, legs = plot_results('./EJPH/tension-perf-seed',only_return_data=True)  # ,title=t1) #'Effect of varying tension on the learning'
+legs = [float(leg) for leg in legs[:, -3]]
+xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
+save_show_fig(xArr, yArr, legs, savename='./EJPH/plots/tension-seed.pdf')  # ,title=t1
 
-    xArr,yArr,legs= plot_results(dirNoise,title=t4, only_return_data=True)
-    legs=[round(float(leg),4) for leg in legs[:,-3]]
-    xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
-    save_show_fig(xArr,yArr,legs,savename='./EJPH/plots/noise.pdf') #,title=t4
+filenames = sorted(glob.glob(dirTension + '-seed/*.npz'))
+legs = np.array([legend.split('_') for legend in filenames])
+legs = [float(leg) for leg in legs[:, -3]]
+idx = sorted(range(len(legs)), key=lambda k: legs[k])
+legs = [legs[i] for i in idx]
+filenames = [filenames[i] for i in idx]
+legs = [str(leg) + 'V' for leg in legs]
+plot_from_npz(filenames, xl, yl, legends=legs, saveName='./EJPH/plots/greedy_tension_seed.pdf')
 
-    xArr,yArr,legs= plot_results('./EJPH/action-noise',title=t5, only_return_data=True)
-    legs=[float(leg)for leg in legs[:,-2]]
-    xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
-    save_show_fig(xArr,yArr,legs,savename='./EJPH/plots/action_noise.pdf')#,title=t5
+if __name__=='__main__':
+    '''
+    PLOT THE TRAINING reward from csv log, namely monitor files
+    '''
+    if PLOT_TRAINING_REWARD:
+        xArr, yArr, legs = plot_results('./EJPH/tension-perf',only_return_data=True)  # ,title=t1) #'Effect of varying tension on the learning'
+        legs = [float(leg) for leg in legs[:, -3]]
+        xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
+        save_show_fig(xArr, yArr, legs, savename='./EJPH/plots/tension.pdf')  # ,title=t1
 
-    xArr,yArr,legs= plot_results('./EJPH/experimental-vs-random',title=t6, only_return_data=True)
-    legs=[leg for leg in legs[:,-2]]
-    save_show_fig(xArr,yArr,legs,savename='./EJPH/plots/exp-vs-rand.pdf')#,title=t6
+        xArr, yArr, legs = plot_results('./EJPH/static-friction', title=t2, only_return_data=True)
+        legs = [round(float(leg[1:]), 4) for leg in legs[:, -2]]
+        xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
+        save_show_fig(xArr, yArr, legs, savename='./EJPH/plots/static.pdf')  # ,title=t2
 
-    xArr,yArr,legs= plot_results('./EJPH/seeds',title=t6, only_return_data=True)
-    legs = legs[:,-1]
-    xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
-    save_show_fig(xArr,yArr,[leg[0] for leg in legs], savename='./EJPH/plots/seeds.pdf') #,title=t6
-'''
-PLOT THE inference reward from .npz, namely EvalCallback logs
-'''
-if PLOT_EVAL_REWARD:
-    title = 'Effect of applied tension on the "greedy policy" reward'
+        xArr, yArr, legs = plot_results('./EJPH/dynamic-friction', title=t3, only_return_data=True)
+        legs = [float(leg) for leg in legs[:, -2]]
+        xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
+        save_show_fig(xArr, yArr, legs, savename='./EJPH/plots/dynamic.pdf')  # ,title=t3
 
-    NUM_TIMESTEPS = 150000
-    EVAL_NUM_STEPS = 5000
-    timesteps = np.linspace(EVAL_NUM_STEPS, NUM_TIMESTEPS, int(NUM_TIMESTEPS / EVAL_NUM_STEPS))
+        xArr, yArr, legs = plot_results(dirNoise, title=t4, only_return_data=True)
+        legs = [round(float(leg), 4) for leg in legs[:, -3]]
+        xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
+        save_show_fig(xArr, yArr, legs, savename='./EJPH/plots/noise.pdf')  # ,title=t4
 
-    xl  ='Timesteps'
-    yl  ='Rewards'
+        xArr, yArr, legs = plot_results('./EJPH/action-noise', title=t5, only_return_data=True)
+        legs = [float(leg) for leg in legs[:, -2]]
+        xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
+        save_show_fig(xArr, yArr, legs, savename='./EJPH/plots/action_noise.pdf')  # ,title=t5
 
-    filenames = sorted(glob.glob(dirTension + '/*.npz'))
-    legs = np.array([legend.split('_') for legend in filenames])
-    legs=[float(leg) for leg in legs[:,-3]]
-    idx = sorted(range(len(legs)), key=lambda k: legs[k])
-    legs = [legs[i] for i in idx]
-    filenames = [filenames[i] for i in idx]
-    legs = [str(leg) + 'V' for leg in legs]
-    plot_from_npz(filenames,xl,yl,legends=legs,saveName='./EJPH/plots/greedy_tension.pdf')
+        xArr, yArr, legs = plot_results('./EJPH/experimental-vs-random', title=t6, only_return_data=True)
+        legs = [leg for leg in legs[:, -2]]
+        save_show_fig(xArr, yArr, legs, savename='./EJPH/plots/exp-vs-rand.pdf')  # ,title=t6
 
-    filenames = sorted(glob.glob(dirDynamic + '/*.npz'))
-    legs = np.array([legend.split('_') for legend in filenames])
-    legs=[round(float(leg),4) for leg in legs[:,-2]]
-    idx = sorted(range(len(legs)), key=lambda k: legs[k])
-    legs = [legs[i] for i in idx]
-    filenames = [filenames[i] for i in idx]
-    plot_from_npz(filenames, xl, yl,legends=legs, saveName='./EJPH/plots/greedy_dynamic.pdf')
+        xArr, yArr, legs = plot_results('./EJPH/seeds', title=t6, only_return_data=True)
+        legs = legs[:, -1]
+        xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
+        save_show_fig(xArr, yArr, [leg[0] for leg in legs], savename='./EJPH/plots/seeds.pdf')  # ,title=t6
+    '''
+    PLOT THE inference reward from .npz, namely EvalCallback logs
+    '''
 
-    filenames = sorted(glob.glob(dirStatic + '/*.npz'))
-    legs = np.array([legend.split('_') for legend in filenames])
-    legs=[round(float(leg[1:]),4) for leg in legs[:,-2]]
-    idx = sorted(range(len(legs)), key=lambda k: legs[k])
-    legs = [legs[i] for i in idx]
-    filenames = [filenames[i] for i in idx]
-    plot_from_npz(filenames, xl, yl,legends=legs, saveName='./EJPH/plots/greedy_static.pdf')
+    if PLOT_EVAL_REWARD:
+        title = 'Effect of applied tension on the "greedy policy" reward'
 
 
 
-    filenames = sorted(glob.glob(dirNoise + '/*.npz'))
-    legs = np.array([legend.split('_') for legend in filenames])
-    legs=[round(float(leg),4) for leg in legs[:,-3]]
-    idx = sorted(range(len(legs)), key=lambda k: legs[k])
-    legs = [legs[i] for i in idx]
-    filenames = [filenames[i] for i in idx]
-    plot_from_npz(filenames, xl, yl, legends=legs, saveName='./EJPH/plots/greedy_noise.pdf')
+        filenames = sorted(glob.glob(dirTension + '/*.npz'))
+        legs = np.array([legend.split('_') for legend in filenames])
+        legs=[float(leg) for leg in legs[:,-3]]
+        idx = sorted(range(len(legs)), key=lambda k: legs[k])
+        legs = [legs[i] for i in idx]
+        filenames = [filenames[i] for i in idx]
+        legs = [str(leg) + 'V' for leg in legs]
+        plot_from_npz(filenames,xl,yl,legends=legs,saveName='./EJPH/plots/greedy_tension.pdf')
 
-    filenames = sorted(glob.glob(dirAction + '/*.npz'))
-    legs = np.array([legend.split('_') for legend in filenames])
-    legs=[round(float(leg),4) for leg in legs[:,-3]]
-    idx = sorted(range(len(legs)), key=lambda k: legs[k])
-    legs = [legs[i] for i in idx]
-    filenames = [filenames[i] for i in idx]
-    plot_from_npz(filenames, xl, yl, legends=legs, saveName='./EJPH/plots/greedy_action.pdf')
+        filenames = sorted(glob.glob(dirDynamic + '/*.npz'))
+        legs = np.array([legend.split('_') for legend in filenames])
+        legs=[round(float(leg),4) for leg in legs[:,-2]]
+        idx = sorted(range(len(legs)), key=lambda k: legs[k])
+        legs = [legs[i] for i in idx]
+        filenames = [filenames[i] for i in idx]
+        plot_from_npz(filenames, xl, yl,legends=legs, saveName='./EJPH/plots/greedy_dynamic.pdf')
 
-    data = np.load('./EJPH/experimental-vs-random/random.npz')
-    data2 = np.load('./EJPH/experimental-vs-random/experimental.npz')
-    meanRew=np.mean(data["results"],axis=1)
-    meanRew2=np.mean(data2["results"],axis=1,keepdims=False)
-    stdRew=np.std(data["results"],axis=1)
-    stdRew2=np.std(data2["results"],axis=1)
-    sns.set_context("paper")
-    sns.set_style("whitegrid")
-    fillBetween=False
-    plt.plot(timesteps, meanRew, 'ro-')
-    plt.plot(timesteps, meanRew2, 'bo--')
-    if fillBetween:
-        plt.fill_between(timesteps,meanRew + stdRew, meanRew - stdRew, facecolor='red', alpha=0.2)
-        plt.fill_between(timesteps,meanRew2 + stdRew2, meanRew2 - stdRew2, facecolor='blue', alpha=0.2)
-    plt.xlabel('timesteps')
-    plt.ylabel('Rewards')
-    # plt.title('Effect of initialisation on the "greedy policy" reward from experimental state')#random
-    plt.legend(['random','experimental'])
-    plt.savefig('./EJPH/exp-vs-rand.pdf')
-    plt.show()
+        filenames = sorted(glob.glob(dirStatic + '/*.npz'))
+        legs = np.array([legend.split('_') for legend in filenames])
+        legs=[round(float(leg[1:]),4) for leg in legs[:,-2]]
+        idx = sorted(range(len(legs)), key=lambda k: legs[k])
+        legs = [legs[i] for i in idx]
+        filenames = [filenames[i] for i in idx]
+        plot_from_npz(filenames, xl, yl,legends=legs, saveName='./EJPH/plots/greedy_static.pdf')
 
-if TENSION_PLOT:
-       def calculate_angle(prev_value,cos,sin,count=0):
+
+
+        filenames = sorted(glob.glob(dirNoise + '/*.npz'))
+        legs = np.array([legend.split('_') for legend in filenames])
+        legs=[round(float(leg),4) for leg in legs[:,-3]]
+        idx = sorted(range(len(legs)), key=lambda k: legs[k])
+        legs = [legs[i] for i in idx]
+        filenames = [filenames[i] for i in idx]
+        plot_from_npz(filenames, xl, yl, legends=legs, saveName='./EJPH/plots/greedy_noise.pdf')
+
+        filenames = sorted(glob.glob(dirAction + '/*.npz'))
+        legs = np.array([legend.split('_') for legend in filenames])
+        legs=[round(float(leg),4) for leg in legs[:,-2]]
+        idx = sorted(range(len(legs)), key=lambda k: legs[k])
+        legs = [legs[i] for i in idx]
+        filenames = [filenames[i] for i in idx]
+        plot_from_npz(filenames, xl, yl, legends=legs, saveName='./EJPH/plots/greedy_action.pdf')
+
+        data = np.load('./EJPH/experimental-vs-random/_random_.npz')
+        data2 = np.load('./EJPH/experimental-vs-random/_experimental_.npz')
+        meanRew=np.mean(data["results"],axis=1)
+        meanRew2=np.mean(data2["results"],axis=1,keepdims=False)
+        stdRew=np.std(data["results"],axis=1)
+        stdRew2=np.std(data2["results"],axis=1)
+        sns.set_context("paper")
+        sns.set_style("whitegrid")
+        fillBetween=False
+        plt.plot(timesteps, meanRew, 'ro-')
+        plt.plot(timesteps, meanRew2, 'bo--')
+        if fillBetween:
+            plt.fill_between(timesteps,meanRew + stdRew, meanRew - stdRew, facecolor='red', alpha=0.2)
+            plt.fill_between(timesteps,meanRew2 + stdRew2, meanRew2 - stdRew2, facecolor='blue', alpha=0.2)
+        plt.xlabel('timesteps')
+        plt.ylabel('Rewards')
+        # plt.title('Effect of initialisation on the "greedy policy" reward from experimental state')#random
+        plt.legend(['random','experimental'])
+        plt.savefig('./EJPH/plots/exp-vs-rand-greedy.pdf')
+        plt.show()
+
+    if TENSION_PLOT:
+        # logdir = ''
+        colorArr = ['red', 'blue', 'green', 'cyan', 'yellow', 'tan', 'navy', 'black']
+        scoreArr = np.zeros_like(TENSION_RANGE)
+        stdArr = np.zeros_like(TENSION_RANGE)
+        def calculate_angle(prev_value,cos,sin,count=0):
             '''
             :param prev_value:
             :param cos: cosinus
@@ -236,7 +266,7 @@ if TENSION_PLOT:
             if PLOT_EPISODE_REWARD:
                 # env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension, resetMode='experimental', sparseReward=False)
                 env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')#CartPoleButter(tensionMax=tension,resetMode='experimental')
-                model = DQN.load(logdir + f'/tension-perf/tension_sim_{tension}_V__best.zip', env=env)
+                model = DQN.load(f'./EJPH/tension-perf/tension_sim_{tension}_V__best.zip', env=env)
                 theta = 0
                 cosThetaIni = np.cos(theta)
                 sinThetaIni = np.sin(theta)
@@ -280,7 +310,6 @@ if TENSION_PLOT:
         if PLOT_EPISODE_REWARD:
             fig.show()
             fig2.show()
-
             ax1.legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
             ax2.legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
             ax1.set_xlabel('timesteps')
@@ -318,11 +347,9 @@ if TENSION_PLOT:
         p1, p2, p3, p4, p5 = 0.2, 0.4, 0.6, 0.8, 1
         for j, tension in enumerate(TENSION_RANGE):
             env = CartPoleButter(Te=Te, N_STEPS=EP_LENGTH, discreteActions=True, tensionMax=tension, resetMode='experimental', sparseReward=False)
-            model = DQN.load(logdir + f'/tension-perf/tension_sim_{tension}_V__best', env=env)
+            model = DQN.load(f'./EJPH/tension-perf/tension_sim_{tension}_V__best', env=env)
             # model = DQN.load(logdir + f'/tension-perf/thetaDot10/tension_sim_{tension}_V_.zip_2', env=env)
             episode_rewards = 0
-            # THETA_THRESHOLD = np.pi/18
-            # theta = np.linspace(-THETA_THRESHOLD, THETA_THRESHOLD, N_TRIALS)
             obs = env.reset(costheta=0.984807753012208,sintheta=-0.17364817766693033)
             for i in range(EP_LENGTH):
                 action, _state = model.predict(obs)

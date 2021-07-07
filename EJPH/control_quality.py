@@ -5,15 +5,8 @@ import seaborn as sns
 import time
 sys.path.append(os.path.abspath('./'))
 sys.path.append(os.path.abspath('./..'))
-from utils import linear_schedule, plot
-from custom_callbacks import plot_results
-from utils import evaluate_policy_episodes
 from stable_baselines3 import DQN, SAC
-from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
 from env_custom import CartPoleButter
-from custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
-from custom_callbacks import EvalCustomCallback
-import pandas as pd
 from matplotlib import pyplot as plt
 from time import time
 # sns.set_context("paper")

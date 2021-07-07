@@ -9,7 +9,6 @@ from utils import linear_schedule, plot
 from custom_callbacks import plot_results
 from env_wrappers import Monitor
 # from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3 import DQN, SAC
 from env_custom import CartPoleButter
 from utils import read_hyperparameters
@@ -24,15 +23,22 @@ EP_STEPS = 800
 Te = 0.05
 MANUAL_SEED = 5
 # simulation results
-qLearningVsDQN = False  # compare q-learn and dqn
-DYNAMIC_FRICTION_SIM = True  # True
-STATIC_FRICTION_SIM = True
-encNoiseVarSim = True
-ACTION_NOISE_SIM = True
-RESET_EFFECT = True  # True#False
-EVAL_TENSION_FINAL_PERF = True  # evaluate final PERFORMANCE of a cartpole for different voltages
-PLOT_FINAL_PERFORMANCE_STD = True  # False#
+#TODO mettre courbes dans l'env
+#TODO 6.1 mettre:
+#TODO fa,fb,fc,fd dans identificaiton
+#TODO episode reward for seed 0,5 + inference
+
+DYNAMIC_FRICTION_SIM = False  # True
+STATIC_FRICTION_SIM = False
+encNoiseVarSim = False
+ACTION_NOISE_SIM = False
+RESET_EFFECT = False  # True#False
+EVAL_TENSION_FINAL_PERF = False  # evaluate final PERFORMANCE of a cartpole for different voltages
+PLOT_FINAL_PERFORMANCE_STD = False  # False#
 SEED_TRAIN = True
+#other
+qLearningVsDQN = False  # compare q-learn and dqn
+EVAL_TENSION_FINAL_PERF_seed = False  # evaluate final PERFORMANCE of a cartpole for different voltages
 logdir = './EJPH/'
 hyperparams = read_hyperparameters('dqn_cartpole_50')
 
@@ -43,7 +49,7 @@ STATIC_FRICTION_ARR = np.array([0, 0.1, 1, 10]) * STATIC_FRICTION_CART
 # DONE temps d’apprentissage et note en fonction de l’amplitude du controle
 # TENSION_RANGE = [9.4]
 TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]#
-colorArr = ['red', 'blue', 'green', 'cyan', 'yellow', 'tan', 'navy', 'black']
+
 # DONE temps  d’apprentissage  et  note  en  fonction  du  coefficient  de frottement dynamique
 DYNAMIC_FRICTION_PENDULUM = 0.11963736650935591
 DYNAMIC_FRICTION_ARR = np.array([0, 0.1, 1, 10]) * DYNAMIC_FRICTION_PENDULUM
@@ -60,22 +66,7 @@ plt.rcParams["figure.dpi"] = 100
 
 colorPalette = d3['Category20'][8]
 
-if qLearningVsDQN:
-    # DONE figure:  note as a function of steps.  3 curves:  1 DQN, 1 Q-learning with learning, 1Q - learning without learning
-    Path('./EJPH/basic').mkdir(parents=True, exist_ok=True)
-    env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.47, resetMode='experimental',
-                         sparseReward=False, f_a=0, f_c=0, f_d=0,
-                         kPendViscous=0.0)  # ,integrator='semi-euler')#,integrator='rk4')
-    # envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.47, resetMode='random', sparseReward=False,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)#,integrator='semi-euler')#,integrator='rk4')
-    env = Monitor(env, filename=logdir + 'basic/basic_simulation_')
-    model = DQN(env=env, **hyperparams, seed=MANUAL_SEED)
-    eval_callback = EvalCustomCallback(env, eval_freq=5000, n_eval_episodes=1, deterministic=True)
 
-    with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
-        model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
-
-    # DONE Q_learning
-    plot_results(logdir + 'basic')
 # sns.set_context("paper")
 # sns.set_style("whitegrid")
 
@@ -85,12 +76,10 @@ if qLearningVsDQN:
 if EVAL_TENSION_FINAL_PERF:
     Path('./EJPH/tension-perf').mkdir(parents=True, exist_ok=True)
     filenames = []
-    scoreArr = np.zeros_like(TENSION_RANGE)
-    stdArr = np.zeros_like(TENSION_RANGE)
+
     # train to generate data
     # inference to test the models
     # rainbow to plot in inference at different timesteps
-
     for i, tension in enumerate(TENSION_RANGE):
         env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')
         envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')
@@ -103,9 +92,30 @@ if EVAL_TENSION_FINAL_PERF:
         with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
             model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
         # scoreArr[i] = eval_callback.best_mean_reward # eval_callback.evaluations_results
-
-
     plot_results(logdir + 'tension-perf', paperMode=True)
+
+if EVAL_TENSION_FINAL_PERF_seed:
+    saveFolder='./EJPH/tension-perf-seed'
+    Path(saveFolder).mkdir(parents=True, exist_ok=True)
+    filenames = []
+    seed=0
+    print(f'starting with seed{seed}')
+    # train to generate data
+    # inference to test the models
+    # rainbow to plot in inference at different timesteps
+    for i, tension in enumerate(TENSION_RANGE):
+        env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')
+        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')
+        filename = saveFolder + f'/tension_sim_{tension}_V_'
+        env = Monitor(env, filename=filename)
+        model = DQN(env=env, **hyperparams, seed=seed)
+        # eval_callback = EvalThetaDotMetric(envEval, best_model_save_path=filename[:-2], log_path=filename, eval_freq=5000, deterministic=True)
+        eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000, deterministic=True)
+        print(f'simulation for {tension} V')
+        with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
+            model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
+        # scoreArr[i] = eval_callback.best_mean_reward # eval_callback.evaluations_results
+    plot_results(saveFolder, paperMode=True)
 
 if STATIC_FRICTION_SIM:
     Path('./EJPH/static-friction').mkdir(exist_ok=True)
@@ -183,6 +193,7 @@ if RESET_EFFECT:
     env0.close()
     del model
 
+
     # filename = logdir + f'experimental-vs-random/iniThetaDot'
     # envTheta0 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental', thetaDotReset=13, sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
     # envTheta = Monitor(envTheta0, filename=filename)
@@ -196,10 +207,12 @@ if RESET_EFFECT:
     plot_results(logdir + 'experimental-vs-random')
 
 # DONE bruit sur action [0, 0.1%, 1%, 10%]
-if ACTION_NOISE_SIM:
+if ACTION_NOISE_SIM:#Action noise in % for standart deviation
     FORCE_STD_ARR = [0, 0.1, 1, 10]
+    savePath = './EJPH/action-noise'
+    Path(savePath).mkdir(exist_ok=True)
     for forceStd in FORCE_STD_ARR:
-        Path('./EJPH/action-noise').mkdir(exist_ok=True)
+        filename = savePath+f'/force_std%_{forceStd}_'
         env0 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental',sparseReward=False, forceStd=forceStd)
         envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental',sparseReward=False, forceStd=forceStd)
         env = Monitor(env0, filename=logdir + f'action-noise/actionStd%_{forceStd}_')
@@ -215,31 +228,8 @@ if SEED_TRAIN:#basic model with default parameters
     # DONE figure:  note as a function of steps.  3 curves:  1 DQN, 1 Q-learning with learning, 1Q-learning without learning
     Path('./EJPH/seeds').mkdir(parents=True, exist_ok=True)
     for seed in range(10):
-        env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode='experimental',
-                             sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
-        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode='experimental',
-                                 sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
-        filename = logdir + f'seeds/basic_{seed}'
-        env = Monitor(env, filename)
-        eval_callback = EvalCustomCallback(envEval, log_path=filename, eval_freq=5000, n_eval_episodes=51,
-                                           deterministic=True)
-        model = DQN(env=env, **hyperparams, seed=seed)
-        with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
-            model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
-    plot_results(logdir + 'seeds')
-#
-#TODO courbe avec seed 0
-#TODO courbe 14,13,boxplots pour 0
-#TODO 5.9V optuna params for 12V;
-#rainbow
-if SEED_TRAIN_NO_FRICTION:#basic model
-    # DONE figure:  note as a function of steps.  3 curves:  1 DQN, 1 Q-learning with learning, 1Q-learning without learning
-    Path('./EJPH/seeds').mkdir(parents=True, exist_ok=True)
-    for seed in range(10):
-        env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=12, resetMode='experimental',
-                             sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
-        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=12, resetMode='experimental',
-                                 sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
+        env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, resetMode='experimental')  # ,integrator='semi-euler')#,integrator='rk4')
+        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, resetMode='experimental')  # ,integrator='semi-euler')#,integrator='rk4')
         filename = logdir + f'seeds/basic_{seed}'
         env = Monitor(env, filename)
         eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000)
@@ -247,9 +237,14 @@ if SEED_TRAIN_NO_FRICTION:#basic model
         with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
             model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
     plot_results(logdir + 'seeds')
+#
+#TODO courbe avec seed 0
 
-# TODO standard deviation of xas a function of the control amplitude in steadystate
-# TODO standard deviation of θas a function of the control amplitude in steadystate
+#TODO 5.9V optuna params for 12V;
+
+
+# DONE standard deviation of xas a function of the control amplitude in steadystate
+# DONE standard deviation of θas a function of the control amplitude in steadystate
 if PLOT_FINAL_PERFORMANCE_STD:
     Te = 0.05
     RENDER = False
@@ -278,5 +273,20 @@ if PLOT_FINAL_PERFORMANCE_STD:
     print(f'std on x: {np.std(obsArr[indexStart:, 0])}')
     print(f'mean theta : {np.mean(np.arctan2(obsArr[indexStart:, 3], obsArr[indexStart:, 2]))}')
     print(f'std on theta: {np.std(obsArr[indexStart:, 0])}')
+
+if qLearningVsDQN:
+    # DONE figure:  note as a function of steps.  3 curves:  1 DQN, 1 Q-learning with learning, 1Q - learning without learning
+    Path('./EJPH/basic').mkdir(parents=True, exist_ok=True)
+    env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, sparseReward=False, f_a=0, f_c=0, f_d=0, kPendViscous=0.0)  # ,integrator='semi-euler')#,integrator='rk4')
+    # envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.47, resetMode='random', sparseReward=False,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)#,integrator='semi-euler')#,integrator='rk4')
+    env = Monitor(env, filename=logdir + 'basic/basic_simulation_')
+    model = DQN(env=env, **hyperparams, seed=MANUAL_SEED)
+    eval_callback = EvalCustomCallback(env, eval_freq=5000, n_eval_episodes=1, deterministic=True)
+
+    with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
+        model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
+
+    # DONE Q_learning
+    plot_results(logdir + 'basic')
 
 
