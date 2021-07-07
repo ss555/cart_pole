@@ -6,6 +6,7 @@ from typing import Any, Dict
 import os
 import sys
 sys.path.append(os.path.abspath('./..'))
+sys.path.append(os.path.abspath('./'))
 from env_custom import CartPoleButter
 import gym
 import torch
@@ -92,6 +93,7 @@ class TrialEvalCallback(EvalThetaDotMetric):
             eval_env=eval_env,
             eval_freq=eval_freq,
             deterministic=deterministic,
+            save_model=False,
             verbose=verbose,
         )
         self.trial = trial

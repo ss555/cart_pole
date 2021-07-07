@@ -312,6 +312,7 @@ class EvalThetaDotMetric(EventCallback):
         eval_freq: int = 10000,
         log_path: str = None,
         best_model_save_path: str = None,
+        save_model = True,
         deterministic: bool = True,
         render: bool = False,
         verbose: int = 1,
@@ -334,10 +335,12 @@ class EvalThetaDotMetric(EventCallback):
         self.THETA_DOT_THRESHOLD = THETA_DOT_THRESHOLD
         self.THETA_THRESHOLD = -np.pi/18
         self.N_BINS=N_BINS
-        if best_model_save_path is None:
-            self.best_model_save_path = log_path+'_best.zip'
-        else:
-            self.best_model_save_path = best_model_save_path
+        self.save_model = save_model
+        if save_model:
+            if best_model_save_path is None:
+                self.best_model_save_path = log_path+'_best.zip'
+            else:
+                self.best_model_save_path = best_model_save_path
 
         if THETA_DOT_THRESHOLD != 0:
             theta_dot = np.linspace(-self.THETA_DOT_THRESHOLD, self.THETA_DOT_THRESHOLD, self.N_BINS)
@@ -394,8 +397,8 @@ class EvalThetaDotMetric(EventCallback):
                 if self.verbose > 0:
                     print("New best mean reward!")
                 # save best model
-
-                self.model.save(self.best_model_save_path)
+                if self.save_model:
+                    self.model.save(self.best_model_save_path)
                 self.best_mean_reward = mean_reward
 
                 # Trigger callback if needed
