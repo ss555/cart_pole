@@ -1,10 +1,10 @@
 """
 """
 import pickle as pkl
+import time
 from typing import Any, Dict
 import os
 import sys
-
 sys.path.append(os.path.abspath('./..'))
 from env_custom import CartPoleButter
 import gym
@@ -17,6 +17,9 @@ import optuna
 from optuna.pruners import MedianPruner
 from optuna.samplers import TPESampler
 from optuna.visualization import plot_optimization_history, plot_param_importances
+from pathlib import Path
+logdir='./optuna/'
+Path(logdir).mkdir(parents=True, exist_ok=True)
 
 N_TRIALS = 1000
 N_JOBS = 3
@@ -182,9 +185,9 @@ if __name__ == "__main__":
         print(f"    {key}: {value}")
 
     # Write report
-    study.trials_dataframe().to_csv("study_results_discrete_cartpole.csv")
+    study.trials_dataframe().to_csv(logdir+f"study_results_discrete_cartpole{time.time()}.csv")
 
-    with open("study.pkl", "wb+") as f:
+    with open(logdir+f"study{time.time()}.pkl", "wb+") as f:
         pkl.dump(study, f)
 
     fig1 = plot_optimization_history(study)
