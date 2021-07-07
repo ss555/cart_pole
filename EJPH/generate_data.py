@@ -17,8 +17,8 @@ from pathlib import Path
 from custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
 from custom_callbacks import EvalCustomCallback, EvalThetaDotMetric, moving_average
 from matplotlib import rcParams, pyplot as plt
-from bokeh.palettes import d3
 import plotly.express as px
+from bokeh.palettes import d3
 STEPS_TO_TRAIN = 150000
 EP_STEPS = 800
 Te = 0.05
@@ -30,8 +30,8 @@ STATIC_FRICTION_SIM = True
 encNoiseVarSim = True
 ACTION_NOISE_SIM = True
 RESET_EFFECT = True  # True#False
-EVAL_TENSION_FINAL_PERF = False  # evaluate final PERFORMANCE of a cartpole for different voltages
-PLOT_FINAL_PERFORMANCE_STD = False  # False#
+EVAL_TENSION_FINAL_PERF = True  # evaluate final PERFORMANCE of a cartpole for different voltages
+PLOT_FINAL_PERFORMANCE_STD = True  # False#
 SEED_TRAIN = True
 logdir = './EJPH/'
 hyperparams = read_hyperparameters('dqn_cartpole_50')
@@ -42,7 +42,7 @@ STATIC_FRICTION_ARR = np.array([0, 0.1, 1, 10]) * STATIC_FRICTION_CART
 
 # DONE temps d’apprentissage et note en fonction de l’amplitude du controle
 # TENSION_RANGE = [9.4]
-TENSION_RANGE = [4.7]#[2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]#
+TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]#
 colorArr = ['red', 'blue', 'green', 'cyan', 'yellow', 'tan', 'navy', 'black']
 # DONE temps  d’apprentissage  et  note  en  fonction  du  coefficient  de frottement dynamique
 DYNAMIC_FRICTION_PENDULUM = 0.11963736650935591
@@ -54,7 +54,7 @@ NOISE_TABLE = np.array([0, 0.01, 0.05, 0.1, 0.15, 0.5, 1, 5, 10]) * np.pi / 180
 #plot params
 plt.rcParams['font.family'] = "serif"
 plt.rcParams['font.serif'] = 'Georgia'
-plt.rcParams['font.size'] = 18
+plt.rcParams['font.size'] = 12
 plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams["figure.dpi"] = 100
 
@@ -76,10 +76,9 @@ if qLearningVsDQN:
 
     # DONE Q_learning
     plot_results(logdir + 'basic')
-sns.set_context("paper")
-sns.set_style("whitegrid")
-#TODO plot the x, theta component of reward
-#TODO normalise for 1
+# sns.set_context("paper")
+# sns.set_style("whitegrid")
+
 
 # DONE graphique la fonction de recompense qui depends de la tension a 40000 pas
 # DONE valeur de MAX recompense en fonction de tension
@@ -91,180 +90,20 @@ if EVAL_TENSION_FINAL_PERF:
     # train to generate data
     # inference to test the models
     # rainbow to plot in inference at different timesteps
-    MODE = 'INFERENCE'   # 'TRAIN' 'INFERENCE' 'RAINBOW'
-    if MODE == 'TRAIN':
-        for i, tension in enumerate(TENSION_RANGE):
-            env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')
-            envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')
-            filename = logdir + f'/tension-perf/tension_sim_{tension}_V_'
-            env = Monitor(env, filename=filename)
-            model = DQN(env=env, **hyperparams, seed=MANUAL_SEED)
-            # eval_callback = EvalThetaDotMetric(envEval, best_model_save_path=filename[:-2], log_path=filename, eval_freq=5000, deterministic=True)
-            eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000, deterministic=True)
-            print(f'simulation for {tension} V')
-            with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
-                model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
-            # scoreArr[i] = eval_callback.best_mean_reward # eval_callback.evaluations_results
-    elif MODE == 'INFERENCE':
-        def calculate_angle(prev_value,cos,sin,count=0):
-            '''
-            :param prev_value:
-            :param cos: cosinus
-            :param sin: sinus
-            :return:
-            '''
-            if prev_value - np.arctan2(sin,cos) > np.pi:
-                count += 1
-                return np.arctan2(sin, cos), count
-            elif np.arctan2(sin,cos) - prev_value > np.pi:
-                count -= 1
-                return np.arctan2(sin, cos), count
-            return np.arctan2(sin, cos), count
-        PLOT_EPISODE_REWARD = True
-        figm1, ax1 = plt.subplots()
-        figm2, ax2 = plt.subplots()
-        fig = px.scatter()
-        fig2 = px.scatter()
-        # fig = px.scatter(x=[0], y=[0])
-        for i, tension in enumerate(TENSION_RANGE):
-            prev_angle_value = 0.0
-            count_tours = 0
-            done = False
-            if PLOT_EPISODE_REWARD:
-                # env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension, resetMode='experimental', sparseReward=False)
-                env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')#CartPoleButter(tensionMax=tension,resetMode='experimental')
-                model = DQN.load(logdir + f'/tension-perf/tension_sim_{tension}_V__best.zip', env=env)
-                theta = 0
-                cosThetaIni = np.cos(theta)
-                sinThetaIni = np.sin(theta)
-                rewArr = []
-                obs = env.reset(costheta=cosThetaIni, sintheta=sinThetaIni)
-                # env.reset()
-                thetaArr, thetaDotArr, xArr, xDotArr = [], [], [], []
-                for j in range(EP_STEPS):
-                    act,_ = model.predict(obs,deterministic=True)
-                    obs, rew, done, _ = env.step(act)
-                    rewArr.append(rew)
-                    if tension==4.7:
-                        env.render()
-                    angle, count_tours = calculate_angle(prev_angle_value, obs[2], obs[3], count_tours)
-                    prev_angle_value = angle
-                    thetaArr.append(angle+count_tours*np.pi*2)
-                    thetaDotArr.append(obs[4])
-                    xArr.append(obs[0])
-                    xDotArr.append(obs[1])
-                    if done:
-                        print(f'ended episode {tension} with {count_tours} tours and {np.sum(rewArr)} reward')
-                        ax1.plot(thetaArr, '.')
-                        fig.add_scatter(x=np.linspace(1,EP_STEPS,EP_STEPS), y=thetaArr, name=f'volt: {tension}')
-                        fig2.add_scatter(x=np.linspace(1,EP_STEPS,EP_STEPS), y=xArr, name=f'volt: {tension}')
-                        break
-                        # ax1.savefig(logdir+'/thetaA.pdf')
-                #TODO theta tensions
-                #TODO time at the training
-                ax2.plot(moving_average(rewArr,20), color = colorPalette[i])
-            else:
-                episode_rewards, episode_lengths = evaluate_policy(
-                    model,
-                    env,
-                    n_eval_episodes=100,
-                    deterministic=True,
-                    return_episode_rewards=True,
-                )
-                scoreArr[i] = np.mean(episode_rewards)
-                stdArr[i] = np.std(episode_rewards)
-                print('done')
-        if PLOT_EPISODE_REWARD:
-            fig.show()
-            fig2.show()
 
-            ax1.legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
-            ax2.legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
-            ax1.set_xlabel('timesteps')
-            ax2.set_xlabel('timesteps')
-            ax2.set_ylabel('Rewards')
-            # plt.title('Effect of the applied tension on the "greedy policy" reward')
-            figm2.savefig('./EJPH/plots/episode_rew_tension.pdf')
-            figm2.show()
-            figm1.savefig('./EJPH/plots/episode_theta.pdf')
-            figm1.show()
-        else:
-            tensionMax = np.array(TENSION_RANGE)
-            plt.plot(tensionMax, scoreArr, 'ro-')
-            plt.fill_between(tensionMax, scoreArr + stdArr, scoreArr - stdArr, facecolor='red', alpha=0.5)
-            plt.xlabel('Tension (V)')
-            plt.ylabel('Rewards')
-            plt.title('Effect of the applied tension on the "greedy policy" reward')
-            plt.savefig('./EJPH/plots/episode_rew_10000eps')
-            plt.show()
-            np.savez(
-                './EJPH/plots/tension-perf10000ep',
-                tensionRange=tensionMax,
-                results=scoreArr,
-                resultsStd=stdArr
-            )
-        print('done inference on voltages')
-    elif MODE == 'RAINBOW':
-        print('plotting in rainbow for different voltages applied')
-        EP_LENGTH = 1500
-        scoreArr1 = np.zeros_like(TENSION_RANGE)
-        scoreArr2 = np.zeros_like(TENSION_RANGE)
-        scoreArr3 = np.zeros_like(TENSION_RANGE)
-        scoreArr4 = np.zeros_like(TENSION_RANGE)
-        scoreArr5 = np.zeros_like(TENSION_RANGE)
-        p1, p2, p3, p4, p5 = 0.2, 0.4, 0.6, 0.8, 1
-        for j, tension in enumerate(TENSION_RANGE):
-            env = CartPoleButter(Te=Te, N_STEPS=EP_LENGTH, discreteActions=True, tensionMax=tension, resetMode='experimental', sparseReward=False)
-            model = DQN.load(logdir + f'/tension-perf/tension_sim_{tension}_V_2', env=env)
-            # model = DQN.load(logdir + f'/tension-perf/thetaDot10/tension_sim_{tension}_V_.zip_2', env=env)
-            episode_rewards = 0
-            # THETA_THRESHOLD = np.pi/18
-            # theta = np.linspace(-THETA_THRESHOLD, THETA_THRESHOLD, N_TRIALS)
-            obs = env.reset(costheta=0.984807753012208,sintheta=-0.17364817766693033)
-            for i in range(EP_LENGTH):
-                action, _state = model.predict(obs)
-                obs, cost, done, _ = env.step(action)
-                episode_rewards += cost
-                if i == int(EP_LENGTH * p1 - 1):
-                    scoreArr1[j] = episode_rewards  # np.mean(episode_rewards)
-                elif i == int(EP_LENGTH * p2 - 1):
-                    scoreArr2[j] = episode_rewards
-                elif i == int(EP_LENGTH * p3 - 1):
-                    scoreArr3[j] = episode_rewards
-                elif i == int(EP_LENGTH * p4 - 1):
-                    scoreArr4[j] = episode_rewards
-                elif i == int(EP_LENGTH * p5 - 1):
-                    scoreArr5[j] = episode_rewards
-                if done:
-                    print(f'observations: {obs} and i: {i}')
-                    break
+    for i, tension in enumerate(TENSION_RANGE):
+        env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')
+        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')
+        filename = logdir + f'/tension-perf/tension_sim_{tension}_V_'
+        env = Monitor(env, filename=filename)
+        model = DQN(env=env, **hyperparams, seed=MANUAL_SEED)
+        # eval_callback = EvalThetaDotMetric(envEval, best_model_save_path=filename[:-2], log_path=filename, eval_freq=5000, deterministic=True)
+        eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000, deterministic=True)
+        print(f'simulation for {tension} V')
+        with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
+            model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
+        # scoreArr[i] = eval_callback.best_mean_reward # eval_callback.evaluations_results
 
-            print('done')
-
-
-        fillArr = np.zeros_like(scoreArr1)
-        plt.plot(TENSION_RANGE, scoreArr1, 'o-r')
-        plt.fill_between(TENSION_RANGE, scoreArr1, fillArr, facecolor=colorArr[0], alpha=0.5)
-        plt.plot(TENSION_RANGE, scoreArr2, 'o-b')
-        plt.fill_between(TENSION_RANGE, scoreArr2, scoreArr1, facecolor=colorArr[1], alpha=0.5)
-        plt.plot(TENSION_RANGE, scoreArr3, 'o-g')
-        plt.fill_between(TENSION_RANGE, scoreArr3, scoreArr2, facecolor=colorArr[2], alpha=0.5)
-        plt.plot(TENSION_RANGE, scoreArr4, 'o-c')
-        plt.fill_between(TENSION_RANGE, scoreArr4, scoreArr3, facecolor=colorArr[3], alpha=0.5)
-        plt.plot(TENSION_RANGE, scoreArr5, 'o-y')
-        plt.fill_between(TENSION_RANGE, scoreArr5, scoreArr4, facecolor=colorArr[4], alpha=0.5)
-        plt.hlines(y=2*EP_LENGTH,xmin=min(TENSION_RANGE),xmax=max(TENSION_RANGE),linestyles='--')
-        plt.grid()
-        plt.xlabel('Tension (V)')
-        plt.ylabel('Rewards')
-        plt.title('Effect of the applied tension on the "greedy policy" reward')
-
-        # for p
-        plt.legend([f'{int(p1 * 100)}% of episode', f'{int(p2 * 100)}% of episode', f'{int(p3 * 100)}% of episode',f'{int(p4 * 100)}% of episode',f'{int(p5 * 100)}% of episode'],
-                   loc='best')
-        plt.savefig('./EJPH/plots/episode_rainbow')
-        plt.show()
-    # elif MODE == '':
 
     plot_results(logdir + 'tension-perf', paperMode=True)
 
@@ -317,12 +156,11 @@ if encNoiseVarSim:
             model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
     plot_results(logdir + 'encoder-noise')
 
-# TODO effect of initialisation with eval callback
-if RESET_EFFECT:
 
+if RESET_EFFECT:
     Path('./EJPH/experimental-vs-random').mkdir(exist_ok=True)
     filenames = []
-    filename = logdir + f'experimental-vs-random/experimental'
+    filename = logdir + f'experimental-vs-random/_experimental_'
     env0 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental', sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
     envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental', sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
     env = Monitor(env0, filename=filename)
@@ -331,17 +169,19 @@ if RESET_EFFECT:
     print(f'simulation with experimental reset')
     with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
         model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
+    env.close()
 
     print(f'simulation with random reset')
-    filename = logdir + f'experimental-vs-random/random'
+    filename = logdir + f'experimental-vs-random/_random_'
     env0 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='random', sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
     envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='random', sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
     env = Monitor(env0, filename=filename)
     eval_callback2 = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000, deterministic=True)
     model = DQN(env=env, **hyperparams)
-    print(f'simulation with random reset')
     with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
         model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback2])
+    env0.close()
+    del model
 
     # filename = logdir + f'experimental-vs-random/iniThetaDot'
     # envTheta0 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental', thetaDotReset=13, sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
@@ -362,27 +202,47 @@ if ACTION_NOISE_SIM:
         Path('./EJPH/action-noise').mkdir(exist_ok=True)
         env0 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental',sparseReward=False, forceStd=forceStd)
         envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental',sparseReward=False, forceStd=forceStd)
-        env = Monitor(env, filename=logdir + f'action-noise/actionStd%-{forceStd}')
+        env = Monitor(env0, filename=logdir + f'action-noise/actionStd%_{forceStd}_')
         eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000)
         model = DQN(env=env, **hyperparams)
         print(f'simulation with action noise in {forceStd}%')
         with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
             model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
     plot_results(logdir + 'action-noise')
+    env0.close()
 
-if SEED_TRAIN:
+if SEED_TRAIN:#basic model with default parameters
     # DONE figure:  note as a function of steps.  3 curves:  1 DQN, 1 Q-learning with learning, 1Q-learning without learning
     Path('./EJPH/seeds').mkdir(parents=True, exist_ok=True)
     for seed in range(10):
         env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode='experimental',
                              sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
-        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706,
-                                 resetMode='random_theta_thetaDot',
+        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode='experimental',
                                  sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
         filename = logdir + f'seeds/basic_{seed}'
         env = Monitor(env, filename)
         eval_callback = EvalCustomCallback(envEval, log_path=filename, eval_freq=5000, n_eval_episodes=51,
                                            deterministic=True)
+        model = DQN(env=env, **hyperparams, seed=seed)
+        with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
+            model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
+    plot_results(logdir + 'seeds')
+#
+#TODO courbe avec seed 0
+#TODO courbe 14,13,boxplots pour 0
+#TODO 5.9V optuna params for 12V;
+#rainbow
+if SEED_TRAIN_NO_FRICTION:#basic model
+    # DONE figure:  note as a function of steps.  3 curves:  1 DQN, 1 Q-learning with learning, 1Q-learning without learning
+    Path('./EJPH/seeds').mkdir(parents=True, exist_ok=True)
+    for seed in range(10):
+        env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=12, resetMode='experimental',
+                             sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
+        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=12, resetMode='experimental',
+                                 sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
+        filename = logdir + f'seeds/basic_{seed}'
+        env = Monitor(env, filename)
+        eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000)
         model = DQN(env=env, **hyperparams, seed=seed)
         with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
             model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
@@ -419,5 +279,4 @@ if PLOT_FINAL_PERFORMANCE_STD:
     print(f'mean theta : {np.mean(np.arctan2(obsArr[indexStart:, 3], obsArr[indexStart:, 2]))}')
     print(f'std on theta: {np.std(obsArr[indexStart:, 0])}')
 
-# TODO initialise random, inference graph
-# TODO l'apprentissage/l'inferance/varie_temps_finale
+

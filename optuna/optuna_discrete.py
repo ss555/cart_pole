@@ -12,7 +12,7 @@ import torch
 import torch.nn as nn
 from stable_baselines3 import DQN
 from stable_baselines3.common.callbacks import EvalCallback
-
+from custom_callbacks import EvalThetaDotMetric
 import optuna
 from optuna.pruners import MedianPruner
 from optuna.samplers import TPESampler
@@ -28,7 +28,7 @@ N_EVAL_EPISODES = 1
 TIMEOUT = int(60 * 15)  # 15 minutes
 Te = 0.05
 EP_STEPS = 800
-
+TENSION_MAX = 5.9
 
 # def q_learning(trial: optuna.Trial) -> Dict[str,Any]:
 #     gamma = trial.suggest_uniform("gamma",0.8,0.9999)
@@ -45,7 +45,7 @@ def sample_dqn_params(trial: optuna.Trial) -> Dict[str, Any]:
     batch_size = trial.suggest_categorical("batch_size", [128, 256, 512, 1024])#16, 32, 64, 100,
     buffer_size = trial.suggest_categorical("buffer_size", [int(1e4), int(5e4), int(1e5), int(5e5)])
     exploration_final_eps = trial.suggest_uniform("exploration_final_eps", 0, 0.2)
-    exploration_fraction = trial.suggest_uniform("exploration_fraction", 0, 0.5)
+    exploration_fraction = trial.suggest_uniform("exploration_fraction", 0, 1)
     target_update_interval = trial.suggest_categorical("target_update_interval", [1, 1000, 5000, 10000, 1500, 200])
     learning_starts = trial.suggest_categorical("learning_starts", [0, 1000, 5000, 10000, 20000])
 
@@ -72,7 +72,7 @@ def sample_dqn_params(trial: optuna.Trial) -> Dict[str, Any]:
 DEFAULT_HYPERPARAMS = {
     "policy": "MlpPolicy"
 }
-class TrialEvalCallback(EvalCallback):
+class TrialEvalCallback(EvalThetaDotMetric):
     """Callback used for evaluating and reporting a trial."""
 
     def __init__(
@@ -87,7 +87,6 @@ class TrialEvalCallback(EvalCallback):
 
         super().__init__(
             eval_env=eval_env,
-            n_eval_episodes=n_eval_episodes,
             eval_freq=eval_freq,
             deterministic=deterministic,
             verbose=verbose,
@@ -113,13 +112,11 @@ def objective(trial: optuna.Trial) -> float:
     kwargs = DEFAULT_HYPERPARAMS.copy()
     # Sample hyperparameters
     kwargs.update(sample_dqn_params(trial))
-    env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=4.7,
-                              resetMode='experimental', sparseReward=False)  # ,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)
-
+    env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=TENSION_MAX, resetMode='experimental', sparseReward=False)  # ,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)
     # Create the RL model
     model = DQN(**kwargs, env=env)
     # Create env used for evaluation
-    eval_env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode='experimental', sparseReward=False)#,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)
+    eval_env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=TENSION_MAX, resetMode='experimental', sparseReward=False)#,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)
     # Create the callback that will periodically evaluate
     # and report the performance
     eval_callback = TrialEvalCallback(

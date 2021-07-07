@@ -18,24 +18,27 @@ from matplotlib import pyplot as plt
 from time import time
 # sns.set_context("paper")
 # sns.set_style("whitegrid")
+#plot params
+plt.rcParams['font.family'] = "serif"
+plt.rcParams['font.serif'] = 'Georgia'
+plt.rcParams['font.size'] = 12
+plt.rcParams['mathtext.fontset'] = 'stix'
+plt.rcParams["figure.dpi"] = 100
 
 start_time=time()
 TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]
 Te=0.05
-EP_STEPS=3000
+EP_STEPS=800
 scoreArr=np.zeros_like(TENSION_RANGE)
 stdArr=np.zeros_like(TENSION_RANGE)
 episodeArr=[]
 for i, tension in enumerate(TENSION_RANGE):
     env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension, resetMode='experimental', sparseReward=False)
-    # env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension, resetMode='random_theta_thetaDot', sparseReward=False)
-    # model = DQN.load(f'./EJPH/tension-perf/thetaDot10/tension_sim_{tension}_V_.zip_2', env=env)
-    model = DQN.load(f'./EJPH/tension-perf/tension_sim_{tension}_V_2', env=env)
-    # model = DQN.load(f'./EJPH/tension-perf/tension-perf{tension}', env=env)
+    model = DQN.load(f'./EJPH/tension-perf/tension_sim_{tension}_V__best', env=env)
     # episode_rewards, episode_lengths = evaluate_policy_episodes(env=env,model=model,n_eval_episodes=100,episode_steps=EP_STEPS)
     THETA_DOT_THRESHOLD=0
     N_TRIALS=10
-    THETA_THRESHOLD = np.pi/18
+    THETA_THRESHOLD = 0#np.pi/18
 
     if THETA_DOT_THRESHOLD!=0:
         theta_dot = np.linspace(-THETA_DOT_THRESHOLD, THETA_DOT_THRESHOLD, N_TRIALS)
@@ -62,9 +65,11 @@ for i, tension in enumerate(TENSION_RANGE):
             episode_rewards[j, l] = reward
             l += 1
         lengthArr[j] = l
-    scoreArr[i] = np.mean(episode_rewards[:,1000:])
-    stdArr[i] = np.std(episode_rewards[:,1000:])
-    episodeArr.append(np.mean(episode_rewards,axis=0)[1000:])#taking the mean of 10 episodes in a steady state
+    #NOT USED
+    scoreArr[i] = np.mean(episode_rewards[:,-200:])
+    stdArr[i] = np.std(episode_rewards[:,-200:])
+    ##boxplot
+    episodeArr.append(episode_rewards[:,-200:].flatten())#taking the mean of 10 episodes in a steady state
     # epArr = [np.mean(s, axis=0) for s in episodeArr]
     print(scoreArr[i])
 plt.plot(arrTest[:,0], arrTest[:,1], '.')
@@ -77,10 +82,10 @@ plt.grid()
 plt.ylabel('mean reward per step')
 plt.xlabel('Applied DC motor Tension (V)')
 if THETA_THRESHOLD==0:
-    plt.title('Effect of varying tension on greedy policy reward (Θ,Θ_dot)=(0,0)',fontsize = 9)
+    #plt.title('Effect of varying tension on greedy policy reward (Θ,Θ_dot)=(0,0)',fontsize = 9)
     plt.savefig('./EJPH/plots/boxplot-control.pdf')
 else:
-    plt.title('Effect of varying tension on greedy policy reward (Θ,Θ_dot)=(-10°:10°,0)',fontsize = 9)
+    # plt.title('Effect of varying tension on greedy policy reward (Θ,Θ_dot)=(-10°:10°,0)',fontsize = 9)
     plt.savefig('./EJPH/plots/boxplot-control10.pdf')
 plt.show()
 

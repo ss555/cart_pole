@@ -13,6 +13,9 @@ from stable_baselines3.common.vec_env import VecEnv
 # Import seaborn
 import seaborn as sns
 from env_wrappers import load_results
+from bokeh.palettes import d3
+
+
 
 def _save_config(self, saved_hyperparams: Dict[str, Any]) -> None:
     # Save hyperparams

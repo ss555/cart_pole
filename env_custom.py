@@ -147,13 +147,12 @@ class CartPoleButter(gym.Env):
         return [seed]
     def _calculate_force(self,action): #TODO fc a 0
         try:
-            # if action[0]!=0.0:
-            #     f = self.masscart*(self.fa*self.state[1] + self.fb*(self.tensionMax*action[0]+self.fd/self.fb)+self.fc*np.sign(self.state[1]))  #PWM 180 : 7.437548494321268
-            # else:
-            #     f = self.masscart*(self.fa*self.state[1] + self.fc*np.sign(self.state[1]))
-            f = self.masscart * (self.fa * self.state[1] + self.fb * (self.tensionMax * action[0]) + self.fc * np.sign(self.state[1]))
+            if action[0]==0:
+                f = self.masscart * (self.fa * self.state[1] + self.fc * np.sign(self.state[1]))
+            else:
+                f = self.masscart * (self.fa * self.state[1] + self.fb * (self.tensionMax * action[0]) + self.fc * np.sign(self.state[1])+self.fd)
         except:
-            print('error')
+            print('error on force')
         return f
     def step(self, action):
         [x, x_dot, costheta, sintheta, theta_dot]=self.state

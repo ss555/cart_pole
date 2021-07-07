@@ -116,7 +116,7 @@ def moving_average(values, window):
 
 def plot_results(log_folder, window_size=30, title='Learning Curve',only_return_data=False, paperMode=False):
     """
-    plot the results
+    plot the results or returns data from log files
     :param log_folder: (str) the save location of the results to plot
     :param title: (str) the title of the task to plot
     """  # x, y = ts2xy(load_results(log_folder), 'walltime_hrs')#'timesteps')
@@ -125,7 +125,6 @@ def plot_results(log_folder, window_size=30, title='Learning Curve',only_return_
     data_frame, legends = load_results(log_folder)
     for data in data_frame:
         # Convert to hours
-        # x_var = data.t.values / 3600.0
         x_var = np.cumsum(data.l.values)
         y_var = data.r.values
         try:
@@ -161,7 +160,7 @@ def plot_results(log_folder, window_size=30, title='Learning Curve',only_return_
         plt.savefig(log_folder+'/plot.png')
         plt.show()
         print(f'saved to {log_folder}')
-    return x_varArr,y_varArr,legends
+    return x_varArr, y_varArr, legends
 
 class CheckPointEpisode(BaseCallback):
     '''

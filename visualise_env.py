@@ -108,4 +108,4 @@ elif mode == 'oscillate':
             if dones:
                 break
                 env.reset()
-plot(obsArr, timeArr,actArr,plotlyUse=True)
+plot(obsArr, timeArr, actArr, plotlyUse=True)
