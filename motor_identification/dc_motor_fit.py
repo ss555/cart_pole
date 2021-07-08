@@ -134,26 +134,27 @@ def plot_experimental_fitted(filename,fA,fB,fC,fD):
     fig.show()
 
 print(os.getcwd())
-# absPath='/home/sardor/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/chariot_data'#+'./chariot_iden.csv'
-absPath='/home/sardor/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/chariot_data_180PWM'
+absPath='/home/sardor/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/chariot_data'#+'./chariot_iden.csv'
+# absPath='/home/sardor/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/chariot_data_180PWM'
 # absPath='/home/sardor/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/chariot_data_150_180PWM'
 #initial data:
 #pwm speed acceleration
 
 #acceleration speed pwm
 # expData,dt =parce_csv(absPath,False,None,None)
-expData,dt = parce_csv(absPath)#,fitTensionMin=150,fitTensionMax=170) #-22.713789110751794, 1.0325247560625972, 0.5808162775799824
+expData,dt = parce_csv(absPath,fitTensionMin=150,fitTensionMax=180) #-22.713789110751794, 1.0325247560625972, 0.5808162775799824
 # (-19.355136863835682, 0.925594504005501, 0.15323233104506603, -0.19643065915299515)
 
 # weighted_data
 # [fA,fB,fC,error] = regression_chariot(expData)
 [fA,fB,fC,fD,error] = regression_chariot(expData,symmetricTension=False)
 # [fA,fB,fC,fD,error] = regression_chariot(expData,weightedStartRegression=3,weight=150,symmetricTension=False)
-expData,dt = parce_csv(absPath)#,fitTensionMin=150,fitTensionMax=170)
+expData,dt = parce_csv(absPath,fitTensionMin=170,fitTensionMax=190)#,fitTensionMin=150,fitTensionMax=170)
+[fA,fB,fC,fD] = [-21.30359185798466, 1.1088617953891196, -0.902272006611719, -0.03935160774012411]
 plot_experimental_fitted(absPath+'/chariot_iden.csv',fA,fB,fC,fD)
 
-print(len(expData))
-print(error)
+print(f'sampling points: {len(expData)}')
+print(f'error: {error}')
 print(f'{fA,fB,fC,fD}')
 #c++
 # (-9.992699476436576, 0.5283959730526665, -0.4335098068332604)

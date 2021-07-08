@@ -181,7 +181,7 @@ expData,dt,weightedData = parce_csv(absPath,weightedStartRegression=0,weight=200
 # weighted_data
 [fA,fB,fC,fD,error] = regression_chariot(weightedData,symmetricTension=True)
 
-plot_experimental_fitted(absPath+'/chariot_iden.csv',fA,fB,fC,fD,applyFiltering=False,Nf = 4,fc=2)
+plot_experimental_fitted(absPath+'/chariot_iden.csv', fA, fB, fC, fD,applyFiltering=False,Nf = 4,fc = 2)
 
 print(len(expData))
 print(error)

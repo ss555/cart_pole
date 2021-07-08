@@ -1,7 +1,6 @@
 import sys
 import os
 import numpy as np
-import seaborn as sns
 import time
 sys.path.append(os.path.abspath('./'))
 sys.path.append(os.path.abspath('./..'))
@@ -21,7 +20,7 @@ from bokeh.palettes import d3
 STEPS_TO_TRAIN = 150000
 EP_STEPS = 800
 Te = 0.05
-MANUAL_SEED = 5
+MANUAL_SEED = 0
 # simulation results
 #TODO mettre courbes dans l'env
 #TODO 6.1 mettre:
@@ -34,9 +33,9 @@ encNoiseVarSim = False
 ACTION_NOISE_SIM = False
 RESET_EFFECT = False  # True#False
 EVAL_TENSION_FINAL_PERF = False  # evaluate final PERFORMANCE of a cartpole for different voltages
-PLOT_FINAL_PERFORMANCE_STD = False  # False#
-SEED_TRAIN = True
+SEED_TRAIN = False
 #other
+PLOT_FINAL_PERFORMANCE_STD = False  # False#
 qLearningVsDQN = False  # compare q-learn and dqn
 EVAL_TENSION_FINAL_PERF_seed = False  # evaluate final PERFORMANCE of a cartpole for different voltages
 logdir = './EJPH/'
@@ -76,7 +75,6 @@ colorPalette = d3['Category20'][8]
 if EVAL_TENSION_FINAL_PERF:
     Path('./EJPH/tension-perf').mkdir(parents=True, exist_ok=True)
     filenames = []
-
     # train to generate data
     # inference to test the models
     # rainbow to plot in inference at different timesteps
@@ -94,28 +92,7 @@ if EVAL_TENSION_FINAL_PERF:
         # scoreArr[i] = eval_callback.best_mean_reward # eval_callback.evaluations_results
     plot_results(logdir + 'tension-perf', paperMode=True)
 
-if EVAL_TENSION_FINAL_PERF_seed:
-    saveFolder='./EJPH/tension-perf-seed'
-    Path(saveFolder).mkdir(parents=True, exist_ok=True)
-    filenames = []
-    seed=0
-    print(f'starting with seed{seed}')
-    # train to generate data
-    # inference to test the models
-    # rainbow to plot in inference at different timesteps
-    for i, tension in enumerate(TENSION_RANGE):
-        env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')
-        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')
-        filename = saveFolder + f'/tension_sim_{tension}_V_'
-        env = Monitor(env, filename=filename)
-        model = DQN(env=env, **hyperparams, seed=seed)
-        # eval_callback = EvalThetaDotMetric(envEval, best_model_save_path=filename[:-2], log_path=filename, eval_freq=5000, deterministic=True)
-        eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000, deterministic=True)
-        print(f'simulation for {tension} V')
-        with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
-            model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
-        # scoreArr[i] = eval_callback.best_mean_reward # eval_callback.evaluations_results
-    plot_results(saveFolder, paperMode=True)
+
 
 if STATIC_FRICTION_SIM:
     Path('./EJPH/static-friction').mkdir(exist_ok=True)
@@ -290,3 +267,25 @@ if qLearningVsDQN:
     plot_results(logdir + 'basic')
 
 
+if EVAL_TENSION_FINAL_PERF_seed:
+    saveFolder='./EJPH/tension-perf-seed'
+    Path(saveFolder).mkdir(parents=True, exist_ok=True)
+    filenames = []
+    seed=0
+    print(f'starting with seed{seed}')
+    # train to generate data
+    # inference to test the models
+    # rainbow to plot in inference at different timesteps
+    for i, tension in enumerate(TENSION_RANGE):
+        env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')
+        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')
+        filename = saveFolder + f'/tension_sim_{tension}_V_'
+        env = Monitor(env, filename=filename)
+        model = DQN(env=env, **hyperparams, seed=seed)
+        # eval_callback = EvalThetaDotMetric(envEval, best_model_save_path=filename[:-2], log_path=filename, eval_freq=5000, deterministic=True)
+        eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000, deterministic=True)
+        print(f'simulation for {tension} V')
+        with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
+            model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
+        # scoreArr[i] = eval_callback.best_mean_reward # eval_callback.evaluations_results
+    plot_results(saveFolder, paperMode=True)
