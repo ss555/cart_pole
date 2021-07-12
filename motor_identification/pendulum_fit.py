@@ -127,9 +127,9 @@ def process_angle_raw(absPath,plot=True):
             timeArr=np.hstack((timeArr,time[cutEdgeInd:-cutEdgeInd]))
         except:
             print('smth is wrong with the data')
-    return np.vstack((aArr,vArr,posArr)).T
+    return np.vstack((aArr,vArr,posArr)).T , timeArr
 
-def fit_params(data):
+def fit_params(data, time=None):
     '''
 
     :param data: aArr,vArr,posArr
@@ -140,24 +140,30 @@ def fit_params(data):
     # since theta=0 is up in the acquisition script, we have an inverted sine in the equation ddot(theta) = w**2 * sin(theta) + Kvisc*theta)
     regA = np.stack((np.sin(data[:,2]),data[:,1]),axis=1)
     X = np.linalg.lstsq(regA,regB, rcond=None)[0]
-    indStartPlot = 2000
-    indEndPlot = 4000
-    fig,ax=plt.subplots()
-    ax.plot(regB[indStartPlot:indEndPlot],'r.')
-    regRes=np.matmul(regA,X)
-    ax.plot(regRes[indStartPlot:indEndPlot])
+    try:
+        indStartPlot = 2000
+        indEndPlot = 4000
+        #plot fitted curve
+        fig,ax=plt.subplots()
+        ax.plot(time[indStartPlot:indEndPlot]-time[indStartPlot],regB[indStartPlot:indEndPlot],'r.')
+        regRes=np.matmul(regA,X)
+        ax.plot(time[indStartPlot:indEndPlot]-time[indStartPlot],regRes[indStartPlot:indEndPlot])
 
-    ax.legend(['experimental','fitted'],loc='best')#bbox_to_anchor=(1.05, 1))
-    # ax.legend(['filtered experimental acceleration','fitted curve'],bbox_to_anchor=(1.05, 1))
-    plt.tight_layout()
-    plt.savefig('./EJPH/plots/regression_theta_ddot.pdf')
-    fig.show()
+        ax.legend(['experimental','fitted'],loc='best')#bbox_to_anchor=(1.05, 1))
+        ax.set_xlabel('time in [s]')
+        ax.set_ylabel('acceleration in [m/s^2]')
+        # ax.set_xlabel('time in [ms]')
+        # ax.legend(['filtered experimental acceleration','fitted curve'],bbox_to_anchor=(1.05, 1))
+        plt.tight_layout()
+        plt.savefig('./EJPH/plots/regression_theta_ddot.pdf')
+        fig.show()
+    except:
+        print('smth is wrong to plot fitted curve')
     return X
 
-expData = process_angle_raw(absPath,plot=False)
-
+expData, time = process_angle_raw(absPath,plot=False)
 # [wSquare,kViscous,cStatic]=fit_params(expData)
-[wSquare,kViscous]=fit_params(expData)
+[wSquare,kViscous] = fit_params(expData,time=time)
 print([wSquare,kViscous])
 print(f'freq{np.sqrt(wSquare)}')
 
@@ -177,11 +183,26 @@ if plot_fitted:
         dt = np.mean(np.diff(time))
         v = np.convolve(posRaw, [-0.5, 0, 0.5], 'valid') / dt
         a = np.convolve(posRaw, [1, -2, 1], 'valid') / dt ** 2
-
     figS, ax = plt.subplots(figsize=(6, 3))
     ax.plot(time, posRaw, 'ro')
     figS.savefig('./EJPH/plots/pendulum_ukf_filtering.pdf')
     figS.show()
+
+    indStartPlot = 2000
+    indEndPlot = 4000
+    fig,ax=plt.subplots()
+    ax.plot(regB[indStartPlot:indEndPlot],'r.')
+    regRes=np.matmul(regA,X)
+    ax.plot(regRes[indStartPlot:indEndPlot])
+
+    ax.legend(['experimental','fitted'],loc='best')#bbox_to_anchor=(1.05, 1))
+    ax.set_xlabel('timesteps')
+    ax.set_ylabel('acceleration in m/s^2')
+    # ax.set_xlabel('time in [ms]')
+    # ax.legend(['filtered experimental acceleration','fitted curve'],bbox_to_anchor=(1.05, 1))
+    plt.tight_layout()
+    plt.savefig('./EJPH/plots/regression_theta_ddot.pdf')
+    fig.show()
 #1data
 #[-1.4349472355174064, 0.07157002894573239, -0.013867312724331888]
 #[21.274437162999224, 0.09899092543427149]

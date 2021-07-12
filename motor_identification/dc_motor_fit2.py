@@ -137,8 +137,6 @@ def plot_experimental_fitted(filename,fA,fB,fC,fD,applyFiltering=False,Nf = 4,fc
     # dv = -a * vs[i] + b * u + c * np.sign(vs[i])
     figSave,ax = plt.subplots()
     legs=[]
-
-
     fileData = np.genfromtxt(filename, delimiter=',').T
     pwmStart = int(min(abs(fileData[:, 0])))
     pwmEnd   = int(max(fileData[:, 0]))
@@ -194,6 +192,9 @@ def plot_experimental_fitted(filename,fA,fB,fC,fD,applyFiltering=False,Nf = 4,fc
 
 
     ax.legend(legs,bbox_to_anchor=(1.05, 1))
+
+    ax.set_xlabel('time in [s]')
+    ax.set_ylabel('speed in [m/s]')
     plt.tight_layout()
     figSave.savefig('./EJPH/plots/regression_chariot.pdf')
     figSave.show()

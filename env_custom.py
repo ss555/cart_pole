@@ -12,11 +12,6 @@ import iir_filter
 import json
 from matplotlib import pyplot as plt
 
-#PWM 180
-#[23.324883933440137, 0.2526389615136766]
-[A,B,C,D] = [-20.75180095541654, 1.059719258572224, -1.166390864012042, -0.09727843708918459] #alu pendulum
-# old pendulum [A,B,C,D] = [-21.30359185798466, 1.1088617953891196, -0.902272006611719, -0.03935160774012411]
-wAngular = 4.881653071189049#old pendulum : 4.85658326956131
 def reward_fnCos(x, costheta, sintheta=0, theta_dot=0, sparse=False, Kx=5):
     if sparse:
         reward = 0.0
@@ -27,13 +22,6 @@ def reward_fnCos(x, costheta, sintheta=0, theta_dot=0, sparse=False, Kx=5):
     return reward
 
 
-length=0.416#center of mass
-N_STEPS=800
-# #TEST#
-K1 = 18.8 #30#Guil  #dynamic friction
-kPendViscous = 0.07035332644615992#0.11963736650935591#0.15 #2 #0.1  #friction on theta
-
-
 class CartPoleButter(gym.Env):
     def __init__(self,
                  Te=0.05,
@@ -41,13 +29,13 @@ class CartPoleButter(gym.Env):
                  resetMode='experimental',
                  Mcart=0.5,
                  Mpole = 0.075,
-                 length=0.416,
+                 length=0.411488843930847,
                  f_a=-20.75180095541654,#-21.30359185798466,
                  f_b=1.059719258572224,#1.1088617953891196,
                  f_c=-1.166390864012042,#-0.902272006611719,
                  f_d= -0.09727843708918459,#0.0393516077401241, #0.0,#
-                 wAngular = 4.85658326956131,
-                 kPendViscous = 0.11963736650935591,#0.0,#
+                 wAngular = 4.881653071189049,
+                 kPendViscous = 0.07035332644615992,#0.0,#
                  integrator="semi-euler",
                  tensionMax=12,
                  FILTER=False,
@@ -98,7 +86,6 @@ class CartPoleButter(gym.Env):
         self.masspoleIni = Mpole
         self.total_mass = (self.masspoleIni + self.masscart)
         self.length = length  # center of mass
-        # 
         self.tau = Te  # seconds between state updates
         self.kinematics_integrator = integrator  # 'rk'#
         self.theta_threshold_radians = math.pi
