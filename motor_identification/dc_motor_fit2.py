@@ -27,6 +27,17 @@ def parce_csv(absPath,PLOT=False,fitTensionMin=None,fitTensionMax=None,weightedS
         dt=np.mean(np.diff(data[:,2]))
     return data[1:,:],dt,weightedData
 def preprocess_data(fileData,plot=False,weightedStartRegression=0,weight=10, fitTensionMin=None,fitTensionMax=None):
+    '''
+    ATTENTION: tension is inverted, i.e when POSITIVE PWM applied there is - speed,
+    SO WE INVERT it when adding to final array
+    :param fileData:
+    :param plot:
+    :param weightedStartRegression:
+    :param weight:
+    :param fitTensionMin:
+    :param fitTensionMax:
+    :return:
+    '''
     ##PWM time(s) position(x)
     res=np.zeros_like(fileData)
     weightedRes=np.zeros_like(fileData)
@@ -98,10 +109,11 @@ def regression_chariot(data,symmetricTension=True):
     '''
     regB=data[:,0].reshape(-1,1) #acceleration
     if symmetricTension:
-        regA=np.stack([data[:,1],data[:,2],np.sign(data[:,1])],axis=1)
+        regA=np.stack([data[:,1],-data[:,2],np.sign(data[:,1])],axis=1)# -VOLTAGE because of inverted tension
     else:
-        regA=np.stack([data[:,1],data[:,2],np.sign(data[:,1]),np.ones_like(np.sign(data[:,1]))],axis=1)
+        regA=np.stack([data[:,1],-data[:,2],np.sign(data[:,1]),np.ones_like(np.sign(-data[:,2]))],axis=1) # -VOLTAGE because of inverted tension
     X=np.linalg.lstsq(regA,regB,rcond=None)
+    #ANOTHER METHOD USING RANSACRegressor
     # import sklearn.linear_model as sk
     # from sklearn.linear_model import SGDRegressor
     # from sklearn.pipeline import make_pipeline
@@ -123,6 +135,10 @@ def regression_chariot(data,symmetricTension=True):
     return np.hstack([X, error])
 def plot_experimental_fitted(filename,fA,fB,fC,fD,applyFiltering=False,Nf = 4,fc=4):
     # dv = -a * vs[i] + b * u + c * np.sign(vs[i])
+    figSave,ax = plt.subplots()
+    legs=[]
+
+
     fileData = np.genfromtxt(filename, delimiter=',').T
     pwmStart = int(min(abs(fileData[:, 0])))
     pwmEnd   = int(max(fileData[:, 0]))
@@ -139,10 +155,17 @@ def plot_experimental_fitted(filename,fA,fB,fC,fD,applyFiltering=False,Nf = 4,fc
         time_offset=localData[0,1]
         v_fitted = integrate_acceleration(fA,fB,fC,fD,u,timeArr=localData[:,1])
         if applyFiltering:
+            #butterworth filtering
             bf, af = signal.butter(Nf, 2 * (dt * fc))
             v = signal.filtfilt(bf, af, v, padtype=None)
+            #TODOO? cut the edges
         fig.add_scatter(x=localData[1:-1, 1], y=v, name=("%.1fV"%u[0]))
         fig.add_scatter(x=localData[:,1], y=v_fitted)
+        if abs(i)%50==0 and abs(i)<210:
+            ax.plot(localData[1:-1, 1]-localData[1, 1],v,'.')
+            legs.append(str(round(-i/255*12,1))) # - because of inverted tension
+            legs.append(str(round(-i / 255 * 12, 1))+' fitted') # - because of inverted tension
+            ax.plot(localData[:,1]-localData[0,1], v_fitted,)
         # except:
         #     print('plot_experimental_fitted error')
     for i in range(pwmStart, pwmEnd + 10, 10):
@@ -162,26 +185,32 @@ def plot_experimental_fitted(filename,fA,fB,fC,fD,applyFiltering=False,Nf = 4,fc
             pass
         fig.add_scatter(x=localData[1:-1, 1], y=v, name=("%.1fV"%u[0]))
         fig.add_scatter(x=localData[:, 1], y=v_fitted)
+        if abs(i)%50==0 and abs(i)<210:
+            ax.plot(localData[1:-1, 1]-localData[1, 1], v,'.')
+            ax.plot(localData[:,1]-localData[0,1], v_fitted)
+            legs.append(str(round(i/255*12,1)))
+            legs.append(str(round(i / 255 * 12, 1))+' fitted')
     fig.show()
 
+
+    ax.legend(legs,bbox_to_anchor=(1.05, 1))
+    plt.tight_layout()
+    figSave.savefig('./EJPH/plots/regression_chariot.pdf')
+    figSave.show()
+
 print(os.getcwd())
-absPath='/home/sardor/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/chariot_data'#+'./chariot_iden.csv'
-# absPath='/home/sardor/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/chariot_data_150_180PWM'
-# absPath='/home/sardor/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/chariot_data_180PWM'
-#initial data:
+absPath='/home/sardor/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/idenChariotCsv'# absPath='/home/sardor/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/chariot_data'#+'./chariot_iden.csv'
 #pwm speed acceleration
 
 #processed:
 #acceleration speed pwm
 # expData,dt =parce_csv(absPath,False,None,None)
-expData,dt,weightedData = parce_csv(absPath,weightedStartRegression=0,weight=200) #-22.713789110751794, 1.0325247560625972, 0.5808162775799824
-#fitTensionMin=1,fitTensionMax=190
+expData, dt, weightedData = parce_csv(absPath,weightedStartRegression=0,weight=200,fitTensionMin=50,fitTensionMax=190) #in practice fitTensionMax<200
 # (-19.355136863835682, 0.925594504005501, 0.15323233104506603, -0.19643065915299515)
 
 # weighted_data
-[fA,fB,fC,fD,error] = regression_chariot(weightedData,symmetricTension=True)
-
-plot_experimental_fitted(absPath+'/chariot_iden.csv', fA, fB, fC, fD,applyFiltering=False,Nf = 4,fc = 2)
+[fA,fB,fC,fD,error] = regression_chariot(weightedData,symmetricTension=False)
+plot_experimental_fitted(absPath+'/chariot_iden_alu.csv', fA, fB, fC, fD, applyFiltering=False, Nf = 4,fc = 2)
 
 print(len(expData))
 print(error)

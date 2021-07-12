@@ -27,14 +27,14 @@ MANUAL_SEED = 0
 #TODO fa,fb,fc,fd dans identificaiton
 #TODO episode reward for seed 0,5 + inference
 
-DYNAMIC_FRICTION_SIM = True  # True
-STATIC_FRICTION_SIM = True
-encNoiseVarSim = True
-ACTION_NOISE_SIM = True
-RESET_EFFECT = True  # True#False
-EVAL_TENSION_FINAL_PERF = True  # evaluate final PERFORMANCE of a cartpole for different voltages
-SEED_TRAIN = True
-# other
+DYNAMIC_FRICTION_SIM = False  # True
+STATIC_FRICTION_SIM = False
+encNoiseVarSim = False
+ACTION_NOISE_SIM = False
+RESET_EFFECT = False  # True#False
+EVAL_TENSION_FINAL_PERF = False  # evaluate final PERFORMANCE of a cartpole for different voltages
+SEED_TRAIN = False
+#other
 PLOT_FINAL_PERFORMANCE_STD = False  # False#
 qLearningVsDQN = False  # compare q-learn and dqn
 EVAL_TENSION_FINAL_PERF_seed = False  # evaluate final PERFORMANCE of a cartpole for different voltages
@@ -46,6 +46,7 @@ STATIC_FRICTION_CART = -0.902272006611719
 STATIC_FRICTION_ARR = np.array([0, 0.1, 1, 10]) * STATIC_FRICTION_CART
 
 # DONE temps d’apprentissage et note en fonction de l’amplitude du controle
+# TENSION_RANGE = [9.4]
 TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]#
 
 # DONE temps  d’apprentissage  et  note  en  fonction  du  coefficient  de frottement dynamique

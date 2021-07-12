@@ -9,13 +9,17 @@ from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 '''
 fitting parameters from pendulum free fall:
-APPLY_FILTER can be in 3 modes: None,ukf(recommended) or butterworth
+APPLY_FILTER can be in 3 modes: None, ukf or butterworth(recommended)
 '''
-APPLY_FILTER=None#'ukf'#'butterworth'
-# absPath='/home/sardor/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/idenPenduleCsv/angle_iden.csv'
-absPath='/home/sardor/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/idenPenduleCsv/angle_iden_20ms.csv'
-# absPath='/home/sardor/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/idenPenduleCsv/angle_iden_10ms.csv'
+APPLY_FILTER='butterworth'#'ukf'#
+absPath = '/home/sardor/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/idenPenduleCsv/angle_iden_alu.csv'
 def process_angle_raw(absPath,plot=True):
+    '''
+
+    :param absPath: path to .csv file
+    :param plot: plot the data or not
+    :return: aArr,vArr,posArr as AN ARRAY at every point in time
+    '''
     data=np.genfromtxt(absPath,delimiter=',')
     #time position(in degree)
     aArr=[]
@@ -27,6 +31,9 @@ def process_angle_raw(absPath,plot=True):
         releventData = data[:,idx]
         time = releventData[1, :]
         posRaw = releventData[2, :] / 180 * math.pi
+        #skip the beginning biased data
+        posRaw = posRaw[10:]
+        time = time[10:]
         dt = np.mean(np.diff(time))
         v = np.convolve(posRaw, [-0.5, 0, 0.5], 'valid') / dt
         a = np.convolve(posRaw, [1, -2, 1], 'valid') / dt ** 2
@@ -42,13 +49,13 @@ def process_angle_raw(absPath,plot=True):
             v = signal.filtfilt(bf, af, v, padtype=None)
             pos = signal.filtfilt(bf, af, posRaw, padtype=None)
             #CUT BORD EFFECTS
-            # pos = pos[1+cutStart:-cutStart-1]
-            # v = v[cutStart:-cutStart]
-            # a = a[cutStart:-cutStart]
-            # time = time[1+cutStart:-cutStart-1]
-            #withous
-            pos=pos[1:-1]
-            time=time[1:-1]
+            pos = pos[1+cutStart:-cutStart-1]
+            v = v[cutStart:-cutStart]
+            a = a[cutStart:-cutStart]
+            time = time[1+cutStart:-cutStart-1]
+            #without filter
+            # pos=pos[1:-1]
+            # time=time[1:-1]
             ##
         elif APPLY_FILTER=='ukf':
             def fx(x, dt):
@@ -81,16 +88,9 @@ def process_angle_raw(absPath,plot=True):
         elif APPLY_FILTER=='None':
             print('no data filtering')
 
-        pos = posRaw[1:-1]
-        time = time[1:-1]
-        # if i==1:
-        #     k=1500
-        #     a=a[:k]
-        #     v=v[:k]
-        #     time=time[:k]
-        #     pos=pos[:k]
+            pos = posRaw[1:-1]
+            time = time[1:-1]
         if plot:
-
             if APPLY_FILTER=='ukf':
                 pos = [p-np.pi for p in pos]
                 ukfPos = [u-np.pi for u in ukfPos]
@@ -119,22 +119,41 @@ def process_angle_raw(absPath,plot=True):
             ax3.legend(loc="upper right")
             plt.plot(time, a, 'r', label='acc')
             plt.show()
-        aArr=np.hstack((aArr,a))
-        vArr=np.hstack((vArr,v))
-        posArr=np.hstack((posArr,pos))
-        timeArr=np.hstack((timeArr,time))
+        try:
+            cutEdgeInd=1
+            aArr=np.hstack((aArr,a[cutEdgeInd:-cutEdgeInd]))
+            vArr=np.hstack((vArr,v[cutEdgeInd:-cutEdgeInd]))
+            posArr=np.hstack((posArr,pos[cutEdgeInd:-cutEdgeInd]))
+            timeArr=np.hstack((timeArr,time[cutEdgeInd:-cutEdgeInd]))
+        except:
+            print('smth is wrong with the data')
     return np.vstack((aArr,vArr,posArr)).T
 
 def fit_params(data):
+    '''
 
+    :param data: aArr,vArr,posArr
+    :return: regression coefficients (X: w**2,K(viscous)) that satisfy(minimises) the eq. : |b-ax|,
+     where b is aArr(acceleration array) and a is [sin(theta), theta]
+    '''
     regB = data[:,0]
-    # regA=np.stack((np.sin(data[:,2]),data[:,1],np.sign(data[:,1])),axis=1) #with static friction
+    # since theta=0 is up in the acquisition script, we have an inverted sine in the equation ddot(theta) = w**2 * sin(theta) + Kvisc*theta)
     regA = np.stack((np.sin(data[:,2]),data[:,1]),axis=1)
-    # theta_acc=w*sin(theta)-k*theta_dot-c*np.sign(theta_dot) with static
-    # theta_acc=w*sin(theta)-k*theta_dot #viscous Fr
     X = np.linalg.lstsq(regA,regB, rcond=None)[0]
+    indStartPlot = 2000
+    indEndPlot = 4000
+    fig,ax=plt.subplots()
+    ax.plot(regB[indStartPlot:indEndPlot],'r.')
+    regRes=np.matmul(regA,X)
+    ax.plot(regRes[indStartPlot:indEndPlot])
 
+    ax.legend(['experimental','fitted'],loc='best')#bbox_to_anchor=(1.05, 1))
+    # ax.legend(['filtered experimental acceleration','fitted curve'],bbox_to_anchor=(1.05, 1))
+    plt.tight_layout()
+    plt.savefig('./EJPH/plots/regression_theta_ddot.pdf')
+    fig.show()
     return X
+
 expData = process_angle_raw(absPath,plot=False)
 
 # [wSquare,kViscous,cStatic]=fit_params(expData)
@@ -161,7 +180,6 @@ if plot_fitted:
 
     figS, ax = plt.subplots(figsize=(6, 3))
     ax.plot(time, posRaw, 'ro')
-    ax.plot(time, ukfPos, 'b')
     figS.savefig('./EJPH/plots/pendulum_ukf_filtering.pdf')
     figS.show()
 #1data
