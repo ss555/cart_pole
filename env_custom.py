@@ -1332,7 +1332,7 @@ class CartPoleDebug(gym.Env):
         dqdt[1] = (force#self.masscart*(fa*x_dot+fb*8.47*action[0]+fc*np.sign(x_dot))#force
                    + self.masspole * self.g * sintheta * costheta - self.masspole * theta_dot ** 2 * sintheta * self.length) \
                   / (self.masscart + self.masspole * sintheta ** 2)
-        dqdt[3] = self.g / self.length * sintheta + dqdt[1] / self.length * costheta - theta_dot * kPendViscous
+        dqdt[3] = self.g / self.length * sintheta + dqdt[1] / self.length * costheta - theta_dot * self.kPendViscous
         dqdt[2] = state[3]
         return dqdt
     def reset(self, costheta=1, sintheta=0, xIni=0.0,x_ini_speed=0.0,theta_ini_speed=0.0):
@@ -1433,10 +1433,10 @@ class CartPoleDiscreteHistory(gym.Env):
                  resetMode='random',
                  Mcart=0.5,
                  Mpole = 0.075,
-                 f_a=A,
-                 f_b=B,
-                 f_c=C,
-                 f_d=D,
+                 f_a=-20.75180095541654,#-21.30359185798466,
+                 f_b=1.059719258572224,#1.1088617953891196,
+                 f_c=-1.166390864012042,#-0.902272006611719,
+                 f_d= -0.09727843708918459,#0.0393516077401241, #0.0,#
                  kPendViscous=0.0,#0.11963736650935591,
                  integrator="semi-euler",
                  tensionMax=12, #8.4706
@@ -1447,6 +1447,7 @@ class CartPoleDiscreteHistory(gym.Env):
                  Km=0,#1.2,
                  seed=0,
                  N_STEPS=800,
+                 wAngular=4.88,
                  wAngularStd=0.0,#0.1
                  masspoleStd=0.0, #0.01
                  forceStd=0.0):  #0.1:
@@ -1529,7 +1530,7 @@ class CartPoleDiscreteHistory(gym.Env):
                 # force=np.random.normal(force,)
                 xacc = (force + np.random.normal(0,scale=1.0) + self.masspole * self.g * sintheta * costheta - self.masspole * theta_dot ** 2 * sintheta * self.length) / (
                                    self.masscart + self.masspole * sintheta ** 2)  # self.wAngularIni = np.random.normal(wAngular, 0.006, 1)[0]
-                thetaacc = self.wAngularUsed ** 2 * sintheta + xacc / self.length * costheta - theta_dot * kPendViscous
+                thetaacc = self.wAngularUsed ** 2 * sintheta + xacc / self.length * costheta - theta_dot * self.kPendViscous
                 # xacc=np.random.normal(xacc, 0.03, 1)[0]
                 # thetaacc=np.random.normal(thetaacc, 0.03, 1)[0]
                 x_dot += self.tau / self.n * xacc
