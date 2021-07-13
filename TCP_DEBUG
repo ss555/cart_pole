@@ -1,12 +1,31 @@
-19:43:51,627 root INFO connecting
-19:43:52,838 root INFO reset
-19:44:01,300 root INFO reset
-19:44:11,604 root ERROR Fatal error in main loop
+16:48:39,348 root INFO reset
+16:48:40,883 root INFO reset
+16:48:58,768 root INFO reset
+16:49:43,784 root INFO reset
+16:49:50,14 root INFO reset
+16:50:35,430 root INFO reset
+16:50:43,195 root INFO reset
+16:51:27,948 root INFO reset
+16:52:12,363 root INFO reset
+16:52:55,975 root INFO reset
+16:53:38,432 root INFO reset
+16:54:23,554 root INFO reset
+16:54:28,992 root INFO reset
+16:55:01,612 root INFO reset
+16:55:17,135 root INFO reset
+16:55:25,579 root INFO reset
+16:55:31,867 root INFO reset
+16:55:54,980 root INFO reset
+16:56:10,697 root INFO reset
+16:56:28,800 root INFO reset
+16:56:43,191 root INFO reset
+16:56:54,549 root INFO reset
+16:57:04,33 root ERROR Fatal error in main loop
 Traceback (most recent call last):
-  File "tcp_env_interfaceContinous.py", line 192, in <module>
+  File "tcp_hostDiscrete.py", line 218, in <module>
     reset()
-  File "tcp_env_interfaceContinous.py", line 170, in reset
-    time.sleep(0.01)
+  File "tcp_hostDiscrete.py", line 188, in reset
+    time.sleep(Te)
 KeyboardInterrupt
-19:44:11,606 root INFO smth went wrong
-19:44:11,606 root INFO time passed: 19.98111605644226
+16:57:04,35 root INFO smth went wrong
+16:57:04,35 root INFO time passed: 517.7031426429749

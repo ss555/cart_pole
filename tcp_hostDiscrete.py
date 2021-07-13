@@ -3,6 +3,12 @@
 import socket
 HOST = '134.59.131.77'#'c0:3e:ba:6c:9e:eb'#'10.42.0.1'#wifi-hotspot  # The server's hostname or IP address
 PORT = 65432        # The port used by the server
+#constants
+
+Te=0.05
+rPWM=60
+SCALE=150#Puissance
+
 import math
 import numpy as np
 import time
@@ -42,12 +48,12 @@ old_time_pendule=time.time()
 reset_time_start=0
 done=0
 reset_counter=0
-#constants
-Te=0.02
+
+
+
 RESET_TIME=120
-rPWM=60
-SCALE=80#Puissance
 COMPENSATE_STATIC=0
+
 ENCODER_GLITCH=0
 def cbf(gpio, level, tick):
 	lock.acquire()	
@@ -82,24 +88,22 @@ def getVitPendule():
 	# 	posPendule+=math.pi*2
 	vitPendule = (posPendule-oldPosPendule)/Te
 	oldPosPendule = posPendule
-	if abs(vitPendule)>12 and not done:
-		done=1
 	return vitPendule
 
-# sens encodeur +6250:left 0-middle -6250: right	           
+# sens encodeur -6250:left 0-middle :+6250 right	           
 def callbackChariot(way):
 	global posChariot, done	 
 	posChariot += way*1.667923899668381e-05  #*2*PI/600*0.006371
 	if posChariot>0.36 and not done:		
 		done=1
-		pi.write(16,1); #1-right 0-left
+		pi.write(16,0); #1-right 0-left
 		pi.set_PWM_dutycycle(24,  rPWM)
 	elif posChariot<-0.36 and not done:
 		done=1
-		pi.write(16,0); #1-right 0-left
+		pi.write(16,1); #1-right 0-left
 		pi.set_PWM_dutycycle(24,  rPWM)
 		
-        
+# sens encodeur -6250:left 0-middle :+6250 right        
 def applyForce(action):
 	# sens encodeur +6250:left 0-middle -6250: right
 	global SCALE
@@ -117,12 +121,12 @@ def applyForce(action):
 		pi.set_PWM_dutycycle(24, 0)
 		lock.release()
 	elif action == 1.0:
-		pi.write(16,0); #1-right 0-left
+		pi.write(16,1); #1-right 0-left
 		lock.acquire()
 		pi.set_PWM_dutycycle(24, SCALE-offset)
 		lock.release()
 	elif action == -1.0:
-		pi.write(16,1); #1-right 0-left
+		pi.write(16,0); #1-right 0-left
 		lock.acquire()
 		pi.set_PWM_dutycycle(24, SCALE+offset)
 		lock.release()
@@ -158,20 +162,20 @@ def reset():
 	data_state = getState()
 	x=data_state[0]
 	if x > 0:
-		pi.write(16,1); #1-right 0-left
+		pi.write(16,0); #1-right 0-left
 		lock.acquire()
 		pi.set_PWM_dutycycle(24,  rPWM) #max 255
 		lock.release()
 		while x>0:                
-			time.sleep(0.00001)
+			time.sleep(0.001)
 			x,_, _,_,_,_ = getState()	
 	elif x < 0:
-		pi.write(16,0); #1-right 0-left
+		pi.write(16,1); #1-right 0-left
 		lock.acquire()
 		pi.set_PWM_dutycycle(24,  rPWM) #max 255
 		lock.release()		
 		while x<0:
-			time.sleep(0.00001)
+			time.sleep(0.001)
 			x,_, _,_,_,_ = getState()
 	pi.set_PWM_dutycycle(24,  0)
 	reset_counter+=1
@@ -179,13 +183,13 @@ def reset():
 	print(reset_counter)
 	if reset_counter>1:
 		reset_time_start=time.time()
-		print('restarting in init values')
+		print('restarting')
 		vPendule = getVitPendule()
-		while np.cos(posPendule)<0.99 and vPendule<0.01:
-			time.sleep(0.1)
-			vPendule = getVitPendule()
-		#initVariables()
-	print('initialised variables')
+		while np.cos(posPendule)<0.99 or vPendule>0.005:
+			time.sleep(Te)
+			x,xDot,cosA,sinA,vPendule,_ = getState()
+		
+	print('another episode')
 def sendState():
 	data_state = getState()				
 	data_send = ','.join(str(data_state[i]) for i in range(len(data_state)))				
