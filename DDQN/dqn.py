@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.append(os.path.abspath('./'))
 from utils import linear_schedule
-from custom_callbacks import plot_results
+from custom_callbacks import plot_results,CheckPointEpisode
 # from env_wrappers import Monitor
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
@@ -11,15 +11,17 @@ from stable_baselines3 import DQN
 from custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback, EvalCustomCallback, EvalThetaDotMetric
 from env_custom import CartPoleButter, CartPoleDebug, CartPoleDiscreteHistory#,CartPoleContinous,CartPoleDiscreteHistory#,CartPoleDiscreteButter2
 import argparse
+import numpy as np
 from utils import read_hyperparameters
 from pathlib import Path
 Te=0.05
 EP_STEPS=800
-STEPS_TO_TRAIN=30000
+STEPS_TO_TRAIN=60000
 LOAD_MODEL_PATH=None#"./logs/best_model"
 LOAD_BUFFER_PATH=None#"dqn_pi_swingup_bufferN"
 logdir = './logs/'
-env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=10.867664969452305,
+checkpoint = CheckPointEpisode(save_path=logdir+'checkpoints')
+env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=7.1, Km=np.pi/360,
                               resetMode='experimental', sparseReward=False)
 env = Monitor(env, filename=logdir+'basic_simulation_')
 # env = DummyVecEnv([lambda: env])
@@ -42,7 +44,7 @@ log_save='./weights/dqn50'
 Path(log_save).mkdir(exist_ok=True)
 #callbacks
 # Use deterministic actions for evaluation and SAVE the best model
-eval_callback = EvalThetaDotMetric(envEvaluation, eval_freq=6000, deterministic=True,verbose=1)
+eval_callback = EvalThetaDotMetric(envEvaluation, log_path=logdir, eval_freq=6000, deterministic=True,verbose=1)
 # eval_callback = EvalCustomCallback(envEvaluation, best_model_save_path=log_save, log_path=logdir+'/evals', eval_freq=STEPS_TO_TRAIN/3, n_eval_episodes=30,deterministic=True, render=False)
 hyperparams = read_hyperparameters('dqn_50')
 model = DQN(env=env,**hyperparams)
@@ -51,7 +53,7 @@ callbackSave = SaveOnBestTrainingRewardCallback(log_dir=log_save, monitor_filena
 try:
     # model for pendulum starting from bottom
     with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
-        model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback, callbackSave])
+        model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback, checkpoint])
         if NORMALISE:
             env.training = False
             # reward normalization is not needed at test time

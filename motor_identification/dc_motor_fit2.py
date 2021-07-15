@@ -186,15 +186,19 @@ def plot_experimental_fitted(filename,fA,fB,fC,fD,applyFiltering=False,Nf = 4,fc
         if abs(i)%50==0 and abs(i)<210:
             ax.plot(localData[1:-1, 1]-localData[1, 1], v,'.')
             ax.plot(localData[:,1]-localData[0,1], v_fitted)
+
+
             legs.append(str(round(i/255*12,1)))
             legs.append(str(round(i / 255 * 12, 1))+' fitted')
     fig.show()
 
 
-    ax.legend(legs,bbox_to_anchor=(1.05, 1))
 
     ax.set_xlabel('time in [s]')
     ax.set_ylabel('speed in [m/s]')
+    ax.set_xlim(left=0.0,right = 1.5)
+    ax.grid()
+    ax.legend(legs,loc = 'upper right',bbox_to_anchor=(1.35, 1.0))
     plt.tight_layout()
     figSave.savefig('./EJPH/plots/regression_chariot.pdf')
     figSave.show()

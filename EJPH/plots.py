@@ -20,8 +20,19 @@ import plotly.express as px
 from bokeh.palettes import d3
 PLOT_TRAINING_REWARD=True
 PLOT_EVAL_REWARD=True
-TENSION_PLOT = False
+TENSION_PLOT = True
 TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]
+
+f_aAr = 20.75180095541654,  # -21.30359185798466,
+f_bAr = 1.059719258572224,  # 1.1088617953891196,
+f_cAr = 1.166390864012042*np.array([0, 0.1, 1, 10]),  # -0.902272006611719,
+f_c=round(1.166390864012042,4)
+legsStatic = [round(f_c,4) for f_c in f_cAr]
+f_d = 0.09727843708918459,  # 0.0393516077401241, #0.0,#
+wAngular = 4.881653071189049,
+kPendViscousAr = 0.07035332644615992*np.array([0, 0.1, 1, 10]),  # 0.0,#
+kPendViscous = round(0.07035332644615992,4)
+legsVisc = [round(kPendViscous,4) for kPendViscous in kPendViscousAr]
 #plot params
 plt.rcParams['font.family'] = "serif"
 plt.rcParams['font.serif'] = 'Georgia'
@@ -60,21 +71,27 @@ t6='Effect of initialisation on training reward'
 # sns.set_style("whitegrid")
 # sns.set(style='ticks',rc={"font.size": 10, 'font.family': ['sans-serif'], 'axes.grid': True, 'font.sans-serif': 'Times New Roman'})
 
-def save_show_fig(xArr,yArr,legs,title=None,savename=None):
+def save_show_fig(xArr,yArr,legs=None,title=None,saveName=None, ax=None, fig=None, true_value=None):
+    if ax is None:
+        fig, ax = plt.subplots()
     for i in range(len(xArr)):
-        sns.lineplot(y=yArr[i]/EP_STEPS, x=xArr[i],palette=colorPalette[i])
+        ax.plot(xArr[i], yArr[i]/EP_STEPS, color=colorPalette[i])
     if title is not None:
-        plt.title(title)
-    plt.xlabel('timesteps',)
-    plt.ylabel('Rewards')
-    plt.legend(legs, loc='best',bbox_to_anchor=(1.01, 1))
-    plt.tight_layout()
-    plt.grid()
+        ax.set_title(title)
+    ax.set_xlabel('timesteps',)
+    ax.set_ylabel('Rewards')
+    if legs is not None:
+        ax.legend(legs, loc='best',bbox_to_anchor=(1.01, 1))
+    if fig is not None:
+        fig.tight_layout()
+    ax.grid()
     try:
-        plt.savefig(savename)
+        if saveName is not None and fig is not None:
+            fig.savefig(saveName)
+            plt.show()
     except:
-        print('provide savename for this plot')
-    plt.show()
+        print('provide saveName for this plot')
+
 
 def generate_legends(legends):
     legends = np.array([legend.split('_') for legend in legends])
@@ -82,29 +99,31 @@ def generate_legends(legends):
 
 
 #Tension
-fig,a = plt.subplots(2,2)
+figT, a = plt.subplots(nrows=2,ncols=2,figsize=(10,10))
 
 
 #helper fcs
-def plot_from_npz(filenames, xlabel, ylabel, legends, title=None, plot_std=False,saveName=None, ax=None):
-
+def plot_from_npz(filenames, xlabel, ylabel, legends=None, title=None, plot_std=False,saveName=None, ax=None, fig=None, true_value=None):
     for i,filename in enumerate(filenames):
         data = np.load(filename)
         meanRew, stdRew = np.mean(data["results"], axis=1)/EP_STEPS, np.std(data["results"], axis=1, keepdims=False)/EP_STEPS
         if ax is None:
-            fig,ax = plt.subplots()
+            fig, ax = plt.subplots()
+        if true_value==legends[i]:
+            ax.plot(timesteps, meanRew, 'o-', color=colorPalette[i])
         else:
-            fig = None
-        ax.plot(timesteps, meanRew,'o-',color=colorPalette[i])
+            ax.plot(timesteps, meanRew, 'o-', color=colorPalette[i], facecolors='none')
         if plot_std:
             plt.fill_between(timesteps, meanRew + stdRew, meanRew - stdRew, alpha=0.2)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
-    plt.grid()
+    ax.grid()
     if title is not None:
         ax.set_title(title)
-    ax.legend(legends,bbox_to_anchor=(1.01, 1))
-    ax.tight_layout()
+    if legends is not None:
+        ax.legend(legends,bbox_to_anchor=(1.01, 1))
+    if fig is not None:
+        fig.tight_layout()
     if saveName is not None and fig is not None:
         fig.savefig(saveName)
     plt.show()
@@ -130,36 +149,37 @@ if __name__=='__main__':
         xArr, yArr, legs = plot_results('./EJPH/tension-perf',only_return_data=True)  # ,title=t1) #'Effect of varying tension on the learning'
         legs = [float(leg) for leg in legs[:, -3]]
         xArrT, yArrT, legsT = sort_arr_from_legs(xArr, yArr, legs)
-        save_show_fig(xArrT, yArrT, legsT, savename='./EJPH/plots/tension.pdf', ax=a[0][0])  # ,title=t1
+        save_show_fig(xArrT, yArrT, title='Training reward',ax=a[0][0],true_value=7.1)  # ,title=t1
 
         xArr, yArr, legs = plot_results('./EJPH/static-friction', title=t2, only_return_data=True)
         legs = [round(float(leg[1:]), 4) for leg in legs[:, -2]]
         xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
-        save_show_fig(xArr, yArr, legs, savename='./EJPH/plots/static.pdf')  # ,title=t2
+        save_show_fig(xArr, yArr, legsStatic, saveName='./EJPH/plots/static.pdf')  # ,title=t2
+        # save_show_fig(xArr, yArr, legs, saveName='./EJPH/plots/static.pdf')  # ,title=t2
 
         xArr, yArr, legs = plot_results('./EJPH/dynamic-friction', title=t3, only_return_data=True)
-        legs = [float(leg) for leg in legs[:, -2]]
+        legs = [round(float(leg),4) for leg in legs[:, -2]]
         xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
-        save_show_fig(xArr, yArr, legs, savename='./EJPH/plots/dynamic.pdf')  # ,title=t3
+        save_show_fig(xArr, yArr, legsVisc, saveName='./EJPH/plots/dynamic.pdf')  # ,title=t3
 
         xArr, yArr, legs = plot_results(dirNoise, title=t4, only_return_data=True)
         legs = [round(float(leg), 4) for leg in legs[:, -3]]
         xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
-        save_show_fig(xArr, yArr, legs, savename='./EJPH/plots/noise.pdf')  # ,title=t4
+        save_show_fig(xArr, yArr, legs, saveName='./EJPH/plots/noise.pdf')  # ,title=t4
 
         xArr, yArr, legs = plot_results('./EJPH/action-noise', title=t5, only_return_data=True)
         legs = [float(leg) for leg in legs[:, -2]]
         xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
-        save_show_fig(xArr, yArr, legs, savename='./EJPH/plots/action_noise.pdf')  # ,title=t5
+        save_show_fig(xArr, yArr, legs, saveName='./EJPH/plots/action_noise.pdf')  # ,title=t5
 
         xArr, yArr, legs = plot_results('./EJPH/experimental-vs-random', title=t6, only_return_data=True)
         legs = [leg for leg in legs[:, -2]]
-        save_show_fig(xArr, yArr, legs, savename='./EJPH/plots/exp-vs-rand.pdf')  # ,title=t6
+        save_show_fig(xArr, yArr, legs, saveName='./EJPH/plots/exp-vs-rand.pdf')  # ,title=t6
 
         xArr, yArr, legs = plot_results('./EJPH/seeds', title=t6, only_return_data=True)
         legs = legs[:, -1]
         xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
-        save_show_fig(xArr, yArr, [leg[0] for leg in legs], savename='./EJPH/plots/seeds.pdf')  # ,title=t6
+        save_show_fig(xArr, yArr, [leg[0] for leg in legs], saveName='./EJPH/plots/seeds.pdf')  # ,title=t6
     '''
     PLOT THE inference reward from .npz, namely EvalCallback logs
     '''
@@ -174,7 +194,7 @@ if __name__=='__main__':
         legs = [legs[i] for i in idx]
         filenames = [filenames[i] for i in idx]
         legs = [str(leg) + 'V' for leg in legs]
-        plot_from_npz(filenames,xl,yl,legends=legs,saveName='./EJPH/plots/greedy_tension.pdf', ax=a[0][1])
+        plot_from_npz(filenames,xl,yl, ax=a[0][1], title='Inference reward', true_value=7.1)
 
         filenames = sorted(glob.glob(dirDynamic + '/*.npz'))
         legs = np.array([legend.split('_') for legend in filenames])
@@ -182,7 +202,8 @@ if __name__=='__main__':
         idx = sorted(range(len(legs)), key=lambda k: legs[k])
         legs = [legs[i] for i in idx]
         filenames = [filenames[i] for i in idx]
-        plot_from_npz(filenames, xl, yl,legends=legs, saveName='./EJPH/plots/greedy_dynamic.pdf')
+        plot_from_npz(filenames, xl, yl,legends=legsVisc, saveName='./EJPH/plots/greedy_dynamic.pdf')
+        # plot_from_npz(filenames, xl, yl,legends=legs, saveName='./EJPH/plots/greedy_dynamic.pdf')
 
         filenames = sorted(glob.glob(dirStatic + '/*.npz'))
         legs = np.array([legend.split('_') for legend in filenames])
@@ -190,7 +211,8 @@ if __name__=='__main__':
         idx = sorted(range(len(legs)), key=lambda k: legs[k])
         legs = [legs[i] for i in idx]
         filenames = [filenames[i] for i in idx]
-        plot_from_npz(filenames, xl, yl,legends=legs, saveName='./EJPH/plots/greedy_static.pdf')
+        plot_from_npz(filenames, xl, yl,legends=legsStatic, saveName='./EJPH/plots/greedy_static.pdf')
+        # plot_from_npz(filenames, xl, yl,legends=legs, saveName='./EJPH/plots/greedy_static.pdf')
 
 
 
@@ -230,26 +252,25 @@ if __name__=='__main__':
         plt.legend(['random','experimental'])
         plt.savefig('./EJPH/plots/exp-vs-rand-greedy.pdf')
         plt.show()
-
+    #helper fcn
+    def calculate_angle(prev_value, cos, sin, count=0):
+        '''
+        :param prev_value:
+        :param cos: cosinus
+        :param sin: sinus
+        :return:
+        '''
+        if prev_value - np.arctan2(sin, cos) > np.pi:
+            count += 1
+            return np.arctan2(sin, cos), count
+        elif np.arctan2(sin, cos) - prev_value > np.pi:
+            count -= 1
+            return np.arctan2(sin, cos), count
+        return np.arctan2(sin, cos), count
     if TENSION_PLOT:
-        # logdir = ''
-        colorArr = ['red', 'blue', 'green', 'cyan', 'yellow', 'tan', 'navy', 'black']
         scoreArr = np.zeros_like(TENSION_RANGE)
         stdArr = np.zeros_like(TENSION_RANGE)
-        def calculate_angle(prev_value,cos,sin,count=0):
-            '''
-            :param prev_value:
-            :param cos: cosinus
-            :param sin: sinus
-            :return:
-            '''
-            if prev_value - np.arctan2(sin,cos) > np.pi:
-                count += 1
-                return np.arctan2(sin, cos), count
-            elif np.arctan2(sin,cos) - prev_value > np.pi:
-                count -= 1
-                return np.arctan2(sin, cos), count
-            return np.arctan2(sin, cos), count
+
         PLOT_EPISODE_REWARD = True
         figm1, ax1 = plt.subplots()
         figm2, ax2 = plt.subplots()
@@ -291,6 +312,7 @@ if __name__=='__main__':
                         break
                         # ax1.savefig(logdir+'/thetaA.pdf')
                 ax2.plot(moving_average(rewArr,20), color = colorPalette[i])
+                a[1][0].plot(moving_average(rewArr,20), color = colorPalette[i])
             else:
                 episode_rewards, episode_lengths = evaluate_policy(
                     model,
@@ -307,9 +329,14 @@ if __name__=='__main__':
             fig2.show()
             ax1.legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
             ax2.legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
+            # a[1][0].legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
             ax1.set_xlabel('timesteps')
             ax2.set_xlabel('timesteps')
+            a[1][0].set_xlabel('timesteps')
             ax2.set_ylabel('Rewards')
+            a[1][0].set_ylabel('Rewards')
+            a[1][0].grid()
+            a[1][0].set_title('Episode reward per step')
             # plt.title('Effect of the applied tension on the "greedy policy" reward')
             figm2.savefig('./EJPH/plots/episode_rew_tension.pdf')
             figm2.show()
@@ -331,6 +358,90 @@ if __name__=='__main__':
                 resultsStd=stdArr
             )
         print('done inference on voltages')
+        #BOXPLOT
+        TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]
+        Te = 0.05
+        EP_STEPS = 800
+        scoreArr = np.zeros_like(TENSION_RANGE)
+        stdArr = np.zeros_like(TENSION_RANGE)
+        episodeArr = []
+        for i, tension in enumerate(TENSION_RANGE):
+            env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension,
+                                 resetMode='experimental', sparseReward=False)
+            model = DQN.load(f'./EJPH/tension-perf/tension_sim_{tension}_V__best', env=env)
+            # episode_rewards, episode_lengths = evaluate_policy_episodes(env=env,model=model,n_eval_episodes=100,episode_steps=EP_STEPS)
+            THETA_DOT_THRESHOLD = 0
+            N_TRIALS = 10
+            THETA_THRESHOLD = np.pi/18
+
+            if THETA_DOT_THRESHOLD != 0:
+                theta_dot = np.linspace(-THETA_DOT_THRESHOLD, THETA_DOT_THRESHOLD, N_TRIALS)
+            else:
+                theta_dot = [0]
+
+            if THETA_THRESHOLD != 0:
+                theta = np.linspace(-THETA_THRESHOLD, THETA_THRESHOLD, N_TRIALS)
+            else:
+                theta = [0]
+
+            arrTest = np.transpose([np.tile(theta, len(theta_dot)), np.repeat(theta_dot, len(theta))])
+
+            episode_rewards = np.zeros((arrTest.shape[0], env.MAX_STEPS_PER_EPISODE), dtype=np.float32)
+            lengthArr = np.zeros(arrTest.shape[0], dtype=np.float32)
+            for j, elem in enumerate(arrTest):
+                done = False
+                l = 0
+                # episode_rewards,episode_lengths =0,0
+                obs = env.reset(costheta=np.cos(elem[0]), sintheta=np.sin(elem[0]), theta_ini_speed=elem[1])
+                while not done:
+                    action, _state = model.predict(obs, deterministic=True)
+                    obs, reward, done, _ = env.step(action)
+                    episode_rewards[j, l] = reward
+                    l += 1
+                lengthArr[j] = l
+            # NOT USED
+            scoreArr[i] = np.mean(episode_rewards[:, -200:])
+            stdArr[i] = np.std(episode_rewards[:, -200:])
+            ##boxplot
+            episodeArr.append(episode_rewards[:, -200:].flatten())  # taking the mean of 10 episodes in a steady state
+            # epArr = [np.mean(s, axis=0) for s in episodeArr]
+            print(scoreArr[i])
+        a[1][1].boxplot(episodeArr, positions=TENSION_RANGE, patch_artist=True)
+        a[1][1].grid()
+        # sns.boxplot(x=TENSION_RANGE,data=episodeArr)
+        a[1][1].set_ylabel('mean reward per step')
+        a[1][1].set_xlabel('Applied DC motor Tension (V)')
+        a[1][1].set_title('Reward in a steady state')
+        # figT.legend(legsT, #loc="center right",   # Position of legend
+        #    borderaxespad=0.1,    # Small spacing around legend box
+        #    title="Tension color"  # Title for the legend
+        #    ,bbox_to_anchor=(1.05, 1))
+        # figT.legend(legsT,bbox_to_anchor=(1, -0.25, 1., .102),title="Voltage",
+        #            ncol=8, mode="expand", borderaxespad=0.)
+        # figT.legend(legsT,loc='upper center', bbox_to_anchor=(0., 1.05, 1., .102),
+        #            )
+
+        figT.tight_layout()
+        shrink = 0.05
+        for tax,bax in zip(a[0],a[1]):
+            tbox = tax.get_position()
+            bbox = bax.get_position()
+            tax.set_position([tbox.x0, tbox.y0-shrink*bbox.height, tbox.width, (1-shrink)*tbox.height])
+            bax.set_position([bbox.x0, bbox.y0, bbox.width, (1-shrink)*bbox.height])
+
+        figT.legend(legsT, loc='upper center', bbox_to_anchor=(0.5, 1), title="Voltage",
+                   ncol=len(legsT))
+
+        # handles, labels = a[1][1].get_legend_handles_labels()
+        # fig.legend(handles, labels, loc='upper center')
+        figT.savefig('./EJPH/plots/tension_all.pdf')
+        figT.show()
+
+
+
+
+
+
 
 
 
@@ -340,7 +451,7 @@ if diffSeed:
     xArr, yArr, legs = plot_results('./EJPH/tension-perf-seed',only_return_data=True)  # ,title=t1) #'Effect of varying tension on the learning'
     legs = [float(leg) for leg in legs[:, -3]]
     xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
-    save_show_fig(xArr, yArr, legs, savename='./EJPH/plots/tension-seed.pdf')  # ,title=t1
+    save_show_fig(xArr, yArr, legs, saveName='./EJPH/plots/tension-seed.pdf')  # ,title=t1
 
     filenames = sorted(glob.glob(dirTension + '-seed/*.npz'))
     legs = np.array([legend.split('_') for legend in filenames])
@@ -389,26 +500,26 @@ if RAINBOW:
 
     fillArr = np.zeros_like(scoreArr1)
     plt.plot(TENSION_RANGE, scoreArr1 / EP_LENGTH, 'o-r')
-    plt.fill_between(TENSION_RANGE, scoreArr1 / EP_LENGTH, fillArr, facecolor=colorArr[0], alpha=0.5)
+    plt.fill_between(TENSION_RANGE, scoreArr1 / EP_LENGTH, fillArr, facecolor=colorPalette[0], alpha=0.5)
     plt.plot(TENSION_RANGE, scoreArr2 / EP_LENGTH, 'o-b')
-    plt.fill_between(TENSION_RANGE, scoreArr2 / EP_LENGTH, scoreArr1 / EP_LENGTH, facecolor=colorArr[1], alpha=0.5)
+    plt.fill_between(TENSION_RANGE, scoreArr2 / EP_LENGTH, scoreArr1 / EP_LENGTH, facecolor=colorPalette[1], alpha=0.5)
     plt.plot(TENSION_RANGE, scoreArr3 / EP_LENGTH, 'o-g')
-    plt.fill_between(TENSION_RANGE, scoreArr3 / EP_LENGTH, scoreArr2 / EP_LENGTH, facecolor=colorArr[2], alpha=0.5)
+    plt.fill_between(TENSION_RANGE, scoreArr3 / EP_LENGTH, scoreArr2 / EP_LENGTH, facecolor=colorPalette[2], alpha=0.5)
     plt.plot(TENSION_RANGE, scoreArr4 / EP_LENGTH, 'o-c')
-    plt.fill_between(TENSION_RANGE, scoreArr4 / EP_LENGTH, scoreArr3 / EP_LENGTH, facecolor=colorArr[3], alpha=0.5)
+    plt.fill_between(TENSION_RANGE, scoreArr4 / EP_LENGTH, scoreArr3 / EP_LENGTH, facecolor=colorPalette[3], alpha=0.5)
     plt.plot(TENSION_RANGE, scoreArr5 / EP_LENGTH, 'o-y')
-    plt.fill_between(TENSION_RANGE, scoreArr5 / EP_LENGTH, scoreArr4 / EP_LENGTH, facecolor=colorArr[4], alpha=0.5)
+    plt.fill_between(TENSION_RANGE, scoreArr5 / EP_LENGTH, scoreArr4 / EP_LENGTH, facecolor=colorPalette[4], alpha=0.5)
     plt.hlines(y=1, xmin=min(TENSION_RANGE), xmax=max(TENSION_RANGE), linestyles='--')
     # plt.plot(TENSION_RANGE, scoreArr1, 'o-r')
-    # plt.fill_between(TENSION_RANGE, scoreArr1, fillArr, facecolor=colorArr[0], alpha=0.5)
+    # plt.fill_between(TENSION_RANGE, scoreArr1, fillArr, facecolor=colorPalette[0], alpha=0.5)
     # plt.plot(TENSION_RANGE, scoreArr2, 'o-b')
-    # plt.fill_between(TENSION_RANGE, scoreArr2, scoreArr1, facecolor=colorArr[1], alpha=0.5)
+    # plt.fill_between(TENSION_RANGE, scoreArr2, scoreArr1, facecolor=colorPalette[1], alpha=0.5)
     # plt.plot(TENSION_RANGE, scoreArr3, 'o-g')
-    # plt.fill_between(TENSION_RANGE, scoreArr3, scoreArr2, facecolor=colorArr[2], alpha=0.5)
+    # plt.fill_between(TENSION_RANGE, scoreArr3, scoreArr2, facecolor=colorPalette[2], alpha=0.5)
     # plt.plot(TENSION_RANGE, scoreArr4, 'o-c')
-    # plt.fill_between(TENSION_RANGE, scoreArr4, scoreArr3, facecolor=colorArr[3], alpha=0.5)
+    # plt.fill_between(TENSION_RANGE, scoreArr4, scoreArr3, facecolor=colorPalette[3], alpha=0.5)
     # plt.plot(TENSION_RANGE, scoreArr5, 'o-y')
-    # plt.fill_between(TENSION_RANGE, scoreArr5, scoreArr4, facecolor=colorArr[4], alpha=0.5)
+    # plt.fill_between(TENSION_RANGE, scoreArr5, scoreArr4, facecolor=colorPalette[4], alpha=0.5)
     # plt.hlines(y=EP_LENGTH,xmin=min(TENSION_RANGE),xmax=max(TENSION_RANGE),linestyles='--')
     plt.grid()
     plt.xlabel('Tension (V)')

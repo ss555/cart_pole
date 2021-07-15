@@ -152,6 +152,7 @@ def fit_params(data, time=None):
         ax.legend(['experimental','fitted'],loc='best')#bbox_to_anchor=(1.05, 1))
         ax.set_xlabel('time in [s]')
         ax.set_ylabel('acceleration in [m/s^2]')
+        ax.grid()
         # ax.set_xlabel('time in [ms]')
         # ax.legend(['filtered experimental acceleration','fitted curve'],bbox_to_anchor=(1.05, 1))
         plt.tight_layout()

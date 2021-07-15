@@ -1,27 +1,28 @@
-import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes,mark_inset
+import numpy as np
 
+# Create main container
+fig = plt.figure()
 
-#  random  walk read
+# Set the random seed
+np.random.seed(100)
 
-random_walk = np.loadtxt("random_walk_for_pict.txt")
+# Create mock data
+x = np.random.normal(400, 50, 10_000)
+y = np.random.normal(300, 50, 10_000)
+c = np.random.rand(10_000)
 
+# Create zoom-in plot
+ax = plt.scatter(x, y, s = 5, c = c)
+plt.xlim(400, 500)
+plt.ylim(350, 400)
+plt.xlabel('x', labelpad = 15)
+plt.ylabel('y', labelpad = 15)
 
-if __name__=='__main__':
+# Create zoom-out plot
+ax_new = fig.add_axes([0.6, 0.6, 0.2, 0.2]) # the position of zoom-out plot compare to the ratio of zoom-in plot
+plt.scatter(x, y, s = 1, c = c)
 
-    fig = plt.figure(figsize = (8,16))
-    ax = plt.subplot(111) #whole path
-    ax.plot(random_walk)
-    ax.set_xlim(0,5000)
-    ax.set_ylim(-130,55)
-
-    axins = zoomed_inset_axes(ax,2,loc='lower right')
-    axins.plot(random_walk)
-
-    x1,x2,y1,y2 = 1000,2000, -60,-15
-    axins.set_xlim(x1,x2)
-    axins.set_ylim(y1,y2)
-
-    mark_inset(ax,axins,loc1=1,loc2=3)
-    plt.show()
+# Save figure with nice margin
+plt.savefig('zoom.png', dpi = 300, bbox_inches = 'tight', pad_inches = .1)
+plt.show()

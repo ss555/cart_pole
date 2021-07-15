@@ -166,19 +166,25 @@ class CheckPointEpisode(BaseCallback):
     '''
     callback for saving every n episodes
     '''
-    def __init__(self, save_freq_ep: int,
+    def __init__(self, save_freq_ep: int=10,
                  save_path: str=None):
+        '''
+
+        :param save_freq_ep:
+        :param save_path: folder to save
+        '''
         super(CheckPointEpisode, self).__init__()
         self.save_path = save_path
         self.save_freq_ep = save_freq_ep
         self.n_episodes=0
     def _init_callback(self) -> None:
         assert self.save_path is not None, "path for checkpoint callback is not specified"
+        os.makedirs(self.save_path,exist_ok=True)
     def _on_rollout_start(self) -> None:
         self.n_episodes += 1
         if self.n_episodes%self.save_freq_ep == 0 and self.n_episodes!=0:
             try:
-                self.model.save(self.save_path)
+                self.model.save(self.save_path+f'/checkpoint{self.n_episodes}')
             except:
                 print('error occured while saving checkpoint')
     def _on_step(self) -> bool:

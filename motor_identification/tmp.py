@@ -1,5 +1,5 @@
-ON decide passer en vitesse a la place de tension.
-% de la vitesse carachteristique du
+# ON decide passer en vitesse a la place de tension.
+# % de la vitesse carachteristique du
 (pendule)
 
 #TODO changer l'identification

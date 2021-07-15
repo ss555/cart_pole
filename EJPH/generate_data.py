@@ -22,10 +22,9 @@ EP_STEPS = 800
 Te = 0.05
 MANUAL_SEED = 0
 # simulation results
-#TODO mettre courbes dans l'env
 #TODO 6.1 mettre:
 #TODO fa,fb,fc,fd dans identificaiton
-#TODO episode reward for seed 0,5 + inference
+#Done episode reward for seed 0,5 + inference
 
 DYNAMIC_FRICTION_SIM = True  # True
 STATIC_FRICTION_SIM = True
@@ -42,16 +41,22 @@ logdir = './EJPH/'
 hyperparams = read_hyperparameters('dqn_cartpole_50')
 
 # DONE temps d’apprentissage et note en fonction du coefficient de friction statique 4 valeurs du coefficient:Ksc,virt= 0,0.1∗Ksc,manip,Ksc,manip,10∗Ksc,manipDiscussion
-STATIC_FRICTION_CART = -0.902272006611719
+STATIC_FRICTION_CART = -1.166390864012042
 STATIC_FRICTION_ARR = np.array([0, 0.1, 1, 10]) * STATIC_FRICTION_CART
 
 # DONE temps d’apprentissage et note en fonction de l’amplitude du controle
 TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]#
 
+# f_a = -20.75180095541654,  # -21.30359185798466,
+# f_b = 1.059719258572224,  # 1.1088617953891196,
+# f_c = -1.166390864012042,  # -0.902272006611719,
+# f_d = -0.09727843708918459,  # 0.0393516077401241, #0.0,#
+# wAngular = 4.881653071189049,
+# kPendViscous = 0.07035332644615992,  # 0.0,#
 # DONE temps  d’apprentissage  et  note  en  fonction  du  coefficient  de frottement dynamique
-DYNAMIC_FRICTION_PENDULUM = 0.11963736650935591
+DYNAMIC_FRICTION_PENDULUM = 0.07035332644615992
 DYNAMIC_FRICTION_ARR = np.array([0, 0.1, 1, 10]) * DYNAMIC_FRICTION_PENDULUM
-
+#TODO : line real in full circle and other in empty
 # DONE encoder noise
 NOISE_TABLE = np.array([0, 0.01, 0.05, 0.1, 0.15, 0.5, 1, 5, 10]) * np.pi / 180
 
@@ -213,8 +218,6 @@ if SEED_TRAIN:#basic model with default parameters
         with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
             model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
     plot_results(logdir + 'seeds')
-#
-#TODO courbe avec seed 0
 
 #TODO 5.9V optuna params for 12V;
 

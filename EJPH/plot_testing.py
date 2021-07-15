@@ -89,8 +89,6 @@ for i, tension in enumerate(TENSION_RANGE):
                 fig2.add_scatter(x=np.linspace(1, EP_STEPS, EP_STEPS), y=xArr, name=f'volt: {tension}')
                 break
                 # ax1.savefig(logdir+'/thetaA.pdf')
-        # TODO theta tensions
-        # TODO time at the training
         ax2.plot(moving_average(rewArr, 20), color=colorPalette[i])
     else:
         episode_rewards, episode_lengths = evaluate_policy(
