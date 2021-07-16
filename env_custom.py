@@ -37,7 +37,7 @@ class CartPoleButter(gym.Env):
                  wAngular = 4.881653071189049,
                  kPendViscous = 0.07035332644615992,#0.0,#
                  integrator="semi-euler",
-                 tensionMax=12,
+                 tensionMax=7.0588235294117645,#150PWM
                  FILTER=False,
                  n=1, #2,5
                  Kp=0,

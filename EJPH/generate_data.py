@@ -30,8 +30,8 @@ DYNAMIC_FRICTION_SIM = True  # True
 STATIC_FRICTION_SIM = True
 encNoiseVarSim = True
 ACTION_NOISE_SIM = True
-RESET_EFFECT = True  # True#False
-EVAL_TENSION_FINAL_PERF = True  # evaluate final PERFORMANCE of a cartpole for different voltages
+RESET_EFFECT = False  # True#False
+EVAL_TENSION_FINAL_PERF = False  # evaluate final PERFORMANCE of a cartpole for different voltages
 SEED_TRAIN = True
 # other
 PLOT_FINAL_PERFORMANCE_STD = False  # False#

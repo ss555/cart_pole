@@ -18,20 +18,23 @@ from matplotlib import rcParams, pyplot as plt
 from custom_callbacks import plot_results
 import plotly.express as px
 from bokeh.palettes import d3
+from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset, inset_axes
 PLOT_TRAINING_REWARD=True
 PLOT_EVAL_REWARD=True
 TENSION_PLOT = True
 TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]
-
+SCALE =1.2
 f_aAr = 20.75180095541654,  # -21.30359185798466,
 f_bAr = 1.059719258572224,  # 1.1088617953891196,
 f_cAr = 1.166390864012042*np.array([0, 0.1, 1, 10]),  # -0.902272006611719,
-f_c=round(1.166390864012042,4)
-legsStatic = [round(f_c,4) for f_c in f_cAr]
+
+
 f_d = 0.09727843708918459,  # 0.0393516077401241, #0.0,#
 wAngular = 4.881653071189049,
-kPendViscousAr = 0.07035332644615992*np.array([0, 0.1, 1, 10]),  # 0.0,#
-kPendViscous = round(0.07035332644615992,4)
+kPendViscousAr = 0.0706*np.array([0, 0.1, 1, 10]).T
+legsStatic = np.array([np.round(f_cc,4) for f_cc in f_cAr]).T# 0.0,#
+# kPendViscous = round(float(0.07035332644615992),4)
+# f_c=round(float(1.166390864012042),4)
 legsVisc = [round(kPendViscous,4) for kPendViscous in kPendViscousAr]
 #plot params
 plt.rcParams['font.family'] = "serif"
@@ -71,11 +74,14 @@ t6='Effect of initialisation on training reward'
 # sns.set_style("whitegrid")
 # sns.set(style='ticks',rc={"font.size": 10, 'font.family': ['sans-serif'], 'axes.grid': True, 'font.sans-serif': 'Times New Roman'})
 
-def save_show_fig(xArr,yArr,legs=None,title=None,saveName=None, ax=None, fig=None, true_value=None):
+def save_show_fig(xArr,yArr,legs=None,title=None,saveName=None, ax=None, fig=None, true_value_index=None):
     if ax is None:
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(SCALE*6,SCALE*3.7125))
     for i in range(len(xArr)):
-        ax.plot(xArr[i], yArr[i]/EP_STEPS, color=colorPalette[i])
+        if i==true_value_index:
+            ax.plot(xArr[i], yArr[i]/EP_STEPS, color=colorPalette[i])
+        else:
+            ax.plot(xArr[i], yArr[i] / EP_STEPS, '--', color=colorPalette[i])
     if title is not None:
         ax.set_title(title)
     ax.set_xlabel('timesteps',)
@@ -97,22 +103,31 @@ def generate_legends(legends):
     legends = np.array([legend.split('_') for legend in legends])
     return legends
 
+def setlabel(ax, label, loc=2, borderpad=0.6, **kwargs):
+    legend = ax.get_legend()
+    if legend:
+        ax.add_artist(legend)
+    line, = ax.plot(np.NaN,np.NaN,color='none',label=label)
+    label_legend = ax.legend(handles=[line],loc=loc,handlelength=0,handleheight=0,handletextpad=0,borderaxespad=0,borderpad=borderpad,frameon=False,**kwargs)
+    label_legend.remove()
+    ax.add_artist(label_legend)
+    line.remove()
 
 #Tension
-figT, a = plt.subplots(nrows=2,ncols=2,figsize=(10,10))
+figT, a = plt.subplots(nrows=2,ncols=2,figsize=(SCALE*10,SCALE*8))
 
 
 #helper fcs
-def plot_from_npz(filenames, xlabel, ylabel, legends=None, title=None, plot_std=False,saveName=None, ax=None, fig=None, true_value=None):
+def plot_from_npz(filenames, xlabel, ylabel, legends=None, title=None, plot_std=False,saveName=None, ax=None, fig=None, true_value_index=None):
     for i,filename in enumerate(filenames):
         data = np.load(filename)
         meanRew, stdRew = np.mean(data["results"], axis=1)/EP_STEPS, np.std(data["results"], axis=1, keepdims=False)/EP_STEPS
         if ax is None:
-            fig, ax = plt.subplots()
-        if true_value==legends[i]:
+            fig, ax = plt.subplots(figsize=(SCALE*6,SCALE*3.7125))
+        if i==true_value_index:
             ax.plot(timesteps, meanRew, 'o-', color=colorPalette[i])
         else:
-            ax.plot(timesteps, meanRew, 'o-', color=colorPalette[i], facecolors='none')
+            ax.plot(timesteps, meanRew, 'o--', color=colorPalette[i])
         if plot_std:
             plt.fill_between(timesteps, meanRew + stdRew, meanRew - stdRew, alpha=0.2)
     ax.set_xlabel(xlabel)
@@ -149,28 +164,28 @@ if __name__=='__main__':
         xArr, yArr, legs = plot_results('./EJPH/tension-perf',only_return_data=True)  # ,title=t1) #'Effect of varying tension on the learning'
         legs = [float(leg) for leg in legs[:, -3]]
         xArrT, yArrT, legsT = sort_arr_from_legs(xArr, yArr, legs)
-        save_show_fig(xArrT, yArrT, title='Training reward',ax=a[0][0],true_value=7.1)  # ,title=t1
+        save_show_fig(xArrT, yArrT, ax=a[0][0],true_value_index=4)  # ,title=t1
 
         xArr, yArr, legs = plot_results('./EJPH/static-friction', title=t2, only_return_data=True)
         legs = [round(float(leg[1:]), 4) for leg in legs[:, -2]]
         xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
-        save_show_fig(xArr, yArr, legsStatic, saveName='./EJPH/plots/static.pdf')  # ,title=t2
+        save_show_fig(xArr, yArr, legsStatic, saveName='./EJPH/plots/static.pdf', true_value_index=2)  # ,title=t2
         # save_show_fig(xArr, yArr, legs, saveName='./EJPH/plots/static.pdf')  # ,title=t2
 
         xArr, yArr, legs = plot_results('./EJPH/dynamic-friction', title=t3, only_return_data=True)
         legs = [round(float(leg),4) for leg in legs[:, -2]]
         xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
-        save_show_fig(xArr, yArr, legsVisc, saveName='./EJPH/plots/dynamic.pdf')  # ,title=t3
+        save_show_fig(xArr, yArr, legsVisc, saveName='./EJPH/plots/dynamic.pdf', true_value_index=2)  # ,title=t3
 
         xArr, yArr, legs = plot_results(dirNoise, title=t4, only_return_data=True)
         legs = [round(float(leg), 4) for leg in legs[:, -3]]
         xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
-        save_show_fig(xArr, yArr, legs, saveName='./EJPH/plots/noise.pdf')  # ,title=t4
+        save_show_fig(xArr, yArr, legs, saveName='./EJPH/plots/noise.pdf', true_value_index=2)  # ,title=t4
 
         xArr, yArr, legs = plot_results('./EJPH/action-noise', title=t5, only_return_data=True)
         legs = [float(leg) for leg in legs[:, -2]]
         xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
-        save_show_fig(xArr, yArr, legs, saveName='./EJPH/plots/action_noise.pdf')  # ,title=t5
+        save_show_fig(xArr, yArr, legs, saveName='./EJPH/plots/action_noise.pdf', true_value_index=2)  # ,title=t5
 
         xArr, yArr, legs = plot_results('./EJPH/experimental-vs-random', title=t6, only_return_data=True)
         legs = [leg for leg in legs[:, -2]]
@@ -194,7 +209,7 @@ if __name__=='__main__':
         legs = [legs[i] for i in idx]
         filenames = [filenames[i] for i in idx]
         legs = [str(leg) + 'V' for leg in legs]
-        plot_from_npz(filenames,xl,yl, ax=a[0][1], title='Inference reward', true_value=7.1)
+        plot_from_npz(filenames,xl,yl, ax=a[0][1], true_value_index=2)
 
         filenames = sorted(glob.glob(dirDynamic + '/*.npz'))
         legs = np.array([legend.split('_') for legend in filenames])
@@ -202,7 +217,7 @@ if __name__=='__main__':
         idx = sorted(range(len(legs)), key=lambda k: legs[k])
         legs = [legs[i] for i in idx]
         filenames = [filenames[i] for i in idx]
-        plot_from_npz(filenames, xl, yl,legends=legsVisc, saveName='./EJPH/plots/greedy_dynamic.pdf')
+        plot_from_npz(filenames, xl, yl,legends=legsVisc, saveName='./EJPH/plots/greedy_dynamic.pdf', true_value_index=2)
         # plot_from_npz(filenames, xl, yl,legends=legs, saveName='./EJPH/plots/greedy_dynamic.pdf')
 
         filenames = sorted(glob.glob(dirStatic + '/*.npz'))
@@ -211,7 +226,7 @@ if __name__=='__main__':
         idx = sorted(range(len(legs)), key=lambda k: legs[k])
         legs = [legs[i] for i in idx]
         filenames = [filenames[i] for i in idx]
-        plot_from_npz(filenames, xl, yl,legends=legsStatic, saveName='./EJPH/plots/greedy_static.pdf')
+        plot_from_npz(filenames, xl, yl,legends=legsStatic, saveName='./EJPH/plots/greedy_static.pdf', true_value_index=2)
         # plot_from_npz(filenames, xl, yl,legends=legs, saveName='./EJPH/plots/greedy_static.pdf')
 
 
@@ -336,7 +351,7 @@ if __name__=='__main__':
             ax2.set_ylabel('Rewards')
             a[1][0].set_ylabel('Rewards')
             a[1][0].grid()
-            a[1][0].set_title('Episode reward per step')
+            # a[1][0].set_title('Episode reward per step')
             # plt.title('Effect of the applied tension on the "greedy policy" reward')
             figm2.savefig('./EJPH/plots/episode_rew_tension.pdf')
             figm2.show()
@@ -411,7 +426,25 @@ if __name__=='__main__':
         # sns.boxplot(x=TENSION_RANGE,data=episodeArr)
         a[1][1].set_ylabel('mean reward per step')
         a[1][1].set_xlabel('Applied DC motor Tension (V)')
-        a[1][1].set_title('Reward in a steady state')
+
+        axins = inset_axes(a[1][1], width="60%", height="80%", loc='lower right')
+        axins.boxplot(episodeArr[2:], positions=TENSION_RANGE[2:], patch_artist=True)
+
+        x1, x2, y1, y2 = 4.2, 12.4, 0.99, 1.0001
+        axins.set_xlim(x1, x2)
+        axins.set_ylim(y1, y2)
+        axins.grid()
+        # plt.setp(axins.get_yticklabels(), visible=False)
+        plt.setp(axins.get_xticklabels(), visible=False)
+        mark_inset(a[1][1], axins, loc1=3, loc2=4,visible=True, edgecolor='red')
+
+        #ANOTHER WAY FOR INSET
+        # ax_new = a[1][1].add_axes([0.35, 0.2, 0.5, 0.5])
+        # ax_new.boxplot(episodeArr[2:], positions=TENSION_RANGE[2:], patch_artist=True)
+
+        # plt.setp(ax_new.get_yticklabels(), visible=False)
+
+        # a[1][1].set_title('Reward in a steady state')
         # figT.legend(legsT, #loc="center right",   # Position of legend
         #    borderaxespad=0.1,    # Small spacing around legend box
         #    title="Tension color"  # Title for the legend
@@ -422,7 +455,7 @@ if __name__=='__main__':
         #            )
 
         figT.tight_layout()
-        shrink = 0.05
+        shrink = 0.07
         for tax,bax in zip(a[0],a[1]):
             tbox = tax.get_position()
             bbox = bax.get_position()
@@ -432,8 +465,18 @@ if __name__=='__main__':
         figT.legend(legsT, loc='upper center', bbox_to_anchor=(0.5, 1), title="Voltage",
                    ncol=len(legsT))
 
-        # handles, labels = a[1][1].get_legend_handles_labels()
-        # fig.legend(handles, labels, loc='upper center')
+        #set labels inside
+        setlabel(a[0][0], '(a)')
+        setlabel(a[0][1], '(b)')
+        setlabel(a[1][0], '(c)')
+        setlabel(a[1][1], '(d)')
+
+        #set labels outside
+        # coords=[-0.05,1.05]
+        # a[0][0].text(coords[0], coords[1], chr(97) + ')', transform=a[0][0].transAxes)
+        # a[0][0].text(coords[0], coords[1], chr(98) + ')', transform=a[0][1].transAxes)
+        # a[0][0].text(coords[0], coords[1], chr(99) + ')', transform=a[1][0].transAxes)
+        # a[0][0].text(coords[0], coords[1], chr(100) + ')', transform=a[1][1].transAxes)
         figT.savefig('./EJPH/plots/tension_all.pdf')
         figT.show()
 

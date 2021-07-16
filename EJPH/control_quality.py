@@ -68,12 +68,31 @@ for i, tension in enumerate(TENSION_RANGE):
 plt.plot(arrTest[:,0], arrTest[:,1], '.')
 plt.show()
 c='red'
-
-plt.boxplot(episodeArr, positions=TENSION_RANGE, patch_artist=True)
-plt.grid()
+fig,ax=plt.subplots(figsize=(5,5))
+ax.boxplot(episodeArr, positions=TENSION_RANGE, patch_artist=True)
+ax.grid()
 # sns.boxplot(x=TENSION_RANGE,data=episodeArr)
-plt.ylabel('mean reward per step')
-plt.xlabel('Applied DC motor Tension (V)')
+ax.set_ylabel('mean reward per step')
+ax.set_xlabel('Applied DC motor Tension (V)')
+
+#INSET
+# ax_new = fig.add_axes([0.35, 0.2, 0.5, 0.5])
+# ax_new.boxplot(episodeArr[2:], positions=TENSION_RANGE[2:], patch_artist=True)
+# # ax_new.set_xticks('')
+# plt.setp(ax_new.get_yticklabels(), visible=False)
+
+from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes,mark_inset,inset_axes
+axins = inset_axes(ax, width="100%",height="80%", loc='lower right')
+axins.boxplot(episodeArr[2:], positions=TENSION_RANGE[2:], patch_artist=True)
+
+x1, x2, y1, y2 = 4, 12.7, 0.99, 1.0
+axins.set_xlim(x1, x2)
+axins.set_ylim(y1, y2)
+axins.grid()
+# plt.setp(axins.get_yticklabels(), visible=False)
+# plt.setp(axins.get_xticklabels(), visible=False)
+mark_inset(ax, axins, loc1=3, loc2=4,visible=True,edgecolor='red')
+
 if THETA_THRESHOLD==0:
     #plt.title('Effect of varying tension on greedy policy reward (Θ,Θ_dot)=(0,0)',fontsize = 9)
     plt.savefig('./EJPH/plots/boxplot-control.pdf')
@@ -81,7 +100,8 @@ else:
     # plt.title('Effect of varying tension on greedy policy reward (Θ,Θ_dot)=(-10°:10°,0)',fontsize = 9)
     plt.savefig('./EJPH/plots/boxplot-control10.pdf')
 plt.show()
-
+#TODO put holdon training
+#TODO put abcd BIGGER
 
 TENSION_STD = False
 VIOLIN_PLOT =True

@@ -139,9 +139,13 @@ def plot_results(log_folder, window_size=30, title='Learning Curve',only_return_
                 sns.set_context("paper")
                 sns.set_style("whitegrid")
             else:
-                sns.set_style("whitegrid")
-                sns.set(font='serif typeface', rc={"font.size": 10})
-                sns.lineplot(y=y_var, x=x_var)
+                # plot params
+                # plt.rcParams['font.family'] = "serif"
+                # plt.rcParams['font.serif'] = 'Georgia'
+                # plt.rcParams['font.size'] = 10
+                # plt.rcParams['mathtext.fontset'] = 'stix'
+                plt.rcParams["figure.dpi"] = 100
+
         x_varArr.append(x_var)
         y_varArr.append(y_var)
 
