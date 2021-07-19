@@ -22,8 +22,6 @@ env0 = Monitor(env, logdir)
 ## Automatically normalize the input features and reward
 env=DummyVecEnv([lambda:env0])
 
-
-
 if NORMALISE:
 	env = VecNormalize.load('envNorm.pkl', env)
 	# env=VecNormalize(env1, norm_obs=True, norm_reward=True, clip_obs=10000, clip_reward=10000)

@@ -57,6 +57,8 @@ sac_cartpole_50:
     train_freq : [1, "episode"]
     tau: 0.02
     policy_kwargs: "dict(log_std_init=-0.9655242596737095,net_arch=[400,300],use_sde=True)"
+
+
 #use_sed: True
 saccartpole_50:
     policy: 'MlpPolicy'

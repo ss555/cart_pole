@@ -92,7 +92,7 @@ class CartPoleButter(gym.Env):
         self.x_threshold = x_threshold
         # FOR DATA
         self.v_max = 15
-        self.w_max = 100
+        self.w_max = 30
         high = np.array([
             self.x_threshold,
             self.v_max,

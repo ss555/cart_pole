@@ -74,12 +74,14 @@ t6='Effect of initialisation on training reward'
 # sns.set_style("whitegrid")
 # sns.set(style='ticks',rc={"font.size": 10, 'font.family': ['sans-serif'], 'axes.grid': True, 'font.sans-serif': 'Times New Roman'})
 
-def save_show_fig(xArr,yArr,legs=None,title=None,saveName=None, ax=None, fig=None, true_value_index=None):
+def save_show_fig(xArr,yArr,legs=None,title=None,saveName=None, ax=None, fig=None, true_value_index=None,experimental_value_index=None):
     if ax is None:
         fig, ax = plt.subplots(figsize=(SCALE*6,SCALE*3.7125))
     for i in range(len(xArr)):
         if i==true_value_index:
             ax.plot(xArr[i], yArr[i]/EP_STEPS, color=colorPalette[i])
+        elif i==experimental_value_index:
+            ax.plot(xArr[i], yArr[i] / EP_STEPS, color='black',linewidth=3.0)
         else:
             ax.plot(xArr[i], yArr[i] / EP_STEPS, '--', color=colorPalette[i])
     if title is not None:
@@ -165,6 +167,13 @@ if __name__=='__main__':
         legs = [float(leg) for leg in legs[:, -3]]
         xArrT, yArrT, legsT = sort_arr_from_legs(xArr, yArr, legs)
         save_show_fig(xArrT, yArrT, ax=a[0][0],true_value_index=4)  # ,title=t1
+        #experimental training150pwm
+        dcVoltage=150/155*12
+        xArrEx, yArrEx, _ = plot_results('./EJPH/real-cartpole/dqn', only_return_data=True)
+        xArr.append(xArrEx[0])
+        yArr.append(yArrEx[0])
+        legsT.append(float(round(dcVoltage,2)))
+        save_show_fig(xArrT, yArrT, ax=a[0][0], true_value_index=4,experimental_value_index=len(xArrT)-1)
 
         xArr, yArr, legs = plot_results('./EJPH/static-friction', title=t2, only_return_data=True)
         legs = [round(float(leg[1:]), 4) for leg in legs[:, -2]]
@@ -180,7 +189,7 @@ if __name__=='__main__':
         xArr, yArr, legs = plot_results(dirNoise, title=t4, only_return_data=True)
         legs = [round(float(leg), 4) for leg in legs[:, -3]]
         xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
-        save_show_fig(xArr, yArr, legs, saveName='./EJPH/plots/noise.pdf', true_value_index=2)  # ,title=t4
+        save_show_fig(xArr, yArr, legs, saveName='./EJPH/plots/noise.pdf', true_value_index=4)  # ,title=t4
 
         xArr, yArr, legs = plot_results('./EJPH/action-noise', title=t5, only_return_data=True)
         legs = [float(leg) for leg in legs[:, -2]]
@@ -237,7 +246,7 @@ if __name__=='__main__':
         idx = sorted(range(len(legs)), key=lambda k: legs[k])
         legs = [legs[i] for i in idx]
         filenames = [filenames[i] for i in idx]
-        plot_from_npz(filenames, xl, yl, legends=legs, saveName='./EJPH/plots/greedy_noise.pdf')
+        plot_from_npz(filenames, xl, yl, legends=legs, saveName='./EJPH/plots/greedy_noise.pdf', true_value_index=4)
 
         filenames = sorted(glob.glob(dirAction + '/*.npz'))
         legs = np.array([legend.split('_') for legend in filenames])
@@ -427,10 +436,10 @@ if __name__=='__main__':
         a[1][1].set_ylabel('mean reward per step')
         a[1][1].set_xlabel('Applied DC motor Tension (V)')
 
-        axins = inset_axes(a[1][1], width="60%", height="80%", loc='lower right')
+        axins = inset_axes(a[1][1], width="60%", height="80%", loc='lower right', borderpad=2)  # ,bbox_to_anchor=())
         axins.boxplot(episodeArr[2:], positions=TENSION_RANGE[2:], patch_artist=True)
 
-        x1, x2, y1, y2 = 4.2, 12.4, 0.99, 1.0001
+        x1, x2, y1, y2 = 4, 12.2, 0.99, 1.0
         axins.set_xlim(x1, x2)
         axins.set_ylim(y1, y2)
         axins.grid()
@@ -466,17 +475,17 @@ if __name__=='__main__':
                    ncol=len(legsT))
 
         #set labels inside
-        setlabel(a[0][0], '(a)')
-        setlabel(a[0][1], '(b)')
-        setlabel(a[1][0], '(c)')
-        setlabel(a[1][1], '(d)')
+        # setlabel(a[0][0], '(a)')
+        # setlabel(a[0][1], '(b)')
+        # setlabel(a[1][0], '(c)')
+        # setlabel(a[1][1], '(d)')
 
         #set labels outside
-        # coords=[-0.05,1.05]
-        # a[0][0].text(coords[0], coords[1], chr(97) + ')', transform=a[0][0].transAxes)
-        # a[0][0].text(coords[0], coords[1], chr(98) + ')', transform=a[0][1].transAxes)
-        # a[0][0].text(coords[0], coords[1], chr(99) + ')', transform=a[1][0].transAxes)
-        # a[0][0].text(coords[0], coords[1], chr(100) + ')', transform=a[1][1].transAxes)
+        coords=[0.05,0.95]
+        a[0][0].text(coords[0], coords[1], chr(97) + ')', transform=a[0][0].transAxes, fontsize='large')
+        a[0][0].text(coords[0], coords[1], chr(98) + ')', transform=a[0][1].transAxes)
+        a[0][0].text(coords[0], coords[1], chr(99) + ')', transform=a[1][0].transAxes)
+        a[0][0].text(coords[0], coords[1], chr(100) + ')', transform=a[1][1].transAxes)
         figT.savefig('./EJPH/plots/tension_all.pdf')
         figT.show()
 

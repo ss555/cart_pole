@@ -1,4 +1,7 @@
 #tensorboard --logdir ./sac_cartpole_tensorboard/
+import sys,os
+sys.path.append(os.path.abspath('./'))
+sys.path.append(os.path.abspath('./..'))
 import torch
 import numpy as np
 from stable_baselines3 import SAC
@@ -9,17 +12,20 @@ from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 import argparse
 from typing import Callable
+from utils import read_hyperparameters
 from custom_callbacks import plot_results
 from utils import linear_schedule, plot
 from stable_baselines3.common.noise import NormalActionNoise
 NORMALISE=False
 logdir='./logs/sac/'
-# env = CartPoleCosSinTension(Te=0.05)#
-env = CartPoleButter(Te=0.02,discreteActions=False,sparseReward=False,tensionMax=12,resetMode='random')#integrator='rk4')#
+
+Te=0.05
+hyperparams = read_hyperparameters('saccartpole_50')
+
+env = CartPoleButter(Te=Te,discreteActions=False,sparseReward=False,tensionMax=12)#integrator='rk4')#
 env0 = Monitor(env, logdir)
 ## Automatically normalize the input features and reward
 env=DummyVecEnv([lambda:env0])
-
 if NORMALISE:
 	env = VecNormalize.load('envNorm.pkl', env)
 	# env=VecNormalize(env1, norm_obs=True, norm_reward=True, clip_obs=10000, clip_reward=10000)
@@ -69,8 +75,7 @@ if __name__ == '__main__':
 		# model = SAC(MlpPolicy, env=env, learning_rate=linear_schedule(1e-3), buffer_size=300000,
   		# 		batch_size= 1024, ent_coef= 'auto', gamma= 0.9999, tau=0.02, train_freq= 64,  gradient_steps= 64,learning_starts= 10000,#target_update_interval=64,
   		# 		use_sde= True, policy_kwargs= dict(log_std_init=-3, net_arch=[256,256,64]))#dict(pi=[256, 256], qf=[256, 256])))
-		from utils import read_hyperparameters
-		hyperparams=read_hyperparameters('sac_cartpole_20')
+
 		model = SAC(env=env,**hyperparams)
 	try:
 		# model for pendulum starting from bottom

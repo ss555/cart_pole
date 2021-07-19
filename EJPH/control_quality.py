@@ -68,7 +68,8 @@ for i, tension in enumerate(TENSION_RANGE):
 plt.plot(arrTest[:,0], arrTest[:,1], '.')
 plt.show()
 c='red'
-fig,ax=plt.subplots(figsize=(5,5))
+scale=2
+fig,ax=plt.subplots(figsize=(5*scale,5*scale))
 ax.boxplot(episodeArr, positions=TENSION_RANGE, patch_artist=True)
 ax.grid()
 # sns.boxplot(x=TENSION_RANGE,data=episodeArr)
@@ -82,10 +83,11 @@ ax.set_xlabel('Applied DC motor Tension (V)')
 # plt.setp(ax_new.get_yticklabels(), visible=False)
 
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes,mark_inset,inset_axes
-axins = inset_axes(ax, width="100%",height="80%", loc='lower right')
+# axins = inset_axes(ax, width="60%",height="80%", loc='lower right')#,bbox_to_anchor=())
+axins = inset_axes(ax,width="60%",height="80%", loc='lower right',borderpad=2)#,bbox_to_anchor=())
 axins.boxplot(episodeArr[2:], positions=TENSION_RANGE[2:], patch_artist=True)
 
-x1, x2, y1, y2 = 4, 12.7, 0.99, 1.0
+x1, x2, y1, y2 = 4, 12.2, 0.99, 1.0
 axins.set_xlim(x1, x2)
 axins.set_ylim(y1, y2)
 axins.grid()
@@ -100,11 +102,14 @@ else:
     # plt.title('Effect of varying tension on greedy policy reward (Θ,Θ_dot)=(-10°:10°,0)',fontsize = 9)
     plt.savefig('./EJPH/plots/boxplot-control10.pdf')
 plt.show()
+
+np.savez('test.npz',episodeArr=episodeArr,TENSION_RANGE=TENSION_RANGE)
+
 #TODO put holdon training
 #TODO put abcd BIGGER
 
 TENSION_STD = False
-VIOLIN_PLOT =True
+VIOLIN_PLOT =False
 if VIOLIN_PLOT:
     sns.violinplot(x='Voltage',y='Reward per step', data = episodeArr, scale_hue=True, positions=TENSION_RANGE, linewidth=0.5, bw=10, trim=True, inner="quart")
     plt.savefig('./EJPH/v.pdf')

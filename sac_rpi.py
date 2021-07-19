@@ -14,6 +14,8 @@ import argparse
 from utils import read_hyperparameters
 from pathlib import Path
 from pendule_pi import PendulePy
+
+
 #Simulation parameters
 Te=0.05 #sampling time
 EP_STEPS=800 #num steps in an episode
@@ -92,9 +94,3 @@ if __name__ == '__main__':
             model.save(f'./weights/sac50-real/pwm{PWM}/sac_rpi.zip')
             model.save_replay_buffer(f'./weights/sac50-real/pwm{PWM}/sac_rpi_buffer.pkl')
             plot_results(log_save)
-'''
-import time
-s=time.time()
-pendulePy.sendCommand(-50)
-print(time.time()-time.time())
-'''

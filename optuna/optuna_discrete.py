@@ -13,7 +13,7 @@ import torch
 import torch.nn as nn
 from stable_baselines3 import DQN
 from stable_baselines3.common.callbacks import EvalCallback
-from custom_callbacks import EvalThetaDotMetric
+from custom_callbacks import EvalThetaDotMetric, EvalX_ThetaMetric
 import optuna
 from optuna.pruners import MedianPruner
 from optuna.samplers import TPESampler

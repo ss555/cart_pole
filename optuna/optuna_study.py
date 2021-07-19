@@ -4,25 +4,23 @@ import pickle as pkl
 from typing import Any, Dict
 import os
 import sys
-
 sys.path.append(os.path.abspath('./'))
 from env_custom import CartPoleButter
 import gym
 import torch
 import torch.nn as nn
-from stable_baselines3 import SAC,DQN
+from stable_baselines3 import SAC
 from stable_baselines3.common.callbacks import EvalCallback
-
+from custom_callbacks import EvalX_ThetaMetric
 import optuna
+from optuna.visualization import plot_optimization_history, plot_param_importances
 from optuna.pruners import MedianPruner
 from optuna.samplers import TPESampler
-from optuna.visualization import plot_optimization_history, plot_param_importances
-
 N_TRIALS = 1000
 N_JOBS = 3
 N_STARTUP_TRIALS = 5
 N_EVALUATIONS = 4
-N_TIMESTEPS = int(8e4)
+N_TIMESTEPS = int(6e4)
 EVAL_FREQ = int(N_TIMESTEPS / N_EVALUATIONS)
 N_EVAL_EPISODES = 3
 #TIMEOUT = int(60 * 15)  # 15 minutes in study.optimize
@@ -76,14 +74,13 @@ def sample_sac_params(trial: optuna.Trial) -> Dict[str, Any]:
 DEFAULT_HYPERPARAMS = {
     "policy": "MlpPolicy"
 }
-class TrialEvalCallback(EvalCallback):
+class TrialEvalCallback(EvalX_ThetaMetric):
     """Callback used for evaluating and reporting a trial."""
 
     def __init__(
         self,
         eval_env: gym.Env,
         trial: optuna.Trial,
-        n_eval_episodes: int = 5,
         eval_freq: int = 10000,
         deterministic: bool = True,
         verbose: int = 0,
@@ -91,10 +88,8 @@ class TrialEvalCallback(EvalCallback):
 
         super().__init__(
             eval_env=eval_env,
-            n_eval_episodes=n_eval_episodes,
             eval_freq=eval_freq,
             deterministic=deterministic,
-            verbose=verbose,
         )
         self.trial = trial
         self.eval_idx = 0
@@ -118,12 +113,11 @@ def objective(trial: optuna.Trial) -> float:
     kwargs = DEFAULT_HYPERPARAMS.copy()
     # Sample hyperparameters
     kwargs.update(sample_sac_params(trial))
-    env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=False, tensionMax=8.4706,
-                              resetMode='experimental', sparseReward=False)  # ,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)
+    env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=False, tensionMax=12, resetMode='experimental')
     # Create the RL model
     model = SAC(**kwargs, env=env)
     # Create env used for evaluation
-    eval_env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=False, tensionMax=8.4706, resetMode='experimental', sparseReward=False)#,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)
+    eval_env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=False, tensionMax=12, resetMode='experimental')
     # Create the callback that will periodically evaluate
     # and report the performance
     eval_callback = TrialEvalCallback(
@@ -159,7 +153,7 @@ def objective(trial: optuna.Trial) -> float:
 if __name__ == "__main__":
     # Set pytorch num threads to 1 for faster training
     torch.set_num_threads(1)
-'''
+
     sampler = TPESampler(n_startup_trials=N_STARTUP_TRIALS)
     # Do not prune before 1/3 of the max budget is used
     pruner = MedianPruner(
@@ -198,8 +192,9 @@ if __name__ == "__main__":
     fig2 = plot_param_importances(study)
     
     fig1.show()
-    fig2.show()'''
-LOAD_PLOT = True
+    fig2.show()
+
+LOAD_PLOT = False
 
 if LOAD_PLOT:
     with open("./optuna/study.pkl", "rb") as f:

@@ -1,13 +1,13 @@
 import csv
 import math
 import time
-
 import gym
 from gym import spaces, logger
 from gym.utils import seeding
 import numpy as np
 from env_custom import reward_fnCos
 from pendule_pi import PendulePy
+
 class CartPoleCosSinRpiDiscrete3(gym.Env):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
@@ -77,8 +77,9 @@ class CartPoleCosSinRpiDiscrete3(gym.Env):
         if abs(self.state[-1])>self.speed_threshold:
             print('speed limit')
             done = True
-        if self.MAX_STEPS_PER_EPISODE==self.counter:
+        if self.MAX_STEPS_PER_EPISODE<=self.counter:
             done=True
+            print('reset because of episode steps')
         # print(self.state)
 
         # info('state: {}, cost{}, done:{}'.format(self.state,cost,done))
