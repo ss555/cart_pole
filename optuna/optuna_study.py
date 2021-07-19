@@ -89,6 +89,7 @@ class TrialEvalCallback(EvalX_ThetaMetric):
         super().__init__(
             eval_env=eval_env,
             eval_freq=eval_freq,
+            X_THRESHOLD=0.2,
             deterministic=deterministic,
         )
         self.trial = trial
@@ -108,8 +109,8 @@ class TrialEvalCallback(EvalX_ThetaMetric):
 
 
 def objective(trial: optuna.Trial) -> float:
-    Te=0.05
-    EP_STEPS=1e5
+    Te = 0.05
+    EP_STEPS = 1e5
     kwargs = DEFAULT_HYPERPARAMS.copy()
     # Sample hyperparameters
     kwargs.update(sample_sac_params(trial))
@@ -123,7 +124,6 @@ def objective(trial: optuna.Trial) -> float:
     eval_callback = TrialEvalCallback(
         eval_env,
         trial,
-        n_eval_episodes=N_EVAL_EPISODES,
         eval_freq=EVAL_FREQ,
         deterministic=True,
     )
@@ -163,12 +163,11 @@ if __name__ == "__main__":
     study = optuna.create_study(sampler=sampler, pruner=pruner, direction="maximize")
 
     try:
-        study.optimize(objective, n_trials=N_TRIALS, n_jobs=-1)
+        study.optimize(objective, n_trials=N_TRIALS, n_jobs=3)
     except KeyboardInterrupt:
         pass
 
     print("Number of finished trials: ", len(study.trials))
-
     print("Best trial:")
     trial = study.best_trial
 

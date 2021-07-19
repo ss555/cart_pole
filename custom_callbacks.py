@@ -1,5 +1,4 @@
 import csv
-
 from stable_baselines3.common.callbacks import BaseCallback
 from tqdm.auto import tqdm
 import os
@@ -328,6 +327,7 @@ class EvalThetaDotMetric(EventCallback):
         verbose: int = 1,
         warn: bool = True,
         THETA_DOT_THRESHOLD : float = 0.0,
+        THETA_THRESHOLD : float = -np.pi/18,
         N_BINS : int = 10
     ):
         super(EvalThetaDotMetric, self).__init__(callback_on_new_best, verbose=verbose)
@@ -343,7 +343,7 @@ class EvalThetaDotMetric(EventCallback):
         self.evaluations_length = []
         self.evaluations_timesteps = []
         self.THETA_DOT_THRESHOLD = THETA_DOT_THRESHOLD
-        self.THETA_THRESHOLD = -np.pi/18
+        self.THETA_THRESHOLD = THETA_THRESHOLD
         self.N_BINS=N_BINS
         self.save_model = save_model
         if save_model:
@@ -358,7 +358,6 @@ class EvalThetaDotMetric(EventCallback):
             theta_dot = [0]
 
         theta = np.linspace(-self.THETA_THRESHOLD, self.THETA_THRESHOLD, self.N_BINS)
-
         self.arrTest = np.transpose([np.tile(theta, len(theta_dot)), np.repeat(theta_dot, len(theta))])
 
 
@@ -421,7 +420,8 @@ class EvalThetaDotMetric(EventCallback):
 
 class EvalX_ThetaMetric(EventCallback):
     """
-    Callback for evaluating a cartpole systematically on a given metric(grid on THETA and X.
+    Callback for evaluating a cartpole systematically on a given metric(grid on THETA and X).
+    BY DEFAULT X_THRESHOLD IS 0, SO ONLY 10 EVALUATIONS ON VARYING THETA, CHANGE TO HAVE BOTH X AND THETA TO CHANGE.
 
     :param eval_env: The environment used for initialization
     :param callback_on_new_best: Callback to trigger
@@ -448,10 +448,11 @@ class EvalX_ThetaMetric(EventCallback):
         render: bool = False,
         verbose: int = 0,
         warn: bool = True,
-        THETA_DOT_THRESHOLD : float = 0.0,
+        X_THRESHOLD : float = 0.0,
+        THETA_THRESHOLD : float = -np.pi/18,
         N_BINS : int = 10
     ):
-        super(EvalThetaDotMetric, self).__init__(callback_on_new_best, verbose=verbose)
+        super(EvalX_ThetaMetric, self).__init__(callback_on_new_best, verbose=verbose)
         self.eval_freq = eval_freq
         self.best_mean_reward = -np.inf
         self.last_mean_reward = -np.inf
@@ -464,15 +465,15 @@ class EvalX_ThetaMetric(EventCallback):
         self.evaluations_results = []
         self.evaluations_length = []
         self.evaluations_timesteps = []
-        self.THETA_DOT_THRESHOLD = THETA_DOT_THRESHOLD
-        self.THETA_THRESHOLD = -np.pi/18
+        self.X_THRESHOLD = X_THRESHOLD
+        self.THETA_THRESHOLD = THETA_THRESHOLD #CHANGE for more randomisation
         self.N_BINS=N_BINS
-        if THETA_DOT_THRESHOLD != 0:
-            theta_dot = np.linspace(-self.THETA_DOT_THRESHOLD, self.THETA_DOT_THRESHOLD, self.N_BINS)
+        if X_THRESHOLD != 0:
+            theta_dot = np.linspace(-self.X_THRESHOLD, self.X_THRESHOLD, self.N_BINS)
         else:
             theta_dot = [0]
 
-        theta = np.linspace(self.THETA_THRESHOLD, self.THETA_THRESHOLD, self.N_BINS)
+        theta = np.linspace(-self.THETA_THRESHOLD, self.THETA_THRESHOLD, self.N_BINS)
 
         self.arrTest = np.transpose([np.tile(theta, len(theta_dot)), np.repeat(theta_dot, len(theta))])
 
@@ -494,7 +495,7 @@ class EvalX_ThetaMetric(EventCallback):
             episode_lengths = np.zeros(self.arrTest.shape[0], dtype=np.float32)
             for i,elem in enumerate(self.arrTest):
                 done=False
-                obs=self.eval_env.reset(costheta=np.cos(elem[0]),sintheta=np.sin(elem[0]), theta_ini_speed=elem[1])
+                obs=self.eval_env.reset(costheta=np.cos(elem[0]),sintheta=np.sin(elem[0]), xIni=elem[1])
                 while not done:
                     action,_state = self.model.predict(obs,deterministic=True)
                     obs,reward,done,_ = self.eval_env.step(action)
