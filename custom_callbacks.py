@@ -372,7 +372,6 @@ class EvalThetaDotMetric(EventCallback):
 
 
     def _on_step(self) -> bool:
-
         if self.eval_freq > 0 and self.n_calls % self.eval_freq == 0:
             episode_rewards = np.zeros(self.arrTest.shape[0], dtype=np.float32)
             episode_lengths = np.zeros(self.arrTest.shape[0], dtype=np.float32)
@@ -495,7 +494,7 @@ class EvalX_ThetaMetric(EventCallback):
             episode_lengths = np.zeros(self.arrTest.shape[0], dtype=np.float32)
             for i,elem in enumerate(self.arrTest):
                 done=False
-                obs=self.eval_env.reset(costheta=np.cos(elem[0]),sintheta=np.sin(elem[0]), xIni=elem[1])
+                obs=self.eval_env.reset(costheta=np.cos(elem[0]), sintheta=np.sin(elem[0]), xIni=elem[1])
                 while not done:
                     action,_state = self.model.predict(obs,deterministic=True)
                     obs,reward,done,_ = self.eval_env.step(action)

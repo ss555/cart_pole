@@ -1,3 +1,7 @@
+'''
+records the video of the training on openai gym
+'''
+
 import sys
 import os
 # sys.path.append(os.path.abspath('./..'))
@@ -50,8 +54,8 @@ def play(eval_env_id, model, steps: int = 50, deterministic: bool =True, video_p
 
 if __name__=='__main__':
     EP_STEPS = 10
-    path_weights = './weights/dqn50-sim/best_model.zip'
-    model = DQN.load(path_weights)
+    TRAIN=True
+
     Te = 0.05
     # env = CartPoleButter()
     env = gym.make('cartpoleSwingD-v0')
@@ -63,7 +67,13 @@ if __name__=='__main__':
     os.makedirs(video_folder,exist_ok=True)
     # # Start the video at step=0 and record 500 steps
     eval_env = VecVideoRecorder(eval_env, video_folder=video_folder, record_video_trigger=lambda step: step == 0, video_length=num_steps, name_prefix=prefix)
-    model.env = eval_env
+    if TRAIN:
+        hyperparams = read_hyperparameters('dqn_50')
+        model = DQN(env=eval_env, **hyperparams)
+    else:
+        path_weights = './weights/dqn50-sim/best_model'
+        model = DQN.load(path_weights)
+        model.env = eval_env
     checkpoint = CheckpointCallback(save_freq=10000, save_path=video_folder)
     with ProgressBarManager(num_steps) as cus_callback:
         model.learn(total_timesteps=num_steps, callback=[cus_callback, checkpoint])

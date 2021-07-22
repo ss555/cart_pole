@@ -16,7 +16,7 @@ class CartPoleCosSinRpiDiscrete3(gym.Env):
     def __init__(self,
                  pi_conn,
                  x_threshold: float = 0.355,
-                 speed_threshold : int = 13,
+                 speed_threshold : int = 14,
                  seed: int = 0):
         self.MAX_STEPS_PER_EPISODE = 800
         self.FORMAT = 'utf-8'

@@ -10,7 +10,7 @@ import os
 from scipy import signal
 sys.path.append(os.path.abspath('./'))
 
-def parce_csv(absPath,PLOT=False,fitTensionMin=None,fitTensionMax=None,weightedStartRegression=0,weight=10):
+def parce_csv(absPath,PLOT=False,fitTensionMin=None, fitTensionMax=None, weightedStartRegression=0,weight=10):
     data     = np.zeros(shape=(3,))
     namesRaw = glob.glob(absPath+'/*.csv')
     namesRaw.sort()
@@ -21,11 +21,12 @@ def parce_csv(absPath,PLOT=False,fitTensionMin=None,fitTensionMax=None,weightedS
 
     for filename in namesRaw:
         # fileData=pd.read_csv(filename)
-        fileData=np.genfromtxt(filename, delimiter=',')
-        processedData,weightedData=preprocess_data(fileData[:,:].T, plot=PLOT, fitTensionMin=fitTensionMin, fitTensionMax=fitTensionMax,weightedStartRegression=weightedStartRegression,weight=weight)
-        data=np.vstack((data, processedData))
-        dt=np.mean(np.diff(data[:,2]))
+        fileData = np.genfromtxt(filename, delimiter=',')
+        processedData,weightedData = preprocess_data(fileData[:,:].T, plot=PLOT, fitTensionMin=fitTensionMin, fitTensionMax=fitTensionMax,weightedStartRegression=weightedStartRegression,weight=weight)
+        data = np.vstack((data, processedData))
+        dt = np.mean(np.diff(data[:,2]))
     return data[1:,:],dt,weightedData
+
 def preprocess_data(fileData,plot=False,weightedStartRegression=0,weight=10, fitTensionMin=None,fitTensionMax=None):
     '''
     ATTENTION: tension is inverted, i.e when POSITIVE PWM applied there is - speed,
@@ -73,7 +74,7 @@ def preprocess_data(fileData,plot=False,weightedStartRegression=0,weight=10, fit
             print('conv error')
     if plot:
         ax1 = plt.subplot(311)
-        plt.plot(fileData[1:-1,1], uArr[0])
+        plt.plot(fileData[1:-1,1], localData[:,2])
         plt.setp(ax1.get_xticklabels(), visible=False)
         ax1.set_ylabel('Position in m', fontsize=5)
 
@@ -95,9 +96,14 @@ def integrate_acceleration(a,b,c,d,u,timeArr):
     for i in range(1,len(timeArr)):
         dt=timeArr[i]-timeArr[i-1]
         # acc=vit*a+b*U+c*np.sign(vit)+d*sign(u)
-        dv=a*v[i-1]+b*u[0]+c*np.sign(v[i-1])+d
-        v[i]=v[i-1]+dv*dt
+        n=10
+        vprev=v[i-1]
+        for j in range(n):
+            dv=a*vprev+b*u[0]+c*np.sign(vprev)+d
+            v[i]=vprev+dv*dt/n
+            vprev=v[i]
     return v
+
 def regression_chariot(data,symmetricTension=True):
     '''
     performs the matrix inversion to determinse the parameters a,b,c,d of acc=vit*a+b*U+c*np.sign(vit)+d
@@ -140,6 +146,7 @@ def plot_experimental_fitted(filename,fA,fB,fC,fD,applyFiltering=False,Nf = 4,fc
     fileData = np.genfromtxt(filename, delimiter=',').T
     pwmStart = int(min(abs(fileData[:, 0])))
     pwmEnd   = int(max(fileData[:, 0]))
+    stableSpeeds = []
     # plt.figure(figsize=(30,12),dpi=200)
     import plotly.express as px
     fig = px.scatter(x=[0],y=[0])
@@ -149,8 +156,8 @@ def plot_experimental_fitted(filename,fA,fB,fC,fD,applyFiltering=False,Nf = 4,fc
         dt = np.mean(np.diff(localData[:, 1]))
         v = np.convolve(localData[:, 2], [0.5, 0, -0.5], 'valid') / dt
         a = np.convolve(localData[:, 2], [1, -2, 1], 'valid') / (dt ** 2)
-        u=[((i) / 255 * 12)]
-        time_offset=localData[0,1]
+        u = [((i) / 255 * 12)]
+        time_offset = localData[0,1]
         v_fitted = integrate_acceleration(fA,fB,fC,fD,u,timeArr=localData[:,1])
         if applyFiltering:
             #butterworth filtering
@@ -159,6 +166,7 @@ def plot_experimental_fitted(filename,fA,fB,fC,fD,applyFiltering=False,Nf = 4,fc
             #TODOO? cut the edges
         fig.add_scatter(x=localData[1:-1, 1], y=v, name=("%.1fV"%u[0]))
         fig.add_scatter(x=localData[:,1], y=v_fitted)
+        stableSpeeds.append(np.mean(v[:-2]))
         if abs(i)%50==0 and abs(i)<210:
             ax.plot(localData[1:-1, 1]-localData[1, 1],v,'.')
             legs.append(str(round(-i/255*12,1))) # - because of inverted tension
@@ -166,13 +174,14 @@ def plot_experimental_fitted(filename,fA,fB,fC,fD,applyFiltering=False,Nf = 4,fc
             ax.plot(localData[:,1]-localData[0,1], v_fitted,)
         # except:
         #     print('plot_experimental_fitted error')
+    stableSpeeds.reverse()
     for i in range(pwmStart, pwmEnd + 10, 10):
         # try:
         localData = fileData[fileData[:, 0] == -i, :]
         dt = np.mean(np.diff(localData[:, 1]))
         v = np.convolve(localData[:, 2], [0.5, 0, -0.5], 'valid') / dt
         a = np.convolve(localData[:, 2], [1, -2, 1], 'valid') / (dt ** 2)
-        u=[((-i) / 255 * 12)]
+        u = [((-i) / 255 * 12)]
         v_fitted = integrate_acceleration(fA, fB, fC,fD, u, timeArr=localData[:, 1])
         if applyFiltering:
             bf, af = signal.butter(Nf, 2 * (dt * fc))
@@ -183,17 +192,13 @@ def plot_experimental_fitted(filename,fA,fB,fC,fD,applyFiltering=False,Nf = 4,fc
             pass
         fig.add_scatter(x=localData[1:-1, 1], y=v, name=("%.1fV"%u[0]))
         fig.add_scatter(x=localData[:, 1], y=v_fitted)
+        stableSpeeds.append(np.mean(v[:-2]))
         if abs(i)%50==0 and abs(i)<210:
             ax.plot(localData[1:-1, 1]-localData[1, 1], v,'.')
             ax.plot(localData[:,1]-localData[0,1], v_fitted)
-
-
             legs.append(str(round(i/255*12,1)))
             legs.append(str(round(i / 255 * 12, 1))+' fitted')
     fig.show()
-
-
-
     ax.set_xlabel('time in [s]')
     ax.set_ylabel('speed in [m/s]')
     ax.set_xlim(left=0.0,right = 1.5)
@@ -202,6 +207,15 @@ def plot_experimental_fitted(filename,fA,fB,fC,fD,applyFiltering=False,Nf = 4,fc
     plt.tight_layout()
     figSave.savefig('./EJPH/plots/regression_chariot.pdf')
     figSave.show()
+    fig2,ax2 = plt.subplots()
+    tensions = np.hstack(([-i for i in range(pwmEnd, pwmStart-1, -10)],[i for i in range(pwmStart, pwmEnd + 10, 10)]))
+    ax2.plot(tensions,stableSpeeds,'o')
+    ax2.set_xlabel('tension in [V]')
+    ax2.set_ylabel('stable speed in [m/s]')
+    ax2.grid()
+    fig2.show()
+    fig2.savefig('./EJPH/plots/regression_u_v.pdf')
+
 
 print(os.getcwd())
 absPath='/home/sardor/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/idenChariotCsv'# absPath='/home/sardor/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/chariot_data'#+'./chariot_iden.csv'

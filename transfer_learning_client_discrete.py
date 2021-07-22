@@ -15,13 +15,14 @@ from custom_callbacks import plot_results
 three modes: TRAIN(train model from scratch or LOAD_MODEL_PATH), 
 INFERENCE(many models from INFERENCE_PATH), ONE_TIME_INFERENCE(1model of LOAD_MODEL_PATH!!)
 '''
-mode='INFERENCE'
+mode='TRAIN'#INFERENCE #ONE_TIME_INFERENCE
 HOST = '134.59.131.77'
 LOAD_MODEL_PATH=None#"./logs/best_model"
 LOAD_BUFFER_PATH=None#"dqn_pi_swingup_bufferN"
 INFERENCE_PATH='./EJPH/real-cartpole/dqn'
 PORT = 65432
-logdir='./weights/dqn/'
+TENSION = 12
+logdir=f'./weights/dqn{TENSION}V/'
 os.makedirs(logdir,exist_ok=True)
 # Use deterministic actions for evaluation and SAVE the best model
 checkpoint = CheckPointEpisode(save_path=logdir)

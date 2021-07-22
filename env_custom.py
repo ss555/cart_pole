@@ -20,7 +20,7 @@ def reward_fnCos(x, costheta, sintheta=0, theta_dot=0, sparse=False, Kx=5):
     else:
         reward = (1 - costheta - Kx * x ** 2)/2
     return reward
-
+#TODO vitesse en fonction de tension
 
 class CartPoleButter(gym.Env):
     def __init__(self,
@@ -92,7 +92,7 @@ class CartPoleButter(gym.Env):
         self.x_threshold = x_threshold
         # FOR DATA
         self.v_max = 15
-        self.w_max = 30
+        self.w_max = 100
         high = np.array([
             self.x_threshold,
             self.v_max,

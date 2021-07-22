@@ -11,8 +11,29 @@ import plotly.graph_objects as go
 fitting parameters from pendulum free fall:
 APPLY_FILTER can be in 3 modes: None, ukf or butterworth(recommended)
 '''
-APPLY_FILTER='butterworth'#'ukf'#
+APPLY_FILTER = 'butterworth'#'ukf'#
 absPath = '/home/sardor/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/idenPenduleCsv/angle_iden_alu.csv'
+def integrate_theta_accel(theta_acc,theta_ini,thetaDotIni, dt):
+    theta=np.zeros(shape=(len(theta_acc)))
+    thetaDot=np.zeros(shape=(len(theta_acc)))
+    theta[0] = theta_ini
+    thetaDot[0] = thetaDotIni
+    for i in range(1,len(theta_acc)):
+        thetaDot[i] = thetaDot[i-1] + dt*theta_acc[i-1]
+        theta[i] = theta[i-1] + dt*thetaDot[i]
+    return theta
+
+def integrate_theta_acc(theta_acc,theta_ini,thetaDotIni, timeArr):
+    theta=np.zeros(shape=(len(theta_acc)))
+    thetaDot=np.zeros(shape=(len(theta_acc)))
+    theta[0] = theta_ini
+    thetaDot[0] = thetaDotIni
+    for i in range(1,len(theta_acc)):
+        dt=timeArr[i]-timeArr[i-1]
+        thetaDot[i] = thetaDot[i-1] + dt*theta_acc[i-1]
+        theta[i] = theta[i-1] + dt*thetaDot[i]
+    return theta
+
 def process_angle_raw(absPath,plot=True):
     '''
 
@@ -141,36 +162,63 @@ def fit_params(data, time=None):
     regA = np.stack((np.sin(data[:,2]),data[:,1]),axis=1)
     X = np.linalg.lstsq(regA,regB, rcond=None)[0]
     try:
-        indStartPlot = 2000
+        indStartPlot = 0 #important to have index to 0 when integrating, otherwise will be offset while integrating accel different from 0
         indEndPlot = 4000
+        # indStartPlot = 2000
+        # indEndPlot = 4000
         #plot fitted curve
         fig,ax=plt.subplots()
-        ax.plot(time[indStartPlot:indEndPlot]-time[indStartPlot],regB[indStartPlot:indEndPlot],'r.')
+        ax.plot(time[indStartPlot:indEndPlot]-time[indStartPlot],regB[indStartPlot:indEndPlot],'r.') #plot real acceleration
+
         regRes=np.matmul(regA,X)
-        ax.plot(time[indStartPlot:indEndPlot]-time[indStartPlot],regRes[indStartPlot:indEndPlot])
+        #plot fitted curve acceleration
+        ax.plot(time[indStartPlot:indEndPlot]-time[indStartPlot], regRes[indStartPlot:indEndPlot])
 
         ax.legend(['experimental','fitted'],loc='best')#bbox_to_anchor=(1.05, 1))
         ax.set_xlabel('time in [s]')
         ax.set_ylabel('acceleration in [m/s^2]')
         ax.grid()
+        ax.legend(['experimental', 'fitted'], loc='best')  # bbox_to_anchor=(1.05, 1))
+        ax.set_xlabel('time in [s]')
+        ax.set_ylabel('acceleration in [rad/s^2]')
+
+        # plot fitted curve ANGLE
+        dt = np.mean(np.diff(time)[np.diff(time) < 0.1])#without reset phase np.diff(time) < 0.1
+        theta=integrate_theta_acc(regRes[indStartPlot:indEndPlot], theta_ini=data[indStartPlot,-1],thetaDotIni=data[indStartPlot,1], timeArr=time)
+        fig2, ax2 = plt.subplots()
+        offsetBeginning=0#indEndPlot/2
+        ax2.plot(time[indStartPlot:indEndPlot] - time[indStartPlot], data[indStartPlot+offsetBeginning:indEndPlot,-1], 'r.') #plot
+        ax2.plot(time[indStartPlot:indEndPlot] - time[indStartPlot], theta[offsetBeginning:], 'b') #plot
+        ax2.legend(['experimental', 'fitted'], loc='best')  # bbox_to_anchor=(1.05, 1))
+        ax2.set_xlabel('time in [s]')
+        ax2.set_ylabel('theta in [rad]')
+        ax2.grid()
+        fig2.tight_layout()
+        fig2.savefig('./EJPH/plots/regression_theta_t.pdf')
+        fig2.show()
+
+
         # ax.set_xlabel('time in [ms]')
         # ax.legend(['filtered experimental acceleration','fitted curve'],bbox_to_anchor=(1.05, 1))
-        plt.tight_layout()
-        plt.savefig('./EJPH/plots/regression_theta_ddot.pdf')
         fig.show()
     except:
         print('smth is wrong to plot fitted curve')
     return X
 
+
 expData, time = process_angle_raw(absPath,plot=False)
 # [wSquare,kViscous,cStatic]=fit_params(expData)
-[wSquare,kViscous] = fit_params(expData,time=time)
-print([wSquare,kViscous])
+[wSquare, kViscous] = fit_params(expData,time=time)
+print([wSquare, kViscous])
 print(f'freq{np.sqrt(wSquare)}')
-
+print(f'R - {9.806/wSquare}')
+#TODO theta sur t OU theta second en fonction de theta-point
 plot_fitted = False
 if plot_fitted:
     data=np.genfromtxt(absPath,delimiter=',')
+    regB = data[:,0]
+    # since theta=0 is up in the acquisition script, we have an inverted sine in the equation ddot(theta) = w**2 * sin(theta) + Kvisc*theta)
+    regA = np.stack((np.sin(data[:,2]),data[:,1]),axis=1)
     #time position(in degree)
     aArr=[]
     vArr=[]
@@ -193,7 +241,8 @@ if plot_fitted:
     indEndPlot = 4000
     fig,ax=plt.subplots()
     ax.plot(regB[indStartPlot:indEndPlot],'r.')
-    regRes=np.matmul(regA,X)
+    X = np.linalg.lstsq(regA, regB, rcond=None)[0]
+    regRes=np.matmul(regA, X)
     ax.plot(regRes[indStartPlot:indEndPlot])
 
     ax.legend(['experimental','fitted'],loc='best')#bbox_to_anchor=(1.05, 1))

@@ -19,6 +19,8 @@ from custom_callbacks import plot_results
 import plotly.express as px
 from bokeh.palettes import d3
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset, inset_axes
+from env_wrappers import load_results, ts2xy, load_data_from_csv
+
 PLOT_TRAINING_REWARD=True
 PLOT_EVAL_REWARD=True
 TENSION_PLOT = True
@@ -81,7 +83,8 @@ def save_show_fig(xArr,yArr,legs=None,title=None,saveName=None, ax=None, fig=Non
         if i==true_value_index:
             ax.plot(xArr[i], yArr[i]/EP_STEPS, color=colorPalette[i])
         elif i==experimental_value_index:
-            ax.plot(xArr[i], yArr[i] / EP_STEPS, color='black',linewidth=3.0)
+            ax.plot(xArr[i], yArr[i] / EP_STEPS, color=colorPalette[i],linewidth=3.0)
+            # ax.plot(xArr[i], yArr[i] / EP_STEPS, color='black',linewidth=3.0)
         else:
             ax.plot(xArr[i], yArr[i] / EP_STEPS, '--', color=colorPalette[i])
     if title is not None:
@@ -129,7 +132,7 @@ def plot_from_npz(filenames, xlabel, ylabel, legends=None, title=None, plot_std=
         if i==true_value_index:
             ax.plot(timesteps, meanRew, 'o-', color=colorPalette[i])
         else:
-            ax.plot(timesteps, meanRew, 'o--', color=colorPalette[i])
+            ax.plot(timesteps, meanRew, 'o--', fillstyle='none', color=colorPalette[i])
         if plot_std:
             plt.fill_between(timesteps, meanRew + stdRew, meanRew - stdRew, alpha=0.2)
     ax.set_xlabel(xlabel)
@@ -165,22 +168,21 @@ if __name__=='__main__':
 
         xArr, yArr, legs = plot_results('./EJPH/tension-perf',only_return_data=True)  # ,title=t1) #'Effect of varying tension on the learning'
         legs = [float(leg) for leg in legs[:, -3]]
-        xArrT, yArrT, legsT = sort_arr_from_legs(xArr, yArr, legs)
-        save_show_fig(xArrT, yArrT, ax=a[0][0],true_value_index=4)  # ,title=t1
+        xArrT, yArrT, legsT = sort_arr_from_legs(xArr, yArr, legs) # ,title=t1
         #experimental training150pwm
-        dcVoltage=150/155*12
+        dcVoltage=150/255*12
         xArrEx, yArrEx, _ = plot_results('./EJPH/real-cartpole/dqn', only_return_data=True)
-        xArr.append(xArrEx[0])
-        yArr.append(yArrEx[0])
-        legsT.append(float(round(dcVoltage,2)))
-        save_show_fig(xArrT, yArrT, ax=a[0][0], true_value_index=4,experimental_value_index=len(xArrT)-1)
+        xArrT.append(xArrEx[0])
+        yArrT.append(yArrEx[0])
+        legsT.append(f'{float(round(dcVoltage,2))}(real)')
+        save_show_fig(xArrT, yArrT, ax=a[0][0], true_value_index=4, experimental_value_index=len(xArrT)-1)
 
         xArr, yArr, legs = plot_results('./EJPH/static-friction', title=t2, only_return_data=True)
         legs = [round(float(leg[1:]), 4) for leg in legs[:, -2]]
         xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
         save_show_fig(xArr, yArr, legsStatic, saveName='./EJPH/plots/static.pdf', true_value_index=2)  # ,title=t2
         # save_show_fig(xArr, yArr, legs, saveName='./EJPH/plots/static.pdf')  # ,title=t2
-
+#TODO enlever zoom
         xArr, yArr, legs = plot_results('./EJPH/dynamic-friction', title=t3, only_return_data=True)
         legs = [round(float(leg),4) for leg in legs[:, -2]]
         xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
@@ -204,6 +206,9 @@ if __name__=='__main__':
         legs = legs[:, -1]
         xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
         save_show_fig(xArr, yArr, [leg[0] for leg in legs], saveName='./EJPH/plots/seeds.pdf')  # ,title=t6
+
+
+
     '''
     PLOT THE inference reward from .npz, namely EvalCallback logs
     '''
@@ -218,7 +223,8 @@ if __name__=='__main__':
         legs = [legs[i] for i in idx]
         filenames = [filenames[i] for i in idx]
         legs = [str(leg) + 'V' for leg in legs]
-        plot_from_npz(filenames,xl,yl, ax=a[0][1], true_value_index=2)
+        plot_from_npz(filenames,xl,yl, ax=a[0][1], true_value_index=4)
+
 
         filenames = sorted(glob.glob(dirDynamic + '/*.npz'))
         legs = np.array([legend.split('_') for legend in filenames])
@@ -237,8 +243,6 @@ if __name__=='__main__':
         filenames = [filenames[i] for i in idx]
         plot_from_npz(filenames, xl, yl,legends=legsStatic, saveName='./EJPH/plots/greedy_static.pdf', true_value_index=2)
         # plot_from_npz(filenames, xl, yl,legends=legs, saveName='./EJPH/plots/greedy_static.pdf')
-
-
 
         filenames = sorted(glob.glob(dirNoise + '/*.npz'))
         legs = np.array([legend.split('_') for legend in filenames])
@@ -298,8 +302,9 @@ if __name__=='__main__':
         PLOT_EPISODE_REWARD = True
         figm1, ax1 = plt.subplots()
         figm2, ax2 = plt.subplots()
-        fig = px.scatter()
-        fig2 = px.scatter()
+        #plt theta,x
+        # fig = px.scatter()
+        # fig2 = px.scatter()
         # fig = px.scatter(x=[0], y=[0])
         for i, tension in enumerate(TENSION_RANGE):
             prev_angle_value = 0.0
@@ -331,8 +336,8 @@ if __name__=='__main__':
                     if done:
                         print(f'ended episode {tension} with {count_tours} tours and {np.sum(rewArr)} reward')
                         ax1.plot(thetaArr, '.')
-                        fig.add_scatter(x=np.linspace(1,EP_STEPS,EP_STEPS), y=thetaArr, name=f'volt: {tension}')
-                        fig2.add_scatter(x=np.linspace(1,EP_STEPS,EP_STEPS), y=xArr, name=f'volt: {tension}')
+                        # fig.add_scatter(x=np.linspace(1,EP_STEPS,EP_STEPS), y=thetaArr, name=f'volt: {tension}')
+                        # fig2.add_scatter(x=np.linspace(1,EP_STEPS,EP_STEPS), y=xArr, name=f'volt: {tension}')
                         break
                         # ax1.savefig(logdir+'/thetaA.pdf')
                 ax2.plot(moving_average(rewArr,20), color = colorPalette[i])
@@ -349,8 +354,8 @@ if __name__=='__main__':
                 stdArr[i] = np.std(episode_rewards)
                 print('done')
         if PLOT_EPISODE_REWARD:
-            fig.show()
-            fig2.show()
+            # fig.show()
+            # fig2.show()
             ax1.legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
             ax2.legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
             # a[1][0].legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
@@ -382,6 +387,8 @@ if __name__=='__main__':
                 resultsStd=stdArr
             )
         print('done inference on voltages')
+
+
         #BOXPLOT
         TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]
         Te = 0.05
@@ -444,9 +451,11 @@ if __name__=='__main__':
         axins.set_ylim(y1, y2)
         axins.grid()
         # plt.setp(axins.get_yticklabels(), visible=False)
-        plt.setp(axins.get_xticklabels(), visible=False)
+        # plt.setp(axins.get_xticklabels(), visible=False)
         mark_inset(a[1][1], axins, loc1=3, loc2=4,visible=True, edgecolor='red')
-
+        '''
+        
+        '''
         #ANOTHER WAY FOR INSET
         # ax_new = a[1][1].add_axes([0.35, 0.2, 0.5, 0.5])
         # ax_new.boxplot(episodeArr[2:], positions=TENSION_RANGE[2:], patch_artist=True)
@@ -462,6 +471,29 @@ if __name__=='__main__':
         #            ncol=8, mode="expand", borderaxespad=0.)
         # figT.legend(legsT,loc='upper center', bbox_to_anchor=(0., 1.05, 1., .102),
         #            )
+
+        # experimental inference
+        # adding inference
+        dataInf = np.load('./EJPH/real-cartpole/dqn/inference_results.npz')
+        dataInf.allow_pickle = True
+        # monitor file
+        data, name = load_data_from_csv('./EJPH/real-cartpole/dqn/monitor.csv')
+        timesteps = np.zeros((16,))
+        rewsArr = dataInf["modelRewArr"]
+        obsArr = dataInf["modelsObsArr"]
+        actArr = dataInf["modelActArr"]
+        nameArr = dataInf["filenames"]
+        epReward = np.zeros((16,))
+        for i in range(0, len(obsArr)):
+            print()
+            obs = obsArr[i]
+            act = actArr[i]
+            epReward[i] = np.sum(rewsArr[i])
+            timesteps[i] = np.sum(data['l'][:(i * 10)])
+            print(f'it {i} and {epReward[i]}')
+        a[0][1].plot(timesteps, epReward/EP_STEPS,'o-', color=colorPalette[len(legsT)-1],linewidth=3.0)
+
+
 
         figT.tight_layout()
         shrink = 0.07
@@ -482,10 +514,11 @@ if __name__=='__main__':
 
         #set labels outside
         coords=[0.05,0.95]
-        a[0][0].text(coords[0], coords[1], chr(97) + ')', transform=a[0][0].transAxes, fontsize='large')
-        a[0][0].text(coords[0], coords[1], chr(98) + ')', transform=a[0][1].transAxes)
-        a[0][0].text(coords[0], coords[1], chr(99) + ')', transform=a[1][0].transAxes)
-        a[0][0].text(coords[0], coords[1], chr(100) + ')', transform=a[1][1].transAxes)
+        fontSize=24
+        a[0][0].text(coords[0], coords[1], chr(97) + ')', transform=a[0][0].transAxes, fontsize='x-large')#font={'size' : fontSize})
+        a[0][1].text(coords[0], coords[1], chr(98) + ')', transform=a[0][1].transAxes, fontsize='x-large')#font={'size' : fontSize})#
+        a[1][0].text(coords[0], coords[1], chr(99) + ')', transform=a[1][0].transAxes, fontsize='x-large')#font={'size' : fontSize})
+        a[1][1].text(coords[0], coords[1], chr(100) + ')', transform=a[1][1].transAxes, fontsize='x-large')#font={'size' : fontSize})
         figT.savefig('./EJPH/plots/tension_all.pdf')
         figT.show()
 
