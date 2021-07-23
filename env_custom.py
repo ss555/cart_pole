@@ -108,7 +108,6 @@ class CartPoleButter(gym.Env):
         self.seed(seed)
         self.viewer = None
         self.state = None
-        
         self.wAngularIni = wAngular  # 4.488 #T=1.4285, w=
         self.reward = None
         self.resetMode = resetMode
@@ -175,8 +174,7 @@ class CartPoleButter(gym.Env):
                 sintheta = np.sin(theta)
         else:
 
-            [x, x_dot, theta, theta_dot] = odeint(self.pend, [x, x_dot, math.atan2(sintheta, costheta), theta_dot], [0, 0.05],
-                           args=(action, self.fa, self.fb, self.fc))[-1,:]
+            [x, x_dot, theta, theta_dot] = odeint(self.pend, [x, x_dot, math.atan2(sintheta, costheta), theta_dot], [0, 0.05], args=(action, self.fa, self.fb, self.fc))[-1,:]
             raise Exception
         #adding process noise
         if self.Kp!=0:

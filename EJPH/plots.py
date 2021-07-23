@@ -45,6 +45,10 @@ plt.rcParams['font.size'] = 10
 plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams["figure.dpi"] = 100
 colorPalette = d3['Category20'][20]
+# set labels outside
+coords = [0.05, 0.95]
+fontSize = 24
+
 
 NUM_TIMESTEPS = 150000
 EVAL_NUM_STEPS = 5000
@@ -118,8 +122,12 @@ def setlabel(ax, label, loc=2, borderpad=0.6, **kwargs):
     ax.add_artist(label_legend)
     line.remove()
 
-#Tension
-figT, a = plt.subplots(nrows=2,ncols=2,figsize=(SCALE*10,SCALE*8))
+#plots
+figT, a = plt.subplots(nrows=2,ncols=2,figsize=(SCALE*10,SCALE*8))#Tension
+figSt, axSt = plt.subplots(nrows=2, ncols=1, figsize=(SCALE*6,SCALE*2*3.7125))
+figDy, axDy = plt.subplots(nrows=2, ncols=1, figsize=(SCALE*6,SCALE*2*3.7125))
+figNo, axNo = plt.subplots(nrows=2, ncols=1, figsize=(SCALE*6,SCALE*2*3.7125))
+figAc, axAc = plt.subplots(nrows=2, ncols=1, figsize=(SCALE*6,SCALE*2*3.7125))
 
 
 #helper fcs
@@ -129,7 +137,7 @@ def plot_from_npz(filenames, xlabel, ylabel, legends=None, title=None, plot_std=
         meanRew, stdRew = np.mean(data["results"], axis=1)/EP_STEPS, np.std(data["results"], axis=1, keepdims=False)/EP_STEPS
         if ax is None:
             fig, ax = plt.subplots(figsize=(SCALE*6,SCALE*3.7125))
-        if i==true_value_index:
+        if i == true_value_index:
             ax.plot(timesteps, meanRew, 'o-', color=colorPalette[i])
         else:
             ax.plot(timesteps, meanRew, 'o--', fillstyle='none', color=colorPalette[i])
@@ -170,33 +178,37 @@ if __name__=='__main__':
         legs = [float(leg) for leg in legs[:, -3]]
         xArrT, yArrT, legsT = sort_arr_from_legs(xArr, yArr, legs) # ,title=t1
         #experimental training150pwm
-        dcVoltage=150/255*12
+        dcVoltage = 150/255*12
         xArrEx, yArrEx, _ = plot_results('./EJPH/real-cartpole/dqn', only_return_data=True)
         xArrT.append(xArrEx[0])
         yArrT.append(yArrEx[0])
         legsT.append(f'{float(round(dcVoltage,2))}(real)')
         save_show_fig(xArrT, yArrT, ax=a[0][0], true_value_index=4, experimental_value_index=len(xArrT)-1)
 
-        xArr, yArr, legs = plot_results('./EJPH/static-friction', title=t2, only_return_data=True)
-        legs = [round(float(leg[1:]), 4) for leg in legs[:, -2]]
-        xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
-        save_show_fig(xArr, yArr, legsStatic, saveName='./EJPH/plots/static.pdf', true_value_index=2)  # ,title=t2
+        xArr, yArr, legsSt = plot_results('./EJPH/static-friction', title=t2, only_return_data=True)
+        legsSt = [round(float(leg[1:]), 4) for leg in legsSt[:, -2]]
+        xArr, yArr, legsSt = sort_arr_from_legs(xArr, yArr, legsSt)
+        save_show_fig(xArr, yArr, legsSt, saveName='./EJPH/plots/static.pdf', true_value_index=2)  # ,title=t2
+        save_show_fig(xArr, yArr, ax=axSt[0], true_value_index=2)  # ,title=t2
         # save_show_fig(xArr, yArr, legs, saveName='./EJPH/plots/static.pdf')  # ,title=t2
-#TODO enlever zoom
-        xArr, yArr, legs = plot_results('./EJPH/dynamic-friction', title=t3, only_return_data=True)
-        legs = [round(float(leg),4) for leg in legs[:, -2]]
-        xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
-        save_show_fig(xArr, yArr, legsVisc, saveName='./EJPH/plots/dynamic.pdf', true_value_index=2)  # ,title=t3
 
-        xArr, yArr, legs = plot_results(dirNoise, title=t4, only_return_data=True)
-        legs = [round(float(leg), 4) for leg in legs[:, -3]]
-        xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
-        save_show_fig(xArr, yArr, legs, saveName='./EJPH/plots/noise.pdf', true_value_index=4)  # ,title=t4
+        xArr, yArr, legsDy = plot_results('./EJPH/dynamic-friction', title=t3, only_return_data=True)
+        legsDy = [round(float(leg),4) for leg in legsDy[:, -2]]
+        xArr, yArr, legsDy = sort_arr_from_legs(xArr, yArr, legsDy)
+        save_show_fig(xArr, yArr, legsDy, saveName='./EJPH/plots/dynamic.pdf', true_value_index=2)  # ,title=t3
+        save_show_fig(xArr, yArr, ax=axDy[0], true_value_index=2)  # ,title=t3
 
-        xArr, yArr, legs = plot_results('./EJPH/action-noise', title=t5, only_return_data=True)
-        legs = [float(leg) for leg in legs[:, -2]]
-        xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
-        save_show_fig(xArr, yArr, legs, saveName='./EJPH/plots/action_noise.pdf', true_value_index=2)  # ,title=t5
+        xArr, yArr, legsNo = plot_results(dirNoise, title=t4, only_return_data=True)
+        legsNo = [round(float(leg), 4) for leg in legsNo[:, -3]]
+        xArr, yArr, legsNo = sort_arr_from_legs(xArr, yArr, legsNo)
+        save_show_fig(xArr, yArr, legsNo, saveName='./EJPH/plots/noise.pdf', true_value_index=4)  # ,title=t4
+        save_show_fig(xArr, yArr, ax=axNo[0],  true_value_index=4)  # ,title=t4
+
+        xArr, yArr, legsAc = plot_results('./EJPH/action-noise', title=t5, only_return_data=True)
+        legsAc = [float(leg) for leg in legsAc[:, -2]]
+        xArr, yArr, legsAc = sort_arr_from_legs(xArr, yArr, legsAc)
+        save_show_fig(xArr, yArr, legsAc, saveName='./EJPH/plots/action_noise.pdf', true_value_index=2)  # ,title=t5
+        save_show_fig(xArr, yArr, ax=axAc[0], true_value_index=1)  # ,title=t5
 
         xArr, yArr, legs = plot_results('./EJPH/experimental-vs-random', title=t6, only_return_data=True)
         legs = [leg for leg in legs[:, -2]]
@@ -206,8 +218,6 @@ if __name__=='__main__':
         legs = legs[:, -1]
         xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
         save_show_fig(xArr, yArr, [leg[0] for leg in legs], saveName='./EJPH/plots/seeds.pdf')  # ,title=t6
-
-
 
     '''
     PLOT THE inference reward from .npz, namely EvalCallback logs
@@ -233,6 +243,7 @@ if __name__=='__main__':
         legs = [legs[i] for i in idx]
         filenames = [filenames[i] for i in idx]
         plot_from_npz(filenames, xl, yl,legends=legsVisc, saveName='./EJPH/plots/greedy_dynamic.pdf', true_value_index=2)
+        plot_from_npz(filenames, xl, yl, ax=axDy[1],  true_value_index=2)
         # plot_from_npz(filenames, xl, yl,legends=legs, saveName='./EJPH/plots/greedy_dynamic.pdf')
 
         filenames = sorted(glob.glob(dirStatic + '/*.npz'))
@@ -242,6 +253,7 @@ if __name__=='__main__':
         legs = [legs[i] for i in idx]
         filenames = [filenames[i] for i in idx]
         plot_from_npz(filenames, xl, yl,legends=legsStatic, saveName='./EJPH/plots/greedy_static.pdf', true_value_index=2)
+        plot_from_npz(filenames, xl, yl, ax=axSt[1],  true_value_index=2)
         # plot_from_npz(filenames, xl, yl,legends=legs, saveName='./EJPH/plots/greedy_static.pdf')
 
         filenames = sorted(glob.glob(dirNoise + '/*.npz'))
@@ -251,6 +263,7 @@ if __name__=='__main__':
         legs = [legs[i] for i in idx]
         filenames = [filenames[i] for i in idx]
         plot_from_npz(filenames, xl, yl, legends=legs, saveName='./EJPH/plots/greedy_noise.pdf', true_value_index=4)
+        plot_from_npz(filenames, xl, yl, ax=axNo[1],  true_value_index=4)
 
         filenames = sorted(glob.glob(dirAction + '/*.npz'))
         legs = np.array([legend.split('_') for legend in filenames])
@@ -259,6 +272,7 @@ if __name__=='__main__':
         legs = [legs[i] for i in idx]
         filenames = [filenames[i] for i in idx]
         plot_from_npz(filenames, xl, yl, legends=legs, saveName='./EJPH/plots/greedy_action.pdf')
+        plot_from_npz(filenames, xl, yl, ax=axAc[1],  true_value_index=1)
 
         data = np.load('./EJPH/experimental-vs-random/_random_.npz')
         data2 = np.load('./EJPH/experimental-vs-random/_experimental_.npz')
@@ -280,6 +294,33 @@ if __name__=='__main__':
         plt.legend(['random','experimental'])
         plt.savefig('./EJPH/plots/exp-vs-rand-greedy.pdf')
         plt.show()
+    offset = 0.2
+    axNo[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axNo[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
+    axNo[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axNo[1].transAxes, fontsize='x-large')
+    figNo.legend(legsNo, loc='upper center', bbox_to_anchor=(0.5, 0.98), title="Noise std [rad]", ncol=5)
+    figNo.savefig('./EJPH/plots/noise_all.pdf')
+    figNo.show()
+
+    axDy[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axDy[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
+    axDy[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axDy[1].transAxes, fontsize='x-large')
+    figDy.legend(legsDy, loc='upper center', bbox_to_anchor=(0.5, 0.96), title="Viscous friction [N*s/rad]", ncol=5)
+    figDy.savefig('./EJPH/plots/static_all.pdf')
+    figDy.show()
+
+    axSt[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axSt[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
+    axSt[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axSt[1].transAxes, fontsize='x-large')
+    figSt.legend(legsSt, loc='upper center', bbox_to_anchor=(0.5, 0.96), title="Static friction [N/kg]", ncol=5)
+    figSt.savefig('./EJPH/plots/dynamic_all.pdf')
+    figSt.show()
+
+    axAc[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axAc[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
+    axAc[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axAc[1].transAxes, fontsize='x-large')
+    figAc.legend(legsAc, loc='upper center', bbox_to_anchor=(0.5, 0.96), title="Action noise std [%]", ncol=5)
+    figAc.savefig('./EJPH/plots/action_all.pdf')
+    figAc.show()
+
+
+    print('generated train/inf')
     #helper fcn
     def calculate_angle(prev_value, cos, sin, count=0):
         '''
@@ -442,24 +483,23 @@ if __name__=='__main__':
         # sns.boxplot(x=TENSION_RANGE,data=episodeArr)
         a[1][1].set_ylabel('mean reward per step')
         a[1][1].set_xlabel('Applied DC motor Tension (V)')
+        INSET = False
+        if INSET:
+            axins = inset_axes(a[1][1], width="60%", height="80%", loc='lower right', borderpad=2)  # ,bbox_to_anchor=())
+            axins.boxplot(episodeArr[2:], positions=TENSION_RANGE[2:], patch_artist=True)
 
-        axins = inset_axes(a[1][1], width="60%", height="80%", loc='lower right', borderpad=2)  # ,bbox_to_anchor=())
-        axins.boxplot(episodeArr[2:], positions=TENSION_RANGE[2:], patch_artist=True)
+            x1, x2, y1, y2 = 4, 12.2, 0.99, 1.0
+            axins.set_xlim(x1, x2)
+            axins.set_ylim(y1, y2)
+            axins.grid()
+            # plt.setp(axins.get_yticklabels(), visible=False)
+            # plt.setp(axins.get_xticklabels(), visible=False)
+            mark_inset(a[1][1], axins, loc1=3, loc2=4,visible=True, edgecolor='red')
 
-        x1, x2, y1, y2 = 4, 12.2, 0.99, 1.0
-        axins.set_xlim(x1, x2)
-        axins.set_ylim(y1, y2)
-        axins.grid()
-        # plt.setp(axins.get_yticklabels(), visible=False)
-        # plt.setp(axins.get_xticklabels(), visible=False)
-        mark_inset(a[1][1], axins, loc1=3, loc2=4,visible=True, edgecolor='red')
-        '''
         
-        '''
         #ANOTHER WAY FOR INSET
         # ax_new = a[1][1].add_axes([0.35, 0.2, 0.5, 0.5])
         # ax_new.boxplot(episodeArr[2:], positions=TENSION_RANGE[2:], patch_artist=True)
-
         # plt.setp(ax_new.get_yticklabels(), visible=False)
 
         # a[1][1].set_title('Reward in a steady state')
@@ -512,16 +552,13 @@ if __name__=='__main__':
         # setlabel(a[1][0], '(c)')
         # setlabel(a[1][1], '(d)')
 
-        #set labels outside
-        coords=[0.05,0.95]
-        fontSize=24
+
         a[0][0].text(coords[0], coords[1], chr(97) + ')', transform=a[0][0].transAxes, fontsize='x-large')#font={'size' : fontSize})
         a[0][1].text(coords[0], coords[1], chr(98) + ')', transform=a[0][1].transAxes, fontsize='x-large')#font={'size' : fontSize})#
         a[1][0].text(coords[0], coords[1], chr(99) + ')', transform=a[1][0].transAxes, fontsize='x-large')#font={'size' : fontSize})
         a[1][1].text(coords[0], coords[1], chr(100) + ')', transform=a[1][1].transAxes, fontsize='x-large')#font={'size' : fontSize})
         figT.savefig('./EJPH/plots/tension_all.pdf')
         figT.show()
-
 
 
 

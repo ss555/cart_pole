@@ -1,7 +1,6 @@
 from glob import glob
 from tcp_envV2 import CartPoleCosSinRpiDiscrete3
 from stable_baselines3 import DQN
-from stable_baselines3.common.callbacks import EvalCallback
 from utils import linear_schedule, plot
 from stable_baselines3.common.monitor import Monitor
 from custom_callbacks import ProgressBarManager, CheckPointEpisode
@@ -37,7 +36,7 @@ try:
         #                              log_path=logdir, eval_freq=10000,
         #                              deterministic=True, render=False)
         hyperparams = read_hyperparameters('dqn_cartpole_50')
-        model = DQN(env=env0, **hyperparams)
+        model = DQN(env=env0, seed=0, **hyperparams)
         if LOAD_MODEL_PATH!=None:
             model = DQN.load(LOAD_MODEL_PATH, env=env0)
             model.learning_starts=0
