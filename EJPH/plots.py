@@ -4,6 +4,7 @@ PLOT_EVAL_REWARD: plots evaluation reward from .npz files
 '''
 import sys
 import os
+import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 sys.path.append(os.path.abspath('./'))
@@ -24,13 +25,11 @@ from env_wrappers import load_results, ts2xy, load_data_from_csv
 PLOT_TRAINING_REWARD=True
 PLOT_EVAL_REWARD=True
 TENSION_PLOT = True
-TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]
+TENSION_RANGE = np.array([2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12])
 SCALE = 1.2
 f_aAr = 20.75180095541654,  # -21.30359185798466,
 f_bAr = 1.059719258572224,  # 1.1088617953891196,
 f_cAr = 1.166390864012042*np.array([0, 0.1, 1, 10]),  # -0.902272006611719,
-
-
 f_d = 0.09727843708918459,  # 0.0393516077401241, #0.0,#
 wAngular = 4.881653071189049,
 kPendViscousAr = 0.0706*np.array([0, 0.1, 1, 10]).T
@@ -85,11 +84,13 @@ def save_show_fig(xArr,yArr,legs=None,title=None,saveName=None, ax=None, fig=Non
         fig, ax = plt.subplots(figsize=(SCALE*6,SCALE*3.7125))
     for i in range(len(xArr)):
         if i==true_value_index:
-            ax.plot(xArr[i], yArr[i]/EP_STEPS, color=colorPalette[i])
+            ax.plot(xArr[i], yArr[i] / EP_STEPS, '--', color=colorPalette[i])
+            # ax.plot(xArr[i], yArr[i]/EP_STEPS, color=colorPalette[i])
         elif i==experimental_value_index:
             ax.plot(xArr[i], yArr[i] / EP_STEPS, color=colorPalette[i],linewidth=3.0)
             # ax.plot(xArr[i], yArr[i] / EP_STEPS, color='black',linewidth=3.0)
         else:
+            # ax.plot(xArr[i], yArr[i]/EP_STEPS, color=colorPalette[i])
             ax.plot(xArr[i], yArr[i] / EP_STEPS, '--', color=colorPalette[i])
     if title is not None:
         ax.set_title(title)
@@ -101,7 +102,7 @@ def save_show_fig(xArr,yArr,legs=None,title=None,saveName=None, ax=None, fig=Non
         fig.tight_layout()
     ax.grid()
     try:
-        if saveName is not None and fig is not None:
+        if saveName!=None and fig is not None:
             fig.savefig(saveName)
             plt.show()
     except:
@@ -138,7 +139,8 @@ def plot_from_npz(filenames, xlabel, ylabel, legends=None, title=None, plot_std=
         if ax is None:
             fig, ax = plt.subplots(figsize=(SCALE*6,SCALE*3.7125))
         if i == true_value_index:
-            ax.plot(timesteps, meanRew, 'o-', color=colorPalette[i])
+            # ax.plot(timesteps, meanRew, 'o-', color=colorPalette[i])
+            ax.plot(timesteps, meanRew, 'o--', fillstyle='none', color=colorPalette[i])
         else:
             ax.plot(timesteps, meanRew, 'o--', fillstyle='none', color=colorPalette[i])
         if plot_std:
@@ -160,7 +162,6 @@ def plot_from_npz(filenames, xlabel, ylabel, legends=None, title=None, plot_std=
 def reaarange_arr_from_idx(xArr, yArr, idx):
     return [xArr[i] for i in idx], [yArr[i] for i in idx]
 
-
 def sort_arr_from_legs(xArr, yArr, legs):
     idx = sorted(range(len(legs)), key=lambda k: legs[k])
     legs = [legs[i] for i in idx]
@@ -177,25 +178,36 @@ if __name__=='__main__':
         xArr, yArr, legs = plot_results('./EJPH/tension-perf',only_return_data=True)  # ,title=t1) #'Effect of varying tension on the learning'
         legs = [float(leg) for leg in legs[:, -3]]
         xArrT, yArrT, legsT = sort_arr_from_legs(xArr, yArr, legs) # ,title=t1
+        save_show_fig(xArrT, yArrT, ax=a[0][0])
         #experimental training150pwm
         dcVoltage1 = 150/255*12
         dcVoltage2 = 12
-
-        legsT.append(f'{float(round(dcVoltage1,2))}(experimental)')
+        #experimental setup training
+        #7.1V
+        legsT.append(f'{float(round(dcVoltage1,2))}(experiment 1)')
         xArrEx, yArrEx, _ = plot_results('./EJPH/real-cartpole/dqn', only_return_data=True)
-        xArrT.append(xArrEx[0])
-        yArrT.append(yArrEx[0])
-        xArrEx, yArrEx, _ = plot_results('./weights/dqn12V1stTrial', only_return_data=True)
-        xArrT.append(xArrEx[0])
-        yArrT.append(yArrEx[0])
-        legsT.append(f'{float(round(dcVoltage2,2))}(experimental)')
-        save_show_fig(xArrT, yArrT, ax=a[0][0], true_value_index=4, experimental_value_index=len(xArrT)-1)
+        # xArrT.append(xArrEx[0])
+        # yArrT.append(yArrEx[0])
+        a[0][0].plot(xArrEx[0], yArrEx[0]/EP_STEPS, color=colorPalette[np.where(TENSION_RANGE == 7.1)[0][0]],linewidth=3.0)
+        #12V
+        # xArrEx, yArrEx, _ = plot_results('./weights/dqn12V/continue', only_return_data=True)
+        # xArrT.append(xArrEx[0])
+        # legsT.append(f'{float(round(dcVoltage2,2))}(experiment 3)')
+        # a[0][0].plot(xArrEx[0], yArrEx[0]/EP_STEPS, 'o-', color=colorPalette[np.where(TENSION_RANGE == 12)[0][0]])
+        #2.4V
+        #3.5V
+        dcVoltage3 = 2.4
+        xArrEx, yArrEx, _ = plot_results(f'./weights/dqn{dcVoltage3}V', only_return_data=True)
+        legsT.append(f'{float(round(dcVoltage3,2))}(experiment 2)')
 
+        a[0][0].plot(xArrEx[0], yArrEx[0]/EP_STEPS, color=colorPalette[np.where(TENSION_RANGE == 2.4)[0][0]],linewidth=3.0)
+
+        #static friciton
         xArr, yArr, legsSt = plot_results('./EJPH/static-friction', title=t2, only_return_data=True)
         legsSt = [round(float(leg[1:]), 4) for leg in legsSt[:, -2]]
         xArr, yArr, legsSt = sort_arr_from_legs(xArr, yArr, legsSt)
         save_show_fig(xArr, yArr, legsSt, saveName='./EJPH/plots/static.pdf', true_value_index=2)  # ,title=t2
-        save_show_fig(xArr, yArr, ax=axSt[0], true_value_index=2)  # ,title=t2
+        save_show_fig(xArr, yArr, ax=axSt[0], true_value_index=-1)  # ,title=t2
         # save_show_fig(xArr, yArr, legs, saveName='./EJPH/plots/static.pdf')  # ,title=t2
 
         xArr, yArr, legsDy = plot_results('./EJPH/dynamic-friction', title=t3, only_return_data=True)
@@ -231,10 +243,9 @@ if __name__=='__main__':
 
     if PLOT_EVAL_REWARD:
         title = 'Effect of applied tension on the "greedy policy" reward'
-
         filenames = sorted(glob.glob(dirTension + '/*.npz'))
         legs = np.array([legend.split('_') for legend in filenames])
-        legs=[float(leg) for leg in legs[:,-3]]
+        legs = [float(leg) for leg in legs[:,-3]]
         idx = sorted(range(len(legs)), key=lambda k: legs[k])
         legs = [legs[i] for i in idx]
         filenames = [filenames[i] for i in idx]
@@ -258,7 +269,7 @@ if __name__=='__main__':
         idx = sorted(range(len(legs)), key=lambda k: legs[k])
         legs = [legs[i] for i in idx]
         filenames = [filenames[i] for i in idx]
-        plot_from_npz(filenames, xl, yl,legends=legsStatic, saveName='./EJPH/plots/greedy_static.pdf', true_value_index=2)
+        plot_from_npz(filenames, xl, yl, legends=legsStatic, saveName='./EJPH/plots/greedy_static.pdf', true_value_index=2)
         plot_from_npz(filenames, xl, yl, ax=axSt[1],  true_value_index=2)
         # plot_from_npz(filenames, xl, yl,legends=legs, saveName='./EJPH/plots/greedy_static.pdf')
 
@@ -282,8 +293,8 @@ if __name__=='__main__':
 
         data = np.load('./EJPH/experimental-vs-random/_random_.npz')
         data2 = np.load('./EJPH/experimental-vs-random/_experimental_.npz')
-        meanRew=np.mean(data["results"],axis=1)/EP_STEPS
-        meanRew2=np.mean(data2["results"],axis=1,keepdims=False)/EP_STEPS
+        meanRew=np.mean(data["results"], axis=1)/EP_STEPS
+        meanRew2=np.mean(data2["results"], axis=1, keepdims=False)/EP_STEPS
         stdRew=np.std(data["results"],axis=1)/EP_STEPS
         stdRew2=np.std(data2["results"],axis=1)/EP_STEPS
         sns.set_context("paper")
@@ -309,14 +320,14 @@ if __name__=='__main__':
 
     axDy[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axDy[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
     axDy[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axDy[1].transAxes, fontsize='x-large')
-    figDy.legend(legsDy, loc='upper center', bbox_to_anchor=(0.5, 0.96), title="Viscous friction [N*s/rad]", ncol=5)
-    figDy.savefig('./EJPH/plots/static_all.pdf')
+    figDy.legend(legsVisc, loc='upper center', bbox_to_anchor=(0.5, 0.96), title="Viscous friction [N*s/rad]", ncol=5)
+    figDy.savefig('./EJPH/plots/dynamic_all.pdf')
     figDy.show()
 
     axSt[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axSt[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
     axSt[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axSt[1].transAxes, fontsize='x-large')
-    figSt.legend(legsSt, loc='upper center', bbox_to_anchor=(0.5, 0.96), title="Static friction [N/kg]", ncol=5)
-    figSt.savefig('./EJPH/plots/dynamic_all.pdf')
+    figSt.legend(legsStatic, loc='upper center', bbox_to_anchor=(0.5, 0.96), title="Static friction [N/kg]", ncol=5)
+    figSt.savefig('./EJPH/plots/static_all.pdf')
     figSt.show()
 
     axAc[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axAc[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
@@ -353,6 +364,7 @@ if __name__=='__main__':
         # fig = px.scatter()
         # fig2 = px.scatter()
         # fig = px.scatter(x=[0], y=[0])
+        TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]
         for i, tension in enumerate(TENSION_RANGE):
             prev_angle_value = 0.0
             count_tours = 0
@@ -377,6 +389,7 @@ if __name__=='__main__':
                     angle, count_tours = calculate_angle(prev_angle_value, obs[2], obs[3], count_tours)
                     prev_angle_value = angle
                     thetaArr.append(angle+count_tours*np.pi*2)
+
                     thetaDotArr.append(obs[4])
                     xArr.append(obs[0])
                     xDotArr.append(obs[1])
@@ -388,7 +401,7 @@ if __name__=='__main__':
                         break
                         # ax1.savefig(logdir+'/thetaA.pdf')
                 ax2.plot(moving_average(rewArr,20), color = colorPalette[i])
-                a[1][0].plot(moving_average(rewArr,20), color = colorPalette[i])
+                a[1][0].plot(moving_average(rewArr,20), '--', color = colorPalette[i])
             else:
                 episode_rewards, episode_lengths = evaluate_policy(
                     model,
@@ -434,56 +447,76 @@ if __name__=='__main__':
                 resultsStd=stdArr
             )
         print('done inference on voltages')
+        #indexes 12,14 are best found by theta_x_experiment.py
+        filenames = ['./EJPH/real-cartpole/dqn/inference_results.npz', './weights/dqn2.4V/inference_results.npz']
+        data = np.load('./weights/dqn2.4V/inference_results.npz')
+        data.allow_pickle=True
+        rewsArr = data["modelRewArr"]
+        a[1][0].plot(moving_average(rewsArr[12], 20), linewidth=3.0, color=colorPalette[0])
+
+        data = np.load('./EJPH/real-cartpole/dqn/inference_results.npz')
+        data.allow_pickle = True
+        rewsArr = data["modelRewArr"]
+        a[1][0].plot(moving_average(rewsArr[14], 20), linewidth=3.0, color=colorPalette[4])
+
 
 
         #BOXPLOT
-        TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]
+
         Te = 0.05
         EP_STEPS = 800
         scoreArr = np.zeros_like(TENSION_RANGE)
         stdArr = np.zeros_like(TENSION_RANGE)
         episodeArr = []
-        for i, tension in enumerate(TENSION_RANGE):
-            env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension,
-                                 resetMode='experimental', sparseReward=False)
-            model = DQN.load(f'./EJPH/tension-perf/tension_sim_{tension}_V__best', env=env)
-            # episode_rewards, episode_lengths = evaluate_policy_episodes(env=env,model=model,n_eval_episodes=100,episode_steps=EP_STEPS)
-            THETA_DOT_THRESHOLD = 0
-            N_TRIALS = 10
-            THETA_THRESHOLD = np.pi/18
+        GENERATE_BOXPLOT_DATA=False#False when we load from pickle
+        if GENERATE_BOXPLOT_DATA:
+            for i, tension in enumerate(TENSION_RANGE):
+                env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension,
+                                     resetMode='experimental', sparseReward=False)
+                model = DQN.load(f'./EJPH/tension-perf/tension_sim_{tension}_V__best', env=env)
+                # episode_rewards, episode_lengths = evaluate_policy_episodes(env=env,model=model,n_eval_episodes=100,episode_steps=EP_STEPS)
+                THETA_DOT_THRESHOLD = 0
+                N_TRIALS = 10
+                THETA_THRESHOLD = np.pi/18
 
-            if THETA_DOT_THRESHOLD != 0:
-                theta_dot = np.linspace(-THETA_DOT_THRESHOLD, THETA_DOT_THRESHOLD, N_TRIALS)
-            else:
-                theta_dot = [0]
+                if THETA_DOT_THRESHOLD != 0:
+                    theta_dot = np.linspace(-THETA_DOT_THRESHOLD, THETA_DOT_THRESHOLD, N_TRIALS)
+                else:
+                    theta_dot = [0]
 
-            if THETA_THRESHOLD != 0:
-                theta = np.linspace(-THETA_THRESHOLD, THETA_THRESHOLD, N_TRIALS)
-            else:
-                theta = [0]
+                if THETA_THRESHOLD != 0:
+                    theta = np.linspace(-THETA_THRESHOLD, THETA_THRESHOLD, N_TRIALS)
+                else:
+                    theta = [0]
 
-            arrTest = np.transpose([np.tile(theta, len(theta_dot)), np.repeat(theta_dot, len(theta))])
-
-            episode_rewards = np.zeros((arrTest.shape[0], env.MAX_STEPS_PER_EPISODE), dtype=np.float32)
-            lengthArr = np.zeros(arrTest.shape[0], dtype=np.float32)
-            for j, elem in enumerate(arrTest):
-                done = False
-                l = 0
-                # episode_rewards,episode_lengths =0,0
-                obs = env.reset(costheta=np.cos(elem[0]), sintheta=np.sin(elem[0]), theta_ini_speed=elem[1])
-                while not done:
-                    action, _state = model.predict(obs, deterministic=True)
-                    obs, reward, done, _ = env.step(action)
-                    episode_rewards[j, l] = reward
-                    l += 1
-                lengthArr[j] = l
-            # NOT USED
-            scoreArr[i] = np.mean(episode_rewards[:, -200:])
-            stdArr[i] = np.std(episode_rewards[:, -200:])
-            ##boxplot
-            episodeArr.append(episode_rewards[:, -200:].flatten())  # taking the mean of 10 episodes in a steady state
-            # epArr = [np.mean(s, axis=0) for s in episodeArr]
-            print(scoreArr[i])
+                arrTest = np.transpose([np.tile(theta, len(theta_dot)), np.repeat(theta_dot, len(theta))])
+                episode_rewards = np.zeros((arrTest.shape[0], env.MAX_STEPS_PER_EPISODE), dtype=np.float32)
+                lengthArr = np.zeros(arrTest.shape[0], dtype=np.float32)
+                for j, elem in enumerate(arrTest):
+                    done = False
+                    l = 0
+                    # episode_rewards,episode_lengths =0,0
+                    obs = env.reset(costheta=np.cos(elem[0]), sintheta=np.sin(elem[0]), theta_ini_speed=elem[1])
+                    while not done:
+                        action, _state = model.predict(obs, deterministic=True)
+                        obs, reward, done, _ = env.step(action)
+                        episode_rewards[j, l] = reward
+                        l += 1
+                    lengthArr[j] = l
+                # NOT USED
+                scoreArr[i] = np.mean(episode_rewards[:, -200:])
+                stdArr[i] = np.std(episode_rewards[:, -200:])
+                ##boxplot
+                episodeArr.append(episode_rewards[:, -200:].flatten())  # taking the mean of 10 episodes in a steady state
+                # epArr = [np.mean(s, axis=0) for s in episodeArr]
+                print(scoreArr[i])
+                with open('./EJPH/data/boxplot.pickle', 'wb') as f:
+                    pickle.dump(episodeArr, f)
+                    # episodeArr = pickle.load(f)
+        else:
+            with open('./EJPH/data/boxplot.pickle', 'rb') as f:
+                # pickle.dump(episodeArr, f)
+                episodeArr=pickle.load(f)
         a[1][1].boxplot(episodeArr, positions=TENSION_RANGE, patch_artist=True)
         a[1][1].grid()
         # sns.boxplot(x=TENSION_RANGE,data=episodeArr)
@@ -507,7 +540,6 @@ if __name__=='__main__':
         # ax_new = a[1][1].add_axes([0.35, 0.2, 0.5, 0.5])
         # ax_new.boxplot(episodeArr[2:], positions=TENSION_RANGE[2:], patch_artist=True)
         # plt.setp(ax_new.get_yticklabels(), visible=False)
-
         # a[1][1].set_title('Reward in a steady state')
         # figT.legend(legsT, #loc="center right",   # Position of legend
         #    borderaxespad=0.1,    # Small spacing around legend box
@@ -515,30 +547,45 @@ if __name__=='__main__':
         #    ,bbox_to_anchor=(1.05, 1))
         # figT.legend(legsT,bbox_to_anchor=(1, -0.25, 1., .102),title="Voltage",
         #            ncol=8, mode="expand", borderaxespad=0.)
-        # figT.legend(legsT,loc='upper center', bbox_to_anchor=(0., 1.05, 1., .102),
-        #            )
+        # figT.legend(legsT,loc='upper center', bbox_to_anchor=(0., 1.05, 1., .102),)
+        def inferenceResCartpole(filename: str = ''):
+            '''
+            :param filename: name of .npz file
+            :return: timeArray , epsiodeReward corresponding to inference
+            NOTE: the wights are saved after nth episodes, that's why we also need to open monitor file to see the correspondance between episodes and timesteps
+            '''
+            dataInf = np.load(filename)
+            dataInf.allow_pickle = True
+            # monitor file
+            data, name = load_data_from_csv('./EJPH/real-cartpole/dqn/monitor.csv')
 
+            rewsArr = dataInf["modelRewArr"]
+            obsArr = dataInf["modelsObsArr"]
+            actArr = dataInf["modelActArr"]
+            nameArr = dataInf["filenames"]
+            timesteps = np.zeros(len(obsArr))
+            epReward = np.zeros(len(obsArr))
+            for i in range(0, len(obsArr)):
+                print()
+                obs = obsArr[i]
+                act = actArr[i]
+                epReward[i] = np.sum(rewsArr[i])
+                timesteps[i] = np.sum(data['l'][:(i * 10)])
+                print(f'it {i} and {epReward[i]}')
+
+            return timesteps,epReward
+        def findInd(array,elem):
+            for i,elArr in enumerate(array):
+                if elem==elArr:
+                    return i
+            return -1
         # experimental inference
         # adding inference
-        dataInf = np.load('./EJPH/real-cartpole/dqn/inference_results.npz')
-        dataInf.allow_pickle = True
-        # monitor file
-        data, name = load_data_from_csv('./EJPH/real-cartpole/dqn/monitor.csv')
-        timesteps = np.zeros((16,))
-        rewsArr = dataInf["modelRewArr"]
-        obsArr = dataInf["modelsObsArr"]
-        actArr = dataInf["modelActArr"]
-        nameArr = dataInf["filenames"]
-        epReward = np.zeros((16,))
-        for i in range(0, len(obsArr)):
-            print()
-            obs = obsArr[i]
-            act = actArr[i]
-            epReward[i] = np.sum(rewsArr[i])
-            timesteps[i] = np.sum(data['l'][:(i * 10)])
-            print(f'it {i} and {epReward[i]}')
-        a[0][1].plot(timesteps, epReward/EP_STEPS,'o-', color=colorPalette[len(legsT)-1],linewidth=3.0)
-
+        timesteps7, epRew7 = inferenceResCartpole('./EJPH/real-cartpole/dqn/inference_results.npz')
+        a[0][1].plot(timesteps7, epRew7/EP_STEPS,'o-', color=colorPalette[findInd(TENSION_RANGE,7.1)],linewidth=3.0)
+        # 2.4 V
+        timesteps3, epRew3 = inferenceResCartpole('./weights/dqn2.4V/inference_results.npz')
+        a[0][1].plot(timesteps3, epRew3/EP_STEPS,'o-', color=colorPalette[findInd(TENSION_RANGE,2.4)],linewidth=3.0)
 
 
         figT.tight_layout()
@@ -549,9 +596,7 @@ if __name__=='__main__':
             tax.set_position([tbox.x0, tbox.y0-shrink*bbox.height, tbox.width, (1-shrink)*tbox.height])
             bax.set_position([bbox.x0, bbox.y0, bbox.width, (1-shrink)*bbox.height])
 
-        figT.legend(legsT, loc='upper center', bbox_to_anchor=(0.5, 1), title="Voltage",
-                   ncol=len(legsT))
-
+        figT.legend(legsT, loc='upper center', bbox_to_anchor=(0.5, 1), title="Voltage", ncol=len(legsT))
         #set labels inside
         # setlabel(a[0][0], '(a)')
         # setlabel(a[0][1], '(b)')

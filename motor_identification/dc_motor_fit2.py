@@ -53,12 +53,24 @@ def preprocess_data(fileData,plot=False,weightedStartRegression=0,weight=10, fit
     pwmStart=int(min(abs(fileData[:,0]))) if fitTensionMin==None else fitTensionMin
     pwmEnd=int(max(fileData[:,0])) if fitTensionMax==None else fitTensionMax
     cStart=0
+    filter=False
+    fc = 4
+    Nf = 4
+
     for i in range(pwmStart,pwmEnd+10,10):
         try:
             localData=fileData[fileData[:,0]==i,:]
             dt=np.mean(np.diff(localData[:,1]))
-            v=np.convolve(localData[:,2],[0.5,0,-0.5],'valid')/dt
-            a=np.convolve(localData[:,2],[1,-2,1],'valid')/(dt**2)
+            if np.mean(localData[:,2])<0:#check the sign when U>0,then V>0
+                v=np.convolve(-localData[:,2],[0.5,0,-0.5],'valid')/dt
+                a=np.convolve(-localData[:,2],[1,-2,1],'valid')/(dt**2)
+            else:
+                v=np.convolve(localData[:,2],[0.5,0,-0.5],'valid')/dt
+                a=np.convolve(localData[:,2],[1,-2,1],'valid')/(dt**2)
+            if filter:
+                bf, af = signal.butter(Nf, 2 * (dt * fc))
+                a = signal.filtfilt(bf, af, a, padtype=None)
+                v = signal.filtfilt(bf, af, v, padtype=None)
             res[cStart:(cStart+len(v)),:]=np.stack([a,v,np.ones(len(a))*i/255*12]).T
             if weightedStartRegression != 0:
                 weightedRes[cStart:(cStart+len(v)),:]=res[cStart:(cStart+len(v)),:]
@@ -71,12 +83,20 @@ def preprocess_data(fileData,plot=False,weightedStartRegression=0,weight=10, fit
         try:
             localData=fileData[fileData[:,0]==-i,:]
             dt=np.mean(np.diff(localData[:,1]))
-            v=np.convolve(localData[:,2],[0.5,0,-0.5],'valid')/dt
-            a=np.convolve(localData[:,2],[1,-2,1],'valid')/(dt**2)
+            if localData[:,2]>0:
+                v=np.convolve(-localData[:,2],[0.5,0,-0.5],'valid')/dt
+                a=np.convolve(-localData[:,2],[1,-2,1],'valid')/(dt**2)
+            else:
+                v = np.convolve(localData[:, 2], [0.5, 0, -0.5], 'valid') / dt
+                a = np.convolve(localData[:, 2], [1, -2, 1], 'valid') / (dt ** 2)
+            if filter:
+                a = signal.filtfilt(bf, af, a, padtype=None)
+                v = signal.filtfilt(bf, af, v, padtype=None)
             res[cStart:(cStart + len(v)), :] = np.stack([a, v, np.ones(len(a)) * (-i) / 255 * 12]).T
             if weightedStartRegression != 0:
                 weightedRes[cStart:(cStart+len(v)),:]=res[cStart:(cStart+len(v)),:]
                 weightedRes[cStart:cStart+weightedStartRegression]=weightedRes[cStart:cStart+weightedStartRegression] * weight
+
             cStart += len(a)
         except:
             print('conv error')
@@ -165,8 +185,9 @@ def plot_experimental_fitted(filename,fA,fB,fC,fD,applyFiltering=False,Nf = 4,fc
             # try:
             localData = fileData[fileData[:, 0] == i, :]
             dt = np.mean(np.diff(localData[:, 1]))
-            v = np.convolve(localData[:, 2], [0.5, 0, -0.5], 'valid') / dt
-            a = np.convolve(localData[:, 2], [1, -2, 1], 'valid') / (dt ** 2)
+            # - sign because the encoder reading ARE INVERTED
+            v = np.convolve(-localData[:, 2], [0.5, 0, -0.5], 'valid') / dt
+            a = np.convolve(-localData[:, 2], [1, -2, 1], 'valid') / (dt ** 2)
             u = [((i) / 255 * 12)]
             time_offset = localData[0,1]
             v_fitted = integrate_acceleration(fA,fB,fC,fD,u, timeArr=localData[:,1])
@@ -174,8 +195,8 @@ def plot_experimental_fitted(filename,fA,fB,fC,fD,applyFiltering=False,Nf = 4,fc
                 #butterworth filtering
                 bf, af = signal.butter(Nf, 2 * (dt * fc))
                 v = signal.filtfilt(bf, af, v, padtype=None)
-            fig.add_scatter(x=localData[1:-1, 1], y=v, name=("%.1fV"%u[0]))
-            fig.add_scatter(x=localData[:,1], y=v_fitted)
+            fig.add_scatter(x=localData[1:-1, 1], y=v, name=("%.1fV"%u[0]),mode='markers')
+            fig.add_scatter(x=localData[:,1], y=-v_fitted)
             stableSpeeds.append(np.min(v))
             if abs(i)%50==0 and abs(i)<210:
                 ax.plot(localData[1:-1, 1]-localData[1, 1],v,'.',color = colorPalette[c])
@@ -202,7 +223,7 @@ def plot_experimental_fitted(filename,fA,fB,fC,fD,applyFiltering=False,Nf = 4,fc
             except:
                 pass
             fig.add_scatter(x=localData[1:-1, 1], y=v, name=("%.1fV"%u[0]))
-            fig.add_scatter(x=localData[:, 1], y=v_fitted)
+            # fig.add_scatter(x=localData[:, 1], y=-v_fitted)
             stableSpeeds.append(np.max(v))
             if abs(i)%50==0 and abs(i)<210:
                 ax.plot(localData[1:-1, 1]-localData[1, 1], v,'.', color = colorPalette[c])

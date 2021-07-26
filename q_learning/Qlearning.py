@@ -111,7 +111,6 @@ def play_one_episode(bins, Q, EPS, ALPHA, observationNum):
 def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon, min_lr):
 
     Q = initialize_Q(observationNum, actionNum, nBins)
-
     length = []
     reward = []
     eps = []
@@ -161,7 +160,8 @@ if __name__ == '__main__':
 
     x_threshold = env.x_threshold
     theta_dot_threshold = 12
-    nBins = [30, 30, 50, 50, 50]
+    nBins = [3, 3, 5, 5, 5]
+    # nBins = [30, 30, 50, 50, 50]
     INFO = {'ALPHA0': ALPHA0, 'GAMMA': GAMMA, 'decay':decay, 'min_epsilon':min_epsilon, 'min_lr':min_lr, 'numEpisode': numEpisode, 'resetMode':resetMode, 'theta_dot_threshold':theta_dot_threshold, 'nBins':str(nBins), 'reward':'without limit theta dot'}
 
 

@@ -1,32 +1,38 @@
 import sys
 import os
+
+import matplotlib.pyplot as plt
+
 sys.path.append(os.path.abspath('./'))
+sys.path.append(os.path.abspath('./..'))
 from utils import linear_schedule
-from custom_callbacks import plot_results,CheckPointEpisode
-# from env_wrappers import Monitor
+from custom_callbacks import plot_results
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 from stable_baselines3 import DQN
 # from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
-from custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback, EvalCustomCallback, EvalThetaDotMetric
-from env_custom import CartPoleButter, CartPoleDebug, CartPoleDiscreteHistory#,CartPoleContinous,CartPoleDiscreteHistory#,CartPoleDiscreteButter2
+from custom_callbacks import EvalCustomCallback
+from custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback
+from env_custom import CartPoleButter, CartPoleButterHistory,CartPoleButterActHist
 import argparse
-import numpy as np
 from utils import read_hyperparameters
 from pathlib import Path
+fig, axis =plt.subplots()
 Te=0.05
 EP_STEPS=800
-STEPS_TO_TRAIN=60000
+STEPS_TO_TRAIN=90000
 LOAD_MODEL_PATH=None#"./logs/best_model"
 LOAD_BUFFER_PATH=None#"dqn_pi_swingup_bufferN"
 logdir = './logs/'
-checkpoint = CheckPointEpisode(save_path=logdir+'checkpoints')
-env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=7.1, Km=np.pi/360,
-                              resetMode='experimental', sparseReward=False)
+VOLTAGE = 12 #8.4706
+# env = CartPoleDiscreteHistory()
+env1 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS,discreteActions=True,tensionMax=VOLTAGE, resetMode='experimental',sparseReward=False,Km=0.0,n=1,FILTER=True)
+env2 = CartPoleButterActHist(Te=Te, N_STEPS=EP_STEPS,discreteActions=True,tensionMax=VOLTAGE, resetMode='experimental',sparseReward=False,Km=0.0,n=1,FILTER=True)
+env3 = CartPoleButterHistory(Te=Te, N_STEPS=EP_STEPS,discreteActions=True,tensionMax=VOLTAGE, resetMode='experimental',sparseReward=False,Km=0.0,n=1,FILTER=True)
+
 env = Monitor(env, filename=logdir+'basic_simulation_')
-# env = DummyVecEnv([lambda: env])
-envEvaluation = env#CartPoleButter(Te=Te,N_STEPS=EP_STEPS,discreteActions=True,tensionMax=8.4706,resetMode='experimental')#,integrator='ode')#,integrator='rk4')
 NORMALISE = False
+
 if NORMALISE:
     ## Automatically normalize the input features and reward
     env1 = DummyVecEnv([lambda: env])
@@ -40,20 +46,19 @@ else:
 
 
 
-log_save='./weights/dqn50'
+log_save='./logs/history'
 Path(log_save).mkdir(exist_ok=True)
 #callbacks
 # Use deterministic actions for evaluation and SAVE the best model
-eval_callback = EvalThetaDotMetric(envEvaluation, log_path=logdir, eval_freq=6000, deterministic=True,verbose=1)
-# eval_callback = EvalCustomCallback(envEvaluation, best_model_save_path=log_save, log_path=logdir+'/evals', eval_freq=STEPS_TO_TRAIN/3, n_eval_episodes=30,deterministic=True, render=False)
-hyperparams = read_hyperparameters('dqn_50')
-model = DQN(env=env,**hyperparams)
+eval_callback = EvalCustomCallback(envEvaluation, best_model_save_path=log_save, log_path=logdir+'/evals', eval_freq=15000, n_eval_episodes=30,deterministic=True, render=False)
+hyperparams = read_hyperparameters('dqn_cartpole_50')
+model = DQN(env=env,seed=5,**hyperparams)
 callbackSave = SaveOnBestTrainingRewardCallback(log_dir=log_save, monitor_filename=logdir+'basic_simulation_monitor.csv')
 
 try:
     # model for pendulum starting from bottom
     with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
-        model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback, checkpoint])
+        model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback, callbackSave])
         if NORMALISE:
             env.training = False
             # reward normalization is not needed at test time

@@ -1,7 +1,7 @@
 from glob import glob
 from tcp_envV2 import CartPoleCosSinRpiDiscrete3
 from stable_baselines3 import DQN
-from utils import linear_schedule, plot
+from utils import plot
 from stable_baselines3.common.monitor import Monitor
 from custom_callbacks import ProgressBarManager, CheckPointEpisode
 import socket
@@ -11,21 +11,24 @@ from utils import read_hyperparameters
 import numpy as np
 from custom_callbacks import plot_results
 '''
-three modes: TRAIN(train model from scratch or LOAD_MODEL_PATH), 
-INFERENCE(many models from INFERENCE_PATH), ONE_TIME_INFERENCE(1model of LOAD_MODEL_PATH!!) '''
-mode = 'TRAIN'#INFERENCE #ONE_TIME_INFERENCE
+three modes: TRAIN (train model from scratch or LOAD_MODEL_PATH), 
+INFERENCE (many models from INFERENCE_PATH), ONE_TIME_INFERENCE (1model of LOAD_MODEL_PATH!!) '''
+mode = 'INFERENCE'  #'INFERENCE' #
 HOST = '134.59.131.77'
-LOAD_MODEL_PATH = './EJPH/real-cartpole/dqn/end/cartpole_pi_dqnN'#"./logs/best_model"
-LOAD_BUFFER_PATH = './EJPH/real-cartpole/dqn/dqn_pi_swingup_bufferN.pkl'#"dqn_pi_swingup_bufferN"
-INFERENCE_PATH = './EJPH/real-cartpole/dqn'
+LOAD_MODEL_PATH = None #'./weights/dqn2.4V/cartpole_pi_dqnN'#'./EJPH/real-cartpole/dqn/end/cartpole_pi_dqnN'#"./logs/best_model"
+LOAD_BUFFER_PATH = None #'./weights/dqn2.4V/dqn_pi_swingup_bufferN.pkl'#'./EJPH/real-cartpole/dqn/dqn_pi_swingup_bufferN.pkl'#"dqn_pi_swingup_bufferN"
+
 PORT = 65432
-TENSION = 12
-logdir = './EJPH/real-cartpole/dqn/continue'
+TENSION = 12 #3.5 #75pwm 2.4 45PWM
+# logdir = './EJPH/real-cartpole/dqn/continue'
+logdir = f'./weights/dqn12V/continue'
 # logdir = f'./weights/dqn{TENSION}V/'
-os.makedirs(logdir,exist_ok=True)
+#SPECIFY INFERENCE PATH IF mode = 'INFERENCE'
+INFERENCE_PATH = logdir#'./EJPH/real-cartpole/dqn'
+os.makedirs(logdir, exist_ok=True)
 # Use deterministic actions for evaluation and SAVE the best model
-checkpoint = CheckPointEpisode(save_path=logdir,episodes_init=139)
-STEPS_TO_TRAIN = 100000
+checkpoint = CheckPointEpisode(save_path=logdir, episodes_init=140)
+STEPS_TO_TRAIN = 60000
 #lr schedule
 try:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -64,11 +67,13 @@ try:
             env.reset()
         elif mode == 'INFERENCE':
             modelsObsArr, modelActArr, modelRewArr = [],[],[]
-            filenames = (sorted(glob(os.path.join(INFERENCE_PATH, "*" + '.zip')), key=os.path.getmtime))
-            obs = env.reset()
+            filenames = (sorted(glob(os.path.join(INFERENCE_PATH, "checkpoint*" + '.zip')), key=os.path.getmtime))
             for modelName in filenames:
                 print(f'loading {modelName}')
+                s_time = time.time()
                 model = DQN.load(modelName, env=env)
+                print(f'loaded:{time.time()-s_time}')
+                obs = env.reset()
                 done = False
                 obsArr, actArr, rewArr = [], [], []
                 while not done:
@@ -78,12 +83,12 @@ try:
                     actArr.append(action)
                     rewArr.append(rewards)
                     if done:
-                        obs = env.reset()
+                        #obs = env.reset() #put before?
                         break
                 modelsObsArr.append(obsArr)
                 modelActArr.append(actArr)
                 modelRewArr.append(rewArr)
-            np.savez('./EJPH/real-cartpole/dqn/inference_results.npz',modelsObsArr=modelsObsArr,modelActArr=modelActArr,modelRewArr=modelRewArr,filenames=filenames)
+            np.savez(INFERENCE_PATH+'/inference_results.npz',modelsObsArr=modelsObsArr,modelActArr=modelActArr,modelRewArr=modelRewArr,filenames=filenames)
 finally:
     if mode=='TRAIN':
         model.save(logdir+"/cartpole_pi_dqnN")

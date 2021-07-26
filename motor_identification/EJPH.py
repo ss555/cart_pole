@@ -21,8 +21,6 @@ SCALE = 2.5
 # figArticle, axis = plt.subplots(nrows=3)#,figsize=(SCALE*3,SCALE*3.7125))
 figArticle, axis = plt.subplots(nrows=3, figsize=(SCALE*3,SCALE*5.56875))
 
-# figArticle, axis = plt.subplots(nrows=3,figsize=(SCALE*3,SCALE*6))
-# figArticle, axis = plt.subplots(nrows=3,figsize=(SCALE*1.618,SCALE*3))
 '''
 fitting parameters from pendulum free fall:
 APPLY_FILTER can be in 3 modes: None, ukf or butterworth(recommended)
@@ -134,7 +132,6 @@ def process_angle_raw(absPath,plot=False):
             ukfPos = ukfPos[1:-1]
         elif APPLY_FILTER=='None':
             print('no data filtering')
-
             pos = posRaw[1:-1]
             time = time[1:-1]
         try:
@@ -330,20 +327,6 @@ def regression_chariot(data,symmetricTension=True):
         regA=np.stack([data[:,1],-data[:,2],np.sign(data[:,1]),np.ones_like(np.sign(-data[:,2]))],axis=1) # -VOLTAGE because of inverted tension
     X=np.linalg.lstsq(regA,regB,rcond=None)
 
-    #ANOTHER METHOD USING RANSACRegressor
-    # import sklearn.linear_model as sk
-    # from sklearn.linear_model import SGDRegressor
-    # from sklearn.pipeline import make_pipeline
-    # from sklearn.preprocessing import StandardScaler
-    # reg = sk.LinearRegression().fit(regA,regB)
-    # reg2 = make_pipeline(StandardScaler(), SGDRegressor(max_iter=1000, tol=1e-3))
-    # reg2.fit(regA,regB)
-    # from sklearn.linear_model import Ridge
-    # clf = Ridge(alpha=1.0)
-    # clf.fit(regA, regB)
-    # from sklearn.linear_model import RANSACRegressor
-    # reg = RANSACRegressor(random_state=0).fit(regA, regB)
-    # reg.score(regA, regB)
     error=X[1]
     X=X[0]
     X=np.squeeze(X, axis=1)
@@ -353,23 +336,27 @@ def regression_chariot(data,symmetricTension=True):
 
 def plot_experimental_fitted(filename,fA,fB,fC,fD,applyFiltering=False,Nf = 4,fc=4):
     # dv = -a * vs[i] + b * u + c * np.sign(vs[i])
-    figSave,ax = plt.subplots()
+    figSave, ax = plt.subplots()
     legs=[]
     fileData = np.genfromtxt(filename, delimiter=',').T
     pwmStart = int(min(abs(fileData[:, 0])))
     pwmEnd   = int(max(fileData[:, 0]))
+    appliedTension = []
     stableSpeeds = []
+    stableSpeedsFit = []
     # plt.figure(figsize=(30,12), dpi=200)
     TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]
     c = 7
     offVoltage = 4
     # fig = px.scatter(x=[0],y=[0])
-    for i in range(pwmStart, pwmEnd + 10, 10):
+    #POSITIVE PWM
+    for i in range(pwmEnd, pwmStart - 10, -10):
         # try:
         localData = fileData[fileData[:, 0] == i, :]
         dt = np.mean(np.diff(localData[:, 1]))
-        v = np.convolve(localData[:, 2], [0.5, 0, -0.5], 'valid') / dt
-        a = np.convolve(localData[:, 2], [1, -2, 1], 'valid') / (dt ** 2)
+        #- sign because the encoder reading ARE INVERTED
+        v = np.convolve(-localData[:, 2], [0.5, 0, -0.5], 'valid') / dt
+        a = np.convolve(-localData[:, 2], [1, -2, 1], 'valid') / (dt ** 2)
         u = [((i) / 255 * 12)]
         time_offset = localData[0,1]
         v_fitted = integrate_acceleration(fA,fB,fC,fD,u,timeArr=localData[:,1])
@@ -377,31 +364,48 @@ def plot_experimental_fitted(filename,fA,fB,fC,fD,applyFiltering=False,Nf = 4,fc
             #butterworth filtering
             bf, af = signal.butter(Nf, 2 * (dt * fc))
             v = signal.filtfilt(bf, af, v, padtype=None)
-            #TODOO? cut the edges
-        # fig.add_scatter(x=localData[1:-1, 1], y=v, name=("%.1fV"%u[0]))
-        # fig.add_scatter(x=localData[:,1], y=v_fitted)
-        stableSpeeds.append(np.min(v))
-
+        appliedTension.append(u)
+        stableSpeeds.append(np.mean(v[-12:]))
+        stableSpeedsFit.append(np.mean(v_fitted[-12:]))
         if abs(i)%50==0 and abs(i)<210:
-            ax.plot(localData[1:-1, 1]-localData[1, 1],v,'.')
-            axis[1].plot(localData[1:-1, 1]-localData[1, 1],v,'.' ,color=colorPalette[c])
-            legs.append(str(round(-i/255*12,1))) # - because of inverted tension
-            legs.append(str(round(-i / 255 * 12, 1))+' fitted') # - because of inverted tension
+            ax.plot(localData[1:-1, 1]-localData[1, 1], v,'.')
             ax.plot(localData[:,1]-localData[0,1], v_fitted)
-            axis[1].plot(localData[:,1]-localData[0,1], v_fitted ,color=colorPalette[c+offVoltage])
-            c+=1
+            legs.append(str(round(i/255*12,1)))
+            legs.append(str(round(i / 255 * 12, 1))+' fitted')
+            if i==50:
+                axis[1].plot(localData[1:-1, 1]-localData[1, 1], v,'.',color=colorPalette[0])
+                axis[1].plot(localData[:, 1] - localData[0, 1], v_fitted, color=colorPalette[0])
+            elif i == 100:
+                axis[1].plot(localData[1:-1, 1] - localData[1, 1], v, '.', color=colorPalette[2])
+                axis[1].plot(localData[:, 1] - localData[0, 1], v_fitted, color=colorPalette[2])
+            elif i == 150:
+                axis[1].plot(localData[1:-1, 1] - localData[1, 1], v, '.', color=colorPalette[4])
+                axis[1].plot(localData[:, 1] - localData[0, 1], v_fitted, color=colorPalette[4])
+            elif i == 200:
+                axis[1].plot(localData[1:-1, 1] - localData[1, 1], v, '.', color=colorPalette[6])
+                axis[1].plot(localData[:, 1] - localData[0, 1], v_fitted, color=colorPalette[6])
+            else:
+                axis[1].plot(localData[1:-1, 1] - localData[1, 1], v, '.', color=colorPalette[c])
+                axis[1].plot(localData[:,1]-localData[0,1], v_fitted,color=colorPalette[c])
+            c += 1
 
-        # except:
-        #     print('plot_experimental_fitted error')
-    stableSpeeds.reverse()
-
+    axis[2].plot(appliedTension, stableSpeeds, 'ro')
+    axis[2].plot(appliedTension, stableSpeedsFit, 'b')
+    # stableSpeedsFit.reverse()
+    # stableSpeeds.reverse()
+    appliedTension = []
+    stableSpeeds = []
+    stableSpeedsFit = []
+    #NEGATIVE PWM
     for i in range(pwmStart, pwmEnd + 10, 10):
         # try:
         localData = fileData[fileData[:, 0] == -i, :]
         dt = np.mean(np.diff(localData[:, 1]))
-        v = np.convolve(localData[:, 2], [0.5, 0, -0.5], 'valid') / dt
-        a = np.convolve(localData[:, 2], [1, -2, 1], 'valid') / (dt ** 2)
+        # - sign because the encoder reading ARE INVERTED
+        v = np.convolve(-localData[:, 2], [0.5, 0, -0.5], 'valid') / dt
+        a = np.convolve(-localData[:, 2], [1, -2, 1], 'valid') / (dt ** 2)
         u = [((-i) / 255 * 12)]
+        appliedTension.append(u)
         v_fitted = integrate_acceleration(fA, fB, fC,fD, u, timeArr=localData[:, 1])
         if applyFiltering:
             bf, af = signal.butter(Nf, 2 * (dt * fc))
@@ -412,25 +416,20 @@ def plot_experimental_fitted(filename,fA,fB,fC,fD,applyFiltering=False,Nf = 4,fc
             pass
         # fig.add_scatter(x=localData[1:-1, 1], y=v, name=("%.1fV"%u[0]))
         # fig.add_scatter(x=localData[:, 1], y=v_fitted)
-        stableSpeeds.append(np.max(v))
-        # stableSpeeds.append(np.mean(v[:-2]))
+        # stableSpeeds.append(np.max(v))
+        stableSpeeds.append(np.mean(v[-12:]))
+        stableSpeedsFit.append(np.mean(v_fitted[-12:]))
         if abs(i)%50==0 and abs(i)<210:
-            ax.plot(localData[1:-1, 1]-localData[1, 1], v,'.')
+            ax.plot(localData[1:-1, 1]-localData[1, 1], v, '.')
+            axis[1].plot(localData[1:-1, 1]-localData[1, 1], v, '.' , color=colorPalette[c])
+            legs.append(str(round(-i/255*12, 1))) # - because of inverted tension
+            legs.append(str(round(-i / 255 * 12, 1))+' fitted') # - because of inverted tension
             ax.plot(localData[:,1]-localData[0,1], v_fitted)
-            legs.append(str(round(i/255*12,1)))
-            legs.append(str(round(i / 255 * 12, 1))+' fitted')
-            if i==50:
-                axis[1].plot(localData[1:-1, 1]-localData[1, 1], v,'.',color=colorPalette[0])
-            elif i == 100:
-                axis[1].plot(localData[1:-1, 1] - localData[1, 1], v, '.', color=colorPalette[2])
-            elif i == 150:
-                axis[1].plot(localData[1:-1, 1] - localData[1, 1], v, '.', color=colorPalette[4])
-            elif i == 200:
-                axis[1].plot(localData[1:-1, 1] - localData[1, 1], v, '.', color=colorPalette[6])
-            else:
-                axis[1].plot(localData[1:-1, 1] - localData[1, 1], v, '.', color=colorPalette[c])
-            axis[1].plot(localData[:,1]-localData[0,1], v_fitted,color=colorPalette[c+offVoltage])
-            c += 1
+            axis[1].plot(localData[:,1]-localData[0,1], v_fitted, color=colorPalette[c])
+            c+=1
+
+    axis[2].plot(appliedTension, stableSpeeds, 'ro')
+    axis[2].plot(appliedTension, stableSpeedsFit, 'b')
     # axis[1].set_aspect(10)
     axis[1].legend(legs)
     axis[1].set_xlim([-0.5, 1.5])
@@ -445,20 +444,15 @@ def plot_experimental_fitted(filename,fA,fB,fC,fD,applyFiltering=False,Nf = 4,fc
     plt.tight_layout()
     figSave.savefig('./EJPH/plots/regression_chariot.pdf')
     figSave.show()
-    fig2,ax2 = plt.subplots()
-    tensions = np.hstack(([-i for i in range(pwmEnd, pwmStart-1, -10)],[i for i in range(pwmStart, pwmEnd + 10, 10)]))
-    ax2.plot(tensions,stableSpeeds,'o')
-    ax2.set_xlabel('tension in [V]')
-    ax2.set_ylabel('stable speed in [m/s]')
-    ax2.grid()
-    fig2.show()
-    fig2.savefig('./EJPH/plots/regression_u_v.pdf')
+
     ax.plot(localData[1:-1, 1] - localData[1, 1], v, '.')
     ax.plot(localData[:, 1] - localData[0, 1], v_fitted)
 
-    axis[2].plot(tensions,stableSpeeds,'o')
+    halfLength=int(len(stableSpeedsFit)/2)
+
     axis[2].set_xlabel('tension in [V]')
     axis[2].set_ylabel('stable speed in [m/s]')
+    axis[2].legend(['experimental','fitted'],loc='best')
     axis[2].grid()
     axis[1].grid()
     axis[0].grid()

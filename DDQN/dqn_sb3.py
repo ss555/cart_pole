@@ -8,8 +8,8 @@ from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 from stable_baselines3 import DQN
 # from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
 from custom_callbacks import EvalCustomCallback
-from custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback
-from env_custom import CartPoleButter
+from custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
+from env_custom import CartPoleButter, CartPoleDiscreteHistory, CartPoleButter, CartPoleButterHistory
 import argparse
 from utils import read_hyperparameters
 from pathlib import Path
@@ -21,10 +21,15 @@ LOAD_MODEL_PATH=None#"./logs/best_model"
 LOAD_BUFFER_PATH=None#"dqn_pi_swingup_bufferN"
 logdir = './logs/'
 VOLTAGE = 12 #8.4706
-env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS,discreteActions=True,tensionMax=VOLTAGE, resetMode='experimental',sparseReward=False,Km=0.0,n=1)
+# env = CartPoleDiscreteHistory()
+env = CartPoleButterHistory(Te=Te, N_STEPS=EP_STEPS,discreteActions=True,tensionMax=VOLTAGE, resetMode='experimental',sparseReward=False,Km=0.0,n=5,FILTER=True)
+# env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS,discreteActions=True,tensionMax=VOLTAGE, resetMode='experimental',sparseReward=False,Km=0.0,n=1,FILTER=True)
 env = Monitor(env, filename=logdir+'basic_simulation_')
-envEvaluation = CartPoleButter(Te=Te,N_STEPS=EP_STEPS,discreteActions=True,tensionMax=VOLTAGE, resetMode='experimental',sparseReward=False,Km=0.0,n=1)
+# envEvaluation = CartPoleDiscreteHistory()
+envEvaluation = CartPoleButterHistory(Te=Te,N_STEPS=EP_STEPS,discreteActions=True,tensionMax=VOLTAGE, resetMode='experimental',sparseReward=False,Km=0.0,n=5,FILTER=True)
+# envEvaluation = CartPoleButter(Te=Te,N_STEPS=EP_STEPS,discreteActions=True,tensionMax=VOLTAGE, resetMode='experimental',sparseReward=False,Km=0.0,n=1,FILTER=True)
 NORMALISE = False
+
 if NORMALISE:
     ## Automatically normalize the input features and reward
     env1 = DummyVecEnv([lambda: env])
@@ -43,7 +48,7 @@ Path(log_save).mkdir(exist_ok=True)
 #callbacks
 # Use deterministic actions for evaluation and SAVE the best model
 eval_callback = EvalCustomCallback(envEvaluation, best_model_save_path=log_save, log_path=logdir+'/evals', eval_freq=15000, n_eval_episodes=30,deterministic=True, render=False)
-hyperparams=read_hyperparameters('dqn_cartpole_50')
+hyperparams = read_hyperparameters('dqn_cartpole_50')
 model = DQN(env=env,seed=5,**hyperparams)
 callbackSave = SaveOnBestTrainingRewardCallback(log_dir=log_save, monitor_filename=logdir+'basic_simulation_monitor.csv')
 

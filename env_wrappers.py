@@ -274,4 +274,4 @@ def load_data_from_csv(path_to_file: str):
         data_frame = pd.read_csv(file_handler, index_col=None)
         headers.append(header)
         data_frame["t"] += header["t_start"]
-    return data_frame,headers
+    return data_frame, headers
