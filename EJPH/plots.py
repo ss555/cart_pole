@@ -25,7 +25,7 @@ PLOT_TRAINING_REWARD=True
 PLOT_EVAL_REWARD=True
 TENSION_PLOT = True
 TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]
-SCALE =1.2
+SCALE = 1.2
 f_aAr = 20.75180095541654,  # -21.30359185798466,
 f_bAr = 1.059719258572224,  # 1.1088617953891196,
 f_cAr = 1.166390864012042*np.array([0, 0.1, 1, 10]),  # -0.902272006611719,
@@ -178,11 +178,17 @@ if __name__=='__main__':
         legs = [float(leg) for leg in legs[:, -3]]
         xArrT, yArrT, legsT = sort_arr_from_legs(xArr, yArr, legs) # ,title=t1
         #experimental training150pwm
-        dcVoltage = 150/255*12
+        dcVoltage1 = 150/255*12
+        dcVoltage2 = 12
+
+        legsT.append(f'{float(round(dcVoltage1,2))}(experimental)')
         xArrEx, yArrEx, _ = plot_results('./EJPH/real-cartpole/dqn', only_return_data=True)
         xArrT.append(xArrEx[0])
         yArrT.append(yArrEx[0])
-        legsT.append(f'{float(round(dcVoltage,2))}(real)')
+        xArrEx, yArrEx, _ = plot_results('./weights/dqn12V1stTrial', only_return_data=True)
+        xArrT.append(xArrEx[0])
+        yArrT.append(yArrEx[0])
+        legsT.append(f'{float(round(dcVoltage2,2))}(experimental)')
         save_show_fig(xArrT, yArrT, ax=a[0][0], true_value_index=4, experimental_value_index=len(xArrT)-1)
 
         xArr, yArr, legsSt = plot_results('./EJPH/static-friction', title=t2, only_return_data=True)

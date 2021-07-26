@@ -12,20 +12,20 @@ import numpy as np
 from custom_callbacks import plot_results
 '''
 three modes: TRAIN(train model from scratch or LOAD_MODEL_PATH), 
-INFERENCE(many models from INFERENCE_PATH), ONE_TIME_INFERENCE(1model of LOAD_MODEL_PATH!!)
-'''
-mode='TRAIN'#INFERENCE #ONE_TIME_INFERENCE
+INFERENCE(many models from INFERENCE_PATH), ONE_TIME_INFERENCE(1model of LOAD_MODEL_PATH!!) '''
+mode = 'TRAIN'#INFERENCE #ONE_TIME_INFERENCE
 HOST = '134.59.131.77'
-LOAD_MODEL_PATH=None#"./logs/best_model"
-LOAD_BUFFER_PATH=None#"dqn_pi_swingup_bufferN"
-INFERENCE_PATH='./EJPH/real-cartpole/dqn'
+LOAD_MODEL_PATH = './EJPH/real-cartpole/dqn/end/cartpole_pi_dqnN'#"./logs/best_model"
+LOAD_BUFFER_PATH = './EJPH/real-cartpole/dqn/dqn_pi_swingup_bufferN.pkl'#"dqn_pi_swingup_bufferN"
+INFERENCE_PATH = './EJPH/real-cartpole/dqn'
 PORT = 65432
 TENSION = 12
-logdir=f'./weights/dqn{TENSION}V/'
+logdir = './EJPH/real-cartpole/dqn/continue'
+# logdir = f'./weights/dqn{TENSION}V/'
 os.makedirs(logdir,exist_ok=True)
 # Use deterministic actions for evaluation and SAVE the best model
-checkpoint = CheckPointEpisode(save_path=logdir)
-STEPS_TO_TRAIN = 150000
+checkpoint = CheckPointEpisode(save_path=logdir,episodes_init=139)
+STEPS_TO_TRAIN = 100000
 #lr schedule
 try:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -40,12 +40,10 @@ try:
         if LOAD_MODEL_PATH!=None:
             model = DQN.load(LOAD_MODEL_PATH, env=env0)
             model.learning_starts=0
-            model.gradient_steps=-1
-            model.train_freq=-1
-            model.n_episodes_rollout=1
-            model.exploration_final_eps=0.05
+            print('loaded model')
         if LOAD_BUFFER_PATH!=None:
             model.load_replay_buffer(LOAD_BUFFER_PATH)
+            print('loaded replay buffer')
         if mode=='TRAIN':
             with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
                 model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, checkpoint])

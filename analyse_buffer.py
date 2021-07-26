@@ -16,8 +16,11 @@ from utils import read_hyperparameters
 from pathlib import Path
 #TODO limit on 2s motorIden
 #TODO change legends on the graph 0.9 to 1.01 and Vk
-LOAD_BUFFER_PATH="./weights/dqn/dqn_pi_swingup_bufferN"
-env0= CartPoleButter()
+#monitor
+xArrEx, yArrEx, _ = plot_results('./EJPH/real-cartpole/dqn', only_return_data=True)
+#buffer
+LOAD_BUFFER_PATH = "./weights/dqn/dqn_pi_swingup_bufferN"
+env0 = CartPoleButter()
 hyperparams = read_hyperparameters('dqn_cartpole_50')
 model = DQN(env=env0, **hyperparams)
 model.load_replay_buffer(LOAD_BUFFER_PATH)
