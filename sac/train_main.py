@@ -1,5 +1,5 @@
 #tensorboard --logdir ./sac_cartpole_tensorboard/
-import sys,os
+import sys, os
 sys.path.append(os.path.abspath('./'))
 sys.path.append(os.path.abspath('./..'))
 import torch
@@ -20,7 +20,7 @@ NORMALISE=False
 logdir='./logs/sac/'
 
 Te=0.05
-hyperparams = read_hyperparameters('saccartpole_50')
+hyperparams = read_hyperparameters('sac_cartpole_50')
 
 env = CartPoleButter(Te=Te,discreteActions=False,sparseReward=False,tensionMax=12)#integrator='rk4')#
 env0 = Monitor(env, logdir)
