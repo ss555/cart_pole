@@ -8,7 +8,6 @@ from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 from matplotlib import pyplot as plt
 from utils import plot, plot_line
 import numpy as np
-#TODO put time in obs feature?
 Te = 5e-2
 #CartPoleCosSinHistory() #CartPoleCusBottom()CartPoleCosSin() #
 STEPS = 5000

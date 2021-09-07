@@ -341,7 +341,7 @@ class CartPoleContinous(gym.Env):
         costheta, sintheta = [np.cos(theta), np.sin(theta)]
         dqdt[0] = state[1]
         force = self._calculate_force(action)  # 0.44*(fa*x_dot+fb*self.tensionMax*action[0]+fc*np.sign(x_dot))
-        # TODO force?
+
         dqdt[1] = (force  # self.masscart*(fa*x_dot+fb*8.47*action[0]+fc*np.sign(x_dot))#force
                    + self.masspole * self.g * sintheta * costheta - self.masspole * theta_dot ** 2 * sintheta * self.length) \
                   / (self.masscart + self.masspole * sintheta ** 2)
@@ -640,7 +640,7 @@ class CartPoleContinousImage(gym.Env):
         costheta, sintheta = [np.cos(theta), np.sin(theta)]
         dqdt[0] = state[1]
         force = self._calculate_force(action)  # 0.44*(fa*x_dot+fb*self.tensionMax*action[0]+fc*np.sign(x_dot))
-        # TODO force?
+
         dqdt[1] = (force  # self.masscart*(fa*x_dot+fb*8.47*action[0]+fc*np.sign(x_dot))#force
                    + self.masspole * self.g * sintheta * costheta - self.masspole * theta_dot ** 2 * sintheta * self.length) \
                   / (self.masscart + self.masspole * sintheta ** 2)

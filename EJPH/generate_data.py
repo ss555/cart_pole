@@ -22,8 +22,14 @@ EP_STEPS = 800
 Te = 0.05
 MANUAL_SEED = 0
 # simulation results
-#TODO 6.1 mettre:
-#TODO fa,fb,fc,fd dans identificaiton
+'''
+f_a=-20.75180095541654,  # -21.30359185798466,
+f_b=1.059719258572224,  # 1.1088617953891196,
+f_c=-1.166390864012042,  # -0.902272006611719,
+f_d=-0.09727843708918459,  # 0.0393516077401241, #0.0,#
+wAngular=4.881653071189049,
+kPendViscous=0.07035332644615992,  
+'''
 #Done episode reward for seed 0,5 + inference
 
 DYNAMIC_FRICTION_SIM = True  # True
@@ -56,8 +62,7 @@ TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]#
 # DONE temps  d’apprentissage  et  note  en  fonction  du  coefficient  de frottement dynamique
 DYNAMIC_FRICTION_PENDULUM = 0.07035332644615992
 DYNAMIC_FRICTION_ARR = np.array([0, 0.1, 1, 10]) * DYNAMIC_FRICTION_PENDULUM
-#TODO : line real in full circle and other in empty
-# DONE encoder noise
+
 NOISE_TABLE = np.array([0, 0.01, 0.05, 0.1, 0.15, 0.5, 1, 5, 10]) * np.pi / 180
 
 #plot params
@@ -109,7 +114,7 @@ if STATIC_FRICTION_SIM:
         eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000)
         # filenames.append(filename)#NOT USED
         env = Monitor(env0, filename=filename)
-        model = DQN(env=env, **hyperparams)
+        model = DQN(env=env, **hyperparams, seed=MANUAL_SEED)
         print(f'simulation with static friciton {frictionValue} coef')
         with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
             model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
@@ -124,7 +129,7 @@ if DYNAMIC_FRICTION_SIM:
         filename = logdir + f'dynamic-friction/dynamic_friction_sim_{frictionValue}_'
         # filenames.append(filename)#NOT USED
         env = Monitor(env0, filename=filename)
-        model = DQN(env=env, **hyperparams)
+        model = DQN(env=env, **hyperparams, seed=MANUAL_SEED)
         eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000)
         print(f'simulation with dynamic friciton {frictionValue} coef')
         with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
@@ -141,7 +146,7 @@ if encNoiseVarSim:
         # filenames.append(filename)#NOT USED
         env = Monitor(env0, filename=filename)
         eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000)
-        model = DQN(env=env, **hyperparams)
+        model = DQN(env=env, **hyperparams, seed=MANUAL_SEED)
         print(f'simulation with noise {encNoise * 180 / np.pi} degree')
         with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
             model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
@@ -156,7 +161,7 @@ if RESET_EFFECT:
     envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='random', sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
     env = Monitor(env0, filename=filename)
     eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000, deterministic=True)
-    model = DQN(env=env, **hyperparams)
+    model = DQN(env=env, **hyperparams, seed=MANUAL_SEED)
     print(f'simulation with experimental reset')
     with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
         model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
@@ -198,7 +203,7 @@ if ACTION_NOISE_SIM:#Action noise in % for standart deviation
         envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental',sparseReward=False, forceStd=forceStd)
         env = Monitor(env0, filename=logdir + f'action-noise/actionStd%_{forceStd}_')
         eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000)
-        model = DQN(env=env, **hyperparams)
+        model = DQN(env=env, **hyperparams, seed=MANUAL_SEED)
         print(f'simulation with action noise in {forceStd}%')
         with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
             model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])

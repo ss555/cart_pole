@@ -16,8 +16,8 @@ import optuna
 from optuna.visualization import plot_optimization_history, plot_param_importances
 from optuna.pruners import MedianPruner
 from optuna.samplers import TPESampler
-N_TRIALS = 1000
-N_JOBS = 3
+N_TRIALS = 500
+N_JOBS = 4
 N_STARTUP_TRIALS = 5
 N_EVALUATIONS = 4
 N_TIMESTEPS = int(6e4)
@@ -33,7 +33,7 @@ def sample_sac_params(trial: optuna.Trial) -> Dict[str, Any]:
     """
     gamma = trial.suggest_categorical("gamma", [0.95, 0.98, 0.99, 0.995, 0.999, 0.9999])
     learning_rate = trial.suggest_loguniform("lr", 1e-5, 0.1)
-    batch_size = trial.suggest_categorical("batch_size", [16, 32, 64, 128, 256, 512, 1024, 2048])
+    batch_size = trial.suggest_categorical("batch_size", [16, 32, 64, 128, 256, 512, 1024])
     buffer_size = trial.suggest_categorical("buffer_size", [int(1e4), int(5e4), int(1e5), int(5e5)])
     learning_starts = trial.suggest_categorical("learning_starts", [0, 1000, 10000, 20000])
     train_freq = (1, "episode")
@@ -75,7 +75,9 @@ DEFAULT_HYPERPARAMS = {
     "policy": "MlpPolicy"
 }
 class TrialEvalCallback(EvalX_ThetaMetric):
-    """Callback used for evaluating and reporting a trial."""
+    """Callback used for evaluating and reporting a trial.
+    INHERITS FROM EvalX_ThetaMetric, so evaluates at different x and theta
+    """
 
     def __init__(
         self,
@@ -90,6 +92,7 @@ class TrialEvalCallback(EvalX_ThetaMetric):
             eval_env=eval_env,
             eval_freq=eval_freq,
             X_THRESHOLD=0.2,
+            N_BINS=4,
             deterministic=deterministic,
         )
         self.trial = trial

@@ -105,9 +105,6 @@ plt.show()
 
 np.savez('test.npz',episodeArr=episodeArr,TENSION_RANGE=TENSION_RANGE)
 
-#TODO put holdon training
-#TODO put abcd BIGGER
-
 TENSION_STD = False
 VIOLIN_PLOT =False
 if VIOLIN_PLOT:

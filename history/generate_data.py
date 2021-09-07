@@ -22,10 +22,7 @@ EP_STEPS = 800
 Te = 0.05
 MANUAL_SEED = 0
 # simulation results
-#TODO mettre courbes dans l'env
-#TODO 6.1 mettre:
-#TODO fa,fb,fc,fd dans identificaiton
-#TODO episode reward for seed 0,5 + inference
+
 
 DYNAMIC_FRICTION_SIM = False  # True
 STATIC_FRICTION_SIM = False

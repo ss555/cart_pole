@@ -7,7 +7,7 @@ from env_wrappers import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 from stable_baselines3 import DQN
 # from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
-from custom_callbacks import EvalCustomCallback
+from custom_callbacks import EvalCustomCallback, EvalX_ThetaMetric
 from custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
 from stable_baselines3.common.callbacks import CheckpointCallback
 from env_custom import CartPoleDebug
@@ -42,10 +42,11 @@ log_save='./weights/dqn50-sim'
 Path(log_save).mkdir(exist_ok=True)
 #callbacks
 # Use deterministic actions for evaluation and SAVE the best model
-eval_callback = EvalCustomCallback(envEvaluation, best_model_save_path=log_save, log_path=logdir+'/evals', eval_freq=15000, n_eval_episodes=30,deterministic=True, render=False)
+# eval_callback = EvalCustomCallback(envEvaluation, best_model_save_path=log_save, log_path=logdir+'/evals', eval_freq=15000, n_eval_episodes=30,deterministic=True, render=False)
+eval_callback = EvalX_ThetaMetric(envEvaluation, best_model_save_path=log_save,N_BINS=4, X_THRESHOLD=0.2,log_path=logdir+'/evals', eval_freq=5000, verbose=1)
 callbackSave = SaveOnBestTrainingRewardCallback(check_freq=1000, log_dir=logdir)
-hyperparams=read_hyperparameters('dqn_cartpole_50')
-model = DQN(env=env,**hyperparams)
+hyperparams = read_hyperparameters('dqn_cartpole_50')
+model = DQN(env=env, **hyperparams)
 
 try:
     # model for pendulum starting from bottom
