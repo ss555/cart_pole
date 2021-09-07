@@ -8,7 +8,7 @@ from scipy import signal
 from scipy.fft import fft,fftfreq
 from collections import deque
 from scipy.integrate import odeint
-import iir_filter
+#import iir_filter
 #PWM 180
 [A,B,C,D]=[-21.30359185798466, 1.1088617953891196, -0.902272006611719, -0.03935160774012411]#20ms#(-7.794018686563599, 0.37538450501353504, -0.4891760779740128, -0.002568958116514183)
 wAngular=4.85658326956131
