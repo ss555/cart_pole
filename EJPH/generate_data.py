@@ -32,13 +32,13 @@ kPendViscous=0.07035332644615992,
 '''
 #Done episode reward for seed 0,5 + inference
 
-DYNAMIC_FRICTION_SIM = True  # True
-STATIC_FRICTION_SIM = True
-encNoiseVarSim = True
-ACTION_NOISE_SIM = False
+DYNAMIC_FRICTION_SIM = False  # True
+STATIC_FRICTION_SIM = False
+encNoiseVarSim = False
+ACTION_NOISE_SIM = True
 RESET_EFFECT = False  # True#False
 EVAL_TENSION_FINAL_PERF = False  # evaluate final PERFORMANCE of a cartpole for different voltages
-SEED_TRAIN = True
+SEED_TRAIN = False
 # other
 PLOT_FINAL_PERFORMANCE_STD = False  # False#
 qLearningVsDQN = False  # compare q-learn and dqn
@@ -93,7 +93,6 @@ if EVAL_TENSION_FINAL_PERF:
         filename = logdir + f'/tension-perf/tension_sim_{tension}_V_'
         env = Monitor(env, filename=filename)
         model = DQN(env=env, **hyperparams, seed=MANUAL_SEED)
-        # eval_callback = EvalThetaDotMetric(envEval, best_model_save_path=filename[:-2], log_path=filename, eval_freq=5000, deterministic=True)
         eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000, deterministic=True)
         print(f'simulation for {tension} V')
         with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
@@ -180,16 +179,6 @@ if RESET_EFFECT:
     del model
 
 
-    # filename = logdir + f'experimental-vs-random/iniThetaDot'
-    # envTheta0 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental', thetaDotReset=13, sparseReward=False)  # ,integrator='semi-euler')#,integrator='rk4')
-    # envTheta = Monitor(envTheta0, filename=filename)
-    # # with ini speed 3rad/s
-    # model = DQN(env=envTheta, **hyperparams)
-    # eval_callback3 = EvalThetaDotMetric(envTheta0, log_path=filename, eval_freq=5000, deterministic=True)
-    # print(f'simulation with random reset')
-    # with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
-    #     model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback3])
-
     plot_results(logdir + 'experimental-vs-random')
 
 # DONE bruit sur action [0, 0.1%, 1%, 10%]
@@ -199,8 +188,8 @@ if ACTION_NOISE_SIM:#Action noise in % for standart deviation
     Path(savePath).mkdir(exist_ok=True)
     for forceStd in FORCE_STD_ARR:
         filename = savePath+f'/force_std%_{forceStd}_'
-        env0 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental',sparseReward=False, forceStd=forceStd)
-        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, resetMode='experimental',sparseReward=False, forceStd=forceStd)
+        env0 = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, resetMode='experimental',sparseReward=False, forceStd=forceStd)
+        envEval = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, resetMode='experimental',sparseReward=False, forceStd=forceStd)
         env = Monitor(env0, filename=logdir + f'action-noise/actionStd%_{forceStd}_')
         eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000)
         model = DQN(env=env, **hyperparams, seed=MANUAL_SEED)

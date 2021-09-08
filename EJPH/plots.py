@@ -2,6 +2,7 @@
 2 modes: PLOT_TRAINING_REWARD: plots the training reward from the .csv files
 PLOT_EVAL_REWARD: plots evaluation reward from .npz files
 '''
+
 import sys
 import os
 import pickle
@@ -22,8 +23,8 @@ from bokeh.palettes import d3
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset, inset_axes
 from env_wrappers import load_results, ts2xy, load_data_from_csv
 
-PLOT_TRAINING_REWARD=True
-PLOT_EVAL_REWARD=True
+PLOT_TRAINING_REWARD = True
+PLOT_EVAL_REWARD = True
 TENSION_PLOT = True
 TENSION_RANGE = np.array([2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12])
 SCALE = 1.2
@@ -88,9 +89,7 @@ def save_show_fig(xArr,yArr,legs=None,title=None,saveName=None, ax=None, fig=Non
             # ax.plot(xArr[i], yArr[i]/EP_STEPS, color=colorPalette[i])
         elif i==experimental_value_index:
             ax.plot(xArr[i], yArr[i] / EP_STEPS, color=colorPalette[i],linewidth=3.0)
-            # ax.plot(xArr[i], yArr[i] / EP_STEPS, color='black',linewidth=3.0)
         else:
-            # ax.plot(xArr[i], yArr[i]/EP_STEPS, color=colorPalette[i])
             ax.plot(xArr[i], yArr[i] / EP_STEPS, '--', color=colorPalette[i])
     if title is not None:
         ax.set_title(title)
@@ -124,7 +123,7 @@ def setlabel(ax, label, loc=2, borderpad=0.6, **kwargs):
     line.remove()
 
 #plots
-figT, a = plt.subplots(nrows=2,ncols=2,figsize=(SCALE*10,SCALE*8))#Tension
+figT, a     = plt.subplots(nrows=2, ncols=2, figsize=(SCALE*10,SCALE*8))#Tension
 figSt, axSt = plt.subplots(nrows=2, ncols=1, figsize=(SCALE*6,SCALE*2*3.7125))
 figDy, axDy = plt.subplots(nrows=2, ncols=1, figsize=(SCALE*6,SCALE*2*3.7125))
 figNo, axNo = plt.subplots(nrows=2, ncols=1, figsize=(SCALE*6,SCALE*2*3.7125))
@@ -185,7 +184,7 @@ if __name__=='__main__':
         #experimental setup training
         #7.1V
         legsT.append(f'{float(round(dcVoltage1,2))}(experiment 1)')
-        xArrEx, yArrEx, _ = plot_results('./EJPH/real-cartpole/dqn', only_return_data=True)
+        xArrEx, yArrEx, _ = plot_results('./EJPH/real-cartpole/dqn_7.1V', only_return_data=True)
         # xArrT.append(xArrEx[0])
         # yArrT.append(yArrEx[0])
         a[0][0].plot(xArrEx[0], yArrEx[0]/EP_STEPS, color=colorPalette[np.where(TENSION_RANGE == 7.1)[0][0]],linewidth=3.0)
@@ -196,10 +195,12 @@ if __name__=='__main__':
         # a[0][0].plot(xArrEx[0], yArrEx[0]/EP_STEPS, 'o-', color=colorPalette[np.where(TENSION_RANGE == 12)[0][0]])
         #2.4V
         #3.5V
-        dcVoltage3 = 2.4
-        xArrEx, yArrEx, _ = plot_results(f'./weights/dqn{dcVoltage3}V', only_return_data=True)
-        legsT.append(f'{float(round(dcVoltage3,2))}(experiment 2)')
-        a[0][0].plot(xArrEx[0], yArrEx[0]/EP_STEPS, color=colorPalette[np.where(TENSION_RANGE == 2.4)[0][0]],linewidth=3.0)
+        PLOT_SMALL_REAL_TENSION=False
+        if PLOT_SMALL_REAL_TENSION:
+            dcVoltage3 = 2.4
+            xArrEx, yArrEx, _ = plot_results(f'./weights/dqn{dcVoltage3}V', only_return_data=True)
+            legsT.append(f'{float(round(dcVoltage3,2))}(experiment 2)')
+            a[0][0].plot(xArrEx[0], yArrEx[0]/EP_STEPS, color=colorPalette[np.where(TENSION_RANGE == 2.4)[0][0]],linewidth=3.0)
 
         #static friciton
         xArr, yArr, legsSt = plot_results('./EJPH/static-friction', title=t2, only_return_data=True)
@@ -447,13 +448,14 @@ if __name__=='__main__':
             )
         print('done inference on voltages')
         #indexes 12,14 are best found by theta_x_experiment.py
-        filenames = ['./EJPH/real-cartpole/dqn/inference_results.npz', './weights/dqn2.4V/inference_results.npz']
-        data = np.load('./weights/dqn2.4V/inference_results.npz')
-        data.allow_pickle=True
-        rewsArr = data["modelRewArr"]
-        a[1][0].plot(moving_average(rewsArr[12], 20), linewidth=3.0, color=colorPalette[0])
+        filenames = ['./EJPH/real-cartpole/dqn_7.1V/inference_results.npz', './weights/dqn2.4V/inference_results.npz']
+        if PLOT_SMALL_REAL_TENSION:
+            data = np.load('./weights/dqn2.4V/inference_results.npz')
+            data.allow_pickle=True
+            rewsArr = data["modelRewArr"]
+            a[1][0].plot(moving_average(rewsArr[12], 20), linewidth=3.0, color=colorPalette[0])
 
-        data = np.load('./EJPH/real-cartpole/dqn/inference_results.npz')
+        data = np.load('./EJPH/real-cartpole/dqn_7.1V/inference_results.npz')
         data.allow_pickle = True
         rewsArr = data["modelRewArr"]
         a[1][0].plot(moving_average(rewsArr[14], 20), linewidth=3.0, color=colorPalette[4])
@@ -509,6 +511,7 @@ if __name__=='__main__':
                 episodeArr.append(episode_rewards[:, -200:].flatten())  # taking the mean of 10 episodes in a steady state
                 # epArr = [np.mean(s, axis=0) for s in episodeArr]
                 print(scoreArr[i])
+                os.makedirs('./EJPH/data/',exist_ok=True)
                 with open('./EJPH/data/boxplot.pickle', 'wb') as f:
                     pickle.dump(episodeArr, f)
                     # episodeArr = pickle.load(f)
