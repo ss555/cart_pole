@@ -199,7 +199,6 @@ if __name__=='__main__':
         dcVoltage3 = 2.4
         xArrEx, yArrEx, _ = plot_results(f'./weights/dqn{dcVoltage3}V', only_return_data=True)
         legsT.append(f'{float(round(dcVoltage3,2))}(experiment 2)')
-
         a[0][0].plot(xArrEx[0], yArrEx[0]/EP_STEPS, color=colorPalette[np.where(TENSION_RANGE == 2.4)[0][0]],linewidth=3.0)
 
         #static friciton
