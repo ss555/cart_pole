@@ -362,29 +362,31 @@ class CartPoleZmq(gym.Env):
         # info('state: {}, cost{}, action:{}'.format(self.state,cost,action))
         return self.state, cost, done, {}
 
-    def reset(self):
+    def reset(self, verbose=1):
         # self.prev_time = time.time()
-
         self.pendulum.readState(blocking=True)
         if self.pendulum.position>0:
             while self.pendulum.position>0:
-                self.pendulum.sendCommand(-70)
+                self.pendulum.sendCommand(-50)
                 self.pendulum.readState(blocking=True)
         else:
             while self.pendulum.position<0:
-                self.pendulum.sendCommand(70)
+                self.pendulum.sendCommand(50)
                 self.pendulum.readState(blocking=True)
-
+        if verbose:
+            print(f'before reset: {self.state}')
         self.pendulum.sendCommand(0)
         self.pendulum.readState(blocking=True)
         angle=self.pendulum.angle
-        while np.cos(angle)<0.995 or abs(self.pendulum.angvel)>0.02:
-            time.sleep(5)
+        while np.cos(angle)<0.999 or abs(self.pendulum.angvel)>0.00001:
+            time.sleep(1)
             self.pendulum.readState(blocking=True)
             angle = self.pendulum.angle
         self.state = [self.pendulum.position,self.pendulum.linvel,np.cos(angle),np.sin(angle),self.pendulum.angvel]
         self.counter = 0
         self.rewards = []
+        if verbose:
+            print(self.state)
         return self.state
 
     def render(self, mode='human'):

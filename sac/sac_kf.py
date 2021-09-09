@@ -11,12 +11,13 @@ import argparse
 from typing import Callable
 from custom_callbacks import plot_results
 from custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback
-
+from utils import read_hyperparameters
 
 NORMALISE=False
 EP_STEPS = 800#*2
 MANUAL_SEED = 5
 logdir='./logs/sac/'
+# modell = SAC.load('./weights/sac50/best_model.zip')
 env = CartPole(Te=0.02,discreteActions=False,N_STEPS=EP_STEPS,f_a=-7.794018686563599, f_b=0.37538450501353504, f_c=-0.4891760779740128, f_d=-0.002568958116514183,sparseReward=False,tensionMax=12)#integrator='rk4')#
 env0 = Monitor(env, logdir)
 ## Automatically normalize the input features and reward

@@ -26,8 +26,7 @@ logdir = f'./weights/dqn12V/continue'
 #SPECIFY INFERENCE PATH IF mode = 'INFERENCE'
 INFERENCE_PATH = logdir#'./EJPH/real-cartpole/dqn'
 os.makedirs(logdir, exist_ok=True)
-# Use deterministic actions for evaluation and SAVE the best model
-checkpoint = CheckPointEpisode(save_path=logdir, episodes_init=140)
+checkpoint = CheckPointEpisode(save_path=logdir, episodes_init=0)
 STEPS_TO_TRAIN = 60000
 #lr schedule
 try:

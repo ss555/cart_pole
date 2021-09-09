@@ -76,6 +76,7 @@ DEFAULT_HYPERPARAMS = {
 }
 class TrialEvalCallback(EvalX_ThetaMetric):
     """Callback used for evaluating and reporting a trial.
+    CHOICE: EvalThetaDotMetric or EvalX_ThetaMetric(not working)
     INHERITS FROM EvalX_ThetaMetric, so evaluates at different x and theta
     """
 
@@ -91,8 +92,8 @@ class TrialEvalCallback(EvalX_ThetaMetric):
         super().__init__(
             eval_env=eval_env,
             eval_freq=eval_freq,
-            X_THRESHOLD=0.2,
-            N_BINS=4,
+            # X_THRESHOLD=0.2,
+            # N_BINS=4,
             deterministic=deterministic,
         )
         self.trial = trial
@@ -127,8 +128,8 @@ def objective(trial: optuna.Trial) -> float:
     eval_callback = TrialEvalCallback(
         eval_env,
         trial,
-        eval_freq=EVAL_FREQ,
-        deterministic=True,
+        eval_freq = EVAL_FREQ,
+        deterministic = True,
     )
 
     nan_encountered = False

@@ -76,7 +76,8 @@ if __name__ == '__main__':
   		# 		batch_size= 1024, ent_coef= 'auto', gamma= 0.9999, tau=0.02, train_freq= 64,  gradient_steps= 64,learning_starts= 10000,#target_update_interval=64,
   		# 		use_sde= True, policy_kwargs= dict(log_std_init=-3, net_arch=[256,256,64]))#dict(pi=[256, 256], qf=[256, 256])))
 
-		model = SAC(env=env,**hyperparams)
+		# model = SAC(env=env,**hyperparams)
+		model = SAC.load('./weights/sac50/best_model_sim.zip',env=env)
 	try:
 		# model for pendulum starting from bottom
 		with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
