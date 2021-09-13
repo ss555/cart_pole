@@ -11,7 +11,7 @@ import torch
 import torch.nn as nn
 from stable_baselines3 import SAC
 from stable_baselines3.common.callbacks import EvalCallback
-from custom_callbacks import EvalX_ThetaMetric
+from custom_callbacks import EvalX_ThetaMetric, EvalThetaDotMetric
 import optuna
 from optuna.visualization import plot_optimization_history, plot_param_importances
 from optuna.pruners import MedianPruner
@@ -74,7 +74,7 @@ def sample_sac_params(trial: optuna.Trial) -> Dict[str, Any]:
 DEFAULT_HYPERPARAMS = {
     "policy": "MlpPolicy"
 }
-class TrialEvalCallback(EvalX_ThetaMetric):
+class TrialEvalCallback(EvalThetaDotMetric):
     """Callback used for evaluating and reporting a trial.
     CHOICE: EvalThetaDotMetric or EvalX_ThetaMetric(not working)
     INHERITS FROM EvalX_ThetaMetric, so evaluates at different x and theta
