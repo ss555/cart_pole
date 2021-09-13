@@ -275,7 +275,7 @@ class CartPoleZmq(gym.Env):
                  x_threshold: float= 0.34,
                  Te=0.05,
                  theta_dot_threshold_init:float=13,
-                 monitor_filename:str = 'monitor.csv',
+                 monitor_filename:str = None,#'monitor.csv',
                  seed: int = 0):
         self.MAX_STEPS_PER_EPISODE = MAX_STEPS_PER_EPISODE
         self.pendulum=pendulePy
@@ -304,10 +304,12 @@ class CartPoleZmq(gym.Env):
         self.state = None
         print('connected')
         self.start_time=time.time()
-        self.file_handler = open(monitor_filename,'wt')
-        self.writer = csv.DictWriter(self.file_handler, fieldnames=("r", "l", "t"))
-        self.writer.writeheader()
-        self.file_handler.flush()
+        self.monitor_filename = monitor_filename
+        if self.monitor_filename is not None:
+            self.file_handler = open(monitor_filename,'wt')
+            self.writer = csv.DictWriter(self.file_handler, fieldnames=("r", "l", "t"))
+            self.writer.writeheader()
+            self.file_handler.flush()
 
     def seed(self, seed=0):
         self.np_random, seed = seeding.np_random(seed)
@@ -328,17 +330,18 @@ class CartPoleZmq(gym.Env):
             self.counter += 1
             self.pendulum.readState(blocking=True)#wait 1 step 25ms
             self.pendulum.readState(blocking=True)#50ms control
-            # print(time.time()-self.prev_time)
-            # if time.time()-self.prev_time>0.06:
-            #     print('alert')
-            # self.prev_time = time.time()
+            #don't wait reset to reinitialise
+            if self.pendulum.position>self.x_threshold:
+                self.pendulum.sendCommand(-50)
+            elif self.pendulum.position<-self.x_threshold:
+                self.pendulum.sendCommand(50)
+
             angle=self.pendulum.angle
             costheta = np.cos(angle)
             self.state = [self.pendulum.position, self.pendulum.linvel, costheta,
                           np.sin(angle), self.pendulum.angvel]
 
             cost = reward_fnCos(self.pendulum.position, costheta)
-
             done = False
             if self.state[0] < -self.x_threshold or self.state[0] > self.x_threshold:
                 cost = cost - self.MAX_STEPS_PER_EPISODE / 5
@@ -350,8 +353,9 @@ class CartPoleZmq(gym.Env):
             elif abs(self.state[-1])>self.theta_dot_threshold_init:
                 done=True
                 print(f'theta_dot_limit {self.state[-1]}')
+
             self.rewards.append(cost)
-            if done:
+            if done and self.monitor_filename is not None:
                 ep_rew=np.sum(self.rewards)
                 ep_info={"r": round(ep_rew, 6), "l": self.counter, "t": round(time.time() - self.start_time,6)}
                 self.writer.writerow(ep_info)

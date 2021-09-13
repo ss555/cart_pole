@@ -12,7 +12,7 @@ import iir_filter
 import json
 from matplotlib import pyplot as plt
 
-def reward_fnCos(x, costheta, sintheta=0, theta_dot=0, sparse=False, Kx=5):
+def reward_fnCos(x, costheta, sintheta=0, theta_dot=0, sparse=False, Kx=5, x_threshold=0.5):
     if sparse:
         reward = 0.0
         if abs(np.arctan2(sintheta,costheta))<np.pi*30/180 and abs(x)<0.2:
