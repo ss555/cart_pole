@@ -347,7 +347,8 @@ class EvalThetaDotMetric(EventCallback):
         self.save_model = save_model
         if save_model:
             if best_model_save_path is None:
-                self.best_model_save_path = log_path+'_best.zip'
+                if log_path is not None:
+                    self.best_model_save_path = log_path+'_best.zip'
             else:
                 self.best_model_save_path = best_model_save_path
 
@@ -392,7 +393,7 @@ class EvalThetaDotMetric(EventCallback):
                 np.savez(
                     self.log_path,
                     timesteps=self.evaluations_timesteps,
-                    results=self.evaluations_results,
+                    results  =self.evaluations_results,
                     ep_length=self.evaluations_length
                 )
             if self.verbose > 0:
