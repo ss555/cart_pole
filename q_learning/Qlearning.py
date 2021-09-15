@@ -157,7 +157,7 @@ def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon
 if __name__ == '__main__':
 
 
-    numEpisode=2000000
+    numEpisode=100000
     EP_STEPS=800
     Te=0.05
     resetMode='experimental'
