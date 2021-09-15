@@ -1,0 +1,2 @@
+1129.322534 and parameters: {'gamma': 0.999, 'lr': 0.001966190408251083, 'batch_size': 2048, 'buffer_size': 100000, 'learning_starts': 0, 'train_freq': 16, 'tau': 0.02, 'ent_coef': 'auto', 'log_std_init': 0.845625652535745, 'net_arch': 'big'}
+for continous trialEnv1

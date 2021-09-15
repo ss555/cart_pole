@@ -11,7 +11,6 @@ import numpy as np
 import pandas as pd
 from stable_baselines3.common.type_aliases import GymObs, GymStepReturn
 
-
 class Monitor(gym.Wrapper):
     """
     A monitor wrapper for Gym environments, it is used to know the episode reward, length, time and other data.
@@ -137,6 +136,32 @@ class Monitor(gym.Wrapper):
         """
         return self.episode_times
 
+class CsvLogSaveBestCallback(gym.Wrapper):
+    def __init__(self, env: gym.Env,
+                 saveLogFile:str='./monitor.csv',
+                 saveModelFile:str='./best.zip'):
+        self.env = env
+        self.saveLogFile = saveLogFile
+        self.saveModelFile = saveModelFile
+        self.fileHandler = open(saveLogFile,'wt')
+        self.writer = csv.DictWriter(self.fileHandler,fieldnames=('r','l','t'))
+        self.writer.writeheader()
+        self.fileHandler.flush()
+        self.rewards = []
+        self.timesteps = 0
+        # self.t = []
+        self.t_start = time.time()
+    def step(self, action):
+        rew, obs, done, _ = self.env.step(action)
+        self.rewards.append(rew)
+        self.timesteps += 1
+        if done:
+            self.writer.writerow({'r': round(self.rewards, 6),'l': round(self.timesteps, 6),'t': round(time.time()-self.t_start, 6)})
+
+    def reset(self, **kwargs):
+        self.rewards = []
+        self.timesteps = 0
+
 
 class LoadMonitorResultsError(Exception):
     """
@@ -197,7 +222,7 @@ def get_monitor_files(path: str) -> List[str]:
     :param path: the logging folder
     :return: the log files
     """
-    return glob(os.path.join(path, "*" + Monitor.EXT))
+    return sorted(glob(os.path.join(path, "*" + Monitor.EXT)),key=os.path.getmtime)
 X_TIMESTEPS = "timesteps"
 X_EPISODES = "episodes"
 X_WALLTIME = "walltime_hrs"
@@ -237,16 +262,16 @@ def load_results(path: str) -> pd.DataFrame:
         raise LoadMonitorResultsError(f"No monitor files of the form *{Monitor.EXT} found in {path}")
     data_frames, headers = [], []
     for file_name in monitor_files:
-        with open(file_name, "rt") as file_handler:
-            first_line = file_handler.readline()
-            assert first_line[0] == "#"
-            header = json.loads(first_line[1:])
-            data_frame = pd.read_csv(file_handler, index_col=None)
-            headers.append(header)
-            data_frame["t"] += header["t_start"]
+        data_frame,headers=load_data_from_csv(file_name)
         data_frames.append(data_frame)
-    # data_frame = pd.concat(data_frames)
-    # data_frame.sort_values("t", inplace=True)
-    # data_frame.reset_index(inplace=True)
-    # data_frame["t"] -= min(header["t_start"] for header in headers)
     return data_frames, monitor_files
+def load_data_from_csv(path_to_file: str):
+    headers = []
+    with open(path_to_file, "rt") as file_handler:
+        first_line = file_handler.readline()
+        assert first_line[0] == "#"
+        header = json.loads(first_line[1:])
+        data_frame = pd.read_csv(file_handler, index_col=None)
+        headers.append(header)
+        data_frame["t"] += header["t_start"]
+    return data_frame, headers
