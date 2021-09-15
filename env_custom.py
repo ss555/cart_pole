@@ -180,7 +180,7 @@ class CartPoleButter(gym.Env):
         self.state = np.array([x, x_dot, np.cos(theta), np.sin(theta), theta_dot], dtype=np.float32)
         done=False
         self.COUNTER+=1
-        if x < -self.x_threshold or x > self.x_threshold or self.COUNTER == self.MAX_STEPS_PER_EPISODE or abs(theta_dot)>11:
+        if x < -self.x_threshold or x > self.x_threshold or self.COUNTER == self.MAX_STEPS_PER_EPISODE:# or abs(theta_dot)>11:
             # print('out of bound')
             done = True
             x = np.clip(x, -self.x_threshold, self.x_threshold)

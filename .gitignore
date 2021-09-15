@@ -8,3 +8,10 @@ todo/
 DDQN/
 /sac_cartpole_tensorboard
 cart_pole
+
+__pycache__/
+.vscode/settings.json
+*.csv
+*.out
+*.json
+*.html

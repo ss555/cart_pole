@@ -81,7 +81,7 @@ def initialize_Q(observationNum, actionNum, nBins):
     Q = pd.DataFrame(0.00000000, index=index, columns=columns)
     return Q
 
-def play_one_episode(bins, Q, EPS, ALPHA, observationNum):
+def play_one_episode(bins, Q, EPS, ALPHA, observationNum, render=False):
     observation = env.reset()
     # env.render()
     done = False
@@ -91,6 +91,7 @@ def play_one_episode(bins, Q, EPS, ALPHA, observationNum):
     totalReward = 0
     act = choose_action(Q, state, EPS)
     # print('initial action', act)
+    dList = [{'timestep':0, 'x':observation[0], 'x_dot':observation[1], 'costheta':observation[2], 'sintheta':observation[3], 'theta_dot':observation[4], 'action':0}]
 
     while not done:
         cnt += 1
@@ -109,8 +110,10 @@ def play_one_episode(bins, Q, EPS, ALPHA, observationNum):
         # print('new state', stateNew, 'new action', actionNew, 'reward', reward)
         # print('Qmax', Q.max().max())
         # print('Qmin', Q.min().min())
-        # env.render()
-    return totalReward, cnt, state, act, Q
+        if render:
+            dList.append({'timestep':cnt, 'x':observationNew[0], 'x_dot':observationNew[1], 'costheta':observationNew[2], 'sintheta':observationNew[3], 'theta_dot':observationNew[4], 'action':actionNew})
+            #env.render()
+    return totalReward, cnt, state, act, Q, dList
 
 def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon, min_lr):
 
@@ -122,15 +125,17 @@ def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon
     for n in range(numEpisode+1):
         # eps=0.5/(1+n*10e-3)
         EPS = get_epsilon(n, min_epsilon, decay)
-        ALPHA = get_learning_rate(n, min_lr, decay)
-        # ALPHA = ALPHA0
+        # ALPHA = get_learning_rate(n, min_lr, decay)
+        ALPHA = 0.01
 
-        episodeReward, episodeLength, state, act, Q = play_one_episode(bins, Q, EPS, ALPHA, observationNum)
-
-        if n % 1000 == 0:
+        if n % 10000 == 0:
             # print(n, '%.4f' % EPS, episodeReward)
+            episodeReward, episodeLength, state, act, Q, dList = play_one_episode(bins, Q, EPS, ALPHA, observationNum, render=True)
+            df = pd.DataFrame.from_dict(dList)
+            df.to_csv(str(n)+'_ep.csv')
             print('{}, \t {:.4f}, \t {}, \t {}, \t {}'.format(n, EPS, episodeReward, state, episodeLength))
-            # print('Qmax', Q.max().max())
+        else:
+            episodeReward, episodeLength, state, act, Q, dList = play_one_episode(bins, Q, EPS, ALPHA, observationNum, render=False)
         if n % 50000 ==0:
             Q.T.to_csv('Q_'+str(n)+'.csv')
 
@@ -146,20 +151,20 @@ def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon
 if __name__ == '__main__':
 
 
-    numEpisode=2000000
+    numEpisode=100000
     EP_STEPS=800
     Te=0.05
     resetMode='experimental'
 
+    # env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode=resetMode, sparseReward=False,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)#,integrator='ode')#,integrator='rk4')
     env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode=resetMode, sparseReward=False,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)#,integrator='ode')#,integrator='rk4')
-
 
     actionNum = env.action_space.n
     observationNum = env.observation_space.shape[0]
 
     ALPHA0 = 1
     GAMMA = 0.99
-    decay = 10000
+    decay = numEpisode/10
     min_epsilon = 0.1
     min_lr = 0.1
 
