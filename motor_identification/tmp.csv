@@ -1,6 +1,0 @@
-        dt=np.mean(np.diff(localData[:,1]))
-        v=np.convolve(localData[:,2],[0.5,0,-0.5],'valid')/dt
-        a=np.convolve(localData[:,2],[1,-2,1],'valid')/(dt**2)
-        aArr=np.hstack((aArr,a))
-        vArr=np.hstack((vArr,v))
-        uArr=np.hstack((uArr,np.ones(len(a))*i/255))

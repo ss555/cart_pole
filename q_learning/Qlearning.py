@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Jan  5 13:27:33 2021
 
-@author: lfu
-"""
 #%%
 import numpy as np
 import matplotlib.pyplot as plt
@@ -15,7 +11,7 @@ sys.path.insert(0, parent_dir)
 from env_custom import CartPoleButter
 import gym
 import pandas as pd
-pd.options.plotting.backend = "plotly"
+#pd.options.plotting.backend = "plotly"
 import itertools as it
 
 import plotly.express as px
@@ -40,7 +36,7 @@ def create_bins(x_threshold,theta_dot_threshold, nBins):
     ## 5 observations, x, x_dot, cos(theta), sin(theta), theta_dot
     # bins = np.zeros((5, nBins))
     bins1 = np.linspace(-x_threshold, x_threshold, nBins[0])
-    bins2 = np.linspace(-5, 5, nBins[1])
+    bins2 = np.linspace(-1, 1, nBins[1])
     bins3 = np.linspace(-1, 1, nBins[2])
     bins4 = np.linspace(-1, 1, nBins[3])
     bins5 = np.linspace(-theta_dot_threshold, theta_dot_threshold, nBins[4])
@@ -64,8 +60,8 @@ def assignBins(observation, bins, observationNum):
 def get_epsilon(t, min_epsilon, decay):
     return max(min_epsilon, min(1., 1. - math.log10((t + 1) / decay)))
 
-def get_learning_rate(t, min_lr, decay):
-    return max(min_lr, min(ALPHA0, 1. - math.log10((t + 1) / decay)))
+# def get_learning_rate(t, min_lr, decay):
+#     return max(min_lr, min(ALPHA0, 1. - math.log10((t + 1) / decay)))
 
 def choose_action(Q, state, EPS):
     if (np.random.random() < EPS):
@@ -120,17 +116,16 @@ def play_one_episode(bins, Q, EPS, ALPHA, observationNum, render=False):
 def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon, min_lr):
 
     Q = initialize_Q(observationNum, actionNum, nBins)
-
     length = []
     reward = []
     eps = []
     for n in range(numEpisode+1):
         # eps=0.5/(1+n*10e-3)
         EPS = get_epsilon(n, min_epsilon, decay)
-        ALPHA = get_learning_rate(n, min_lr, decay)
+        # ALPHA = 0.1get_learning_rate(n, min_lr, decay)
         # ALPHA = ALPHA0
-
-        
+        ALPHA = 0.1
+        episodeReward, episodeLength, state, act, Q = play_one_episode(bins, Q, EPS, ALPHA, observationNum)
 
         if n % 10000 == 0:
             # print(n, '%.4f' % EPS, episodeReward)
@@ -157,27 +152,28 @@ def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon
 if __name__ == '__main__':
 
 
-    numEpisode=100000
+    numEpisode=5000000
     EP_STEPS=800
     Te=0.05
     resetMode='experimental'
 
-    env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode=resetMode, sparseReward=False,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)#,integrator='ode')#,integrator='rk4')
+    env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode=resetMode, sparseReward=False)#,integrator='ode')#,integrator='rk4')
 
 
     actionNum = env.action_space.n
     observationNum = env.observation_space.shape[0]
 
     ALPHA0 = 1
-    GAMMA = 0.99
-    decay = 10000
-    min_epsilon = 0.1
+    GAMMA = 0.95
+    decay = 20000
+    min_epsilon = 0.05
     min_lr = 0.1
 
     x_threshold = env.x_threshold
-    theta_dot_threshold = 2*np.pi
-    nBins = [10, 10, 10, 10, 10]
-    INFO = {'ALPHA0': ALPHA0, 'GAMMA': GAMMA, 'decay':decay, 'min_epsilon':min_epsilon, 'min_lr':min_lr, 'numEpisode': numEpisode, 'resetMode':resetMode, 'theta_dot_threshold':theta_dot_threshold, 'nBins':str(nBins), 'reward':'without limite theta dot'}
+    theta_dot_threshold = 12
+    nBins = [3, 3, 5, 5, 5]
+    # nBins = [30, 30, 50, 50, 50]
+    INFO = {'ALPHA0': ALPHA0, 'GAMMA': GAMMA, 'decay':decay, 'min_epsilon':min_epsilon, 'min_lr':min_lr, 'numEpisode': numEpisode, 'resetMode':resetMode, 'theta_dot_threshold':theta_dot_threshold, 'nBins':str(nBins), 'reward':'without limit theta dot'}
 
 
 

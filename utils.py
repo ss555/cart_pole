@@ -6,12 +6,16 @@ import glob
 import sys
 import os
 import yaml
-from typing import Any, Callable, Dict, List, Optional, Tuple
+import gym
+from typing import Any, Callable, Dict, Union, List, Optional, Tuple
 from collections import OrderedDict
-from pprint import pprint
+from stable_baselines3.common.vec_env import VecEnv
 # Import seaborn
 import seaborn as sns
 from env_wrappers import load_results
+from bokeh.palettes import d3
+
+
 
 def _save_config(self, saved_hyperparams: Dict[str, Any]) -> None:
     # Save hyperparams
@@ -25,8 +29,33 @@ def _save_config(self, saved_hyperparams: Dict[str, Any]) -> None:
 
     print(f"Log path: {self.save_path}")
 
-def read_hyperparameters(name, path="parameters.yml",additional_params=None):
+def evaluate_policy_episodes(
+        env: Union[gym.Env, VecEnv],
+        model:"base_class.BaseAlgorithm",
+        n_eval_episodes:int=1,
+        episode_steps=3000):
+    '''
 
+    :param env:
+    :param model:
+    :param n_eval_episodes:
+    :return: array of episode rewards
+    '''
+    episodeRewArr=np.zeros((n_eval_episodes,episode_steps),dtype=np.float32)
+    lengthArr=np.zeros(n_eval_episodes,dtype=np.float32)
+    for i in range(n_eval_episodes):
+        episodeLength=0
+        done = False
+        obs=env.reset()
+        while not done:
+            action,_state=model.predict(obs,deterministic=True)
+            obs,reward,done,_=env.step(action)
+            episodeRewArr[i,episodeLength]=reward
+            episodeLength+=1
+        lengthArr[i]=episodeLength
+    return episodeRewArr,lengthArr
+
+def read_hyperparameters(name, path="parameters.yml",additional_params=None):
     with open(path, "r") as f:
         hyperparams_dict = yaml.safe_load(f)
         hyperparams = hyperparams_dict[name]
@@ -34,8 +63,11 @@ def read_hyperparameters(name, path="parameters.yml",additional_params=None):
             hyperparams["train_freq"] = tuple(hyperparams["train_freq"])
             print('parameters loaded')
         # Convert to python object if needed
-        if isinstance(hyperparams["policy_kwargs"], str):
-            hyperparams["policy_kwargs"] = eval(hyperparams["policy_kwargs"])
+        try:
+            if isinstance(hyperparams["policy_kwargs"], str):
+                hyperparams["policy_kwargs"] = eval(hyperparams["policy_kwargs"])
+        except:
+            pass
         # Overwrite hyperparams if needed
         # hyperparams.update(self.custom_hyperparams)
     return hyperparams
@@ -48,7 +80,7 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
     def func(progress_remaining: float) -> float:
         return progress_remaining * initial_value
     return func
-def plot(observations = [],timeArr=[], actArr=[], save=True,plotlyUse=False,PLOT_TIME_DIFF=True):
+def plot(observations = [],timeArr=[], actArr=[], save=True,plotlyUse=False,PLOT_TIME_DIFF=True,savePath='./tmp/',paperMode=False):
     '''
     :param observations: experience in form of N,5 observations=np.array(observations)
     :param timeArr: time when observation happened
@@ -57,45 +89,60 @@ def plot(observations = [],timeArr=[], actArr=[], save=True,plotlyUse=False,PLOT
     :param plotlyUse: plot in nice figures in browser
     :return:
     '''
-
     try:
-        fig1=plt.figure(figsize=(12, 12))
-        plt.subplot(221)
-        plt.title('X')
-        plt.xlabel('time (s)')
-        plt.ylabel('distance (m)')
-        #plt.axvline(0.2, 0, 1) #vertical line
-        # plt.plot(timeArr,observations[:,0], 'r')
-        plt.plot(timeArr,observations[:,0], 'r.')
-        plt.subplot(223)
-        plt.title('X_dot')
-        plt.xlabel('time (s)')
-        plt.ylabel('speed (m/s)')
-        # plt.plot(timeArr,observations[:,1], 'g')
-        plt.plot(timeArr,observations[:,1], 'g.')
-        plt.subplot(222)
-        plt.title('theta')
-        plt.xlabel('time (s)')
-        plt.ylabel('angle (rad)')
-        theta=np.arctan2(observations[:,3],observations[:,2])
-        # plt.plot(timeArr,theta, 'r')
-        plt.plot(timeArr,theta, 'r.')
-        plt.subplot(224)
-        plt.title('theta_dot')
-        plt.xlabel('time (s)')
-        plt.ylabel('angular speed (rad/s)')
-        # plt.plot(timeArr,observations[:,4], 'g')
-        plt.plot(timeArr,observations[:,4], 'g.')
-        plt.savefig('./tmp/observations.png', dpi=200)
-        plt.close(fig1)
+        if not paperMode:
+
+            fig1=plt.figure(figsize=(12, 12))
+            plt.subplot(221)
+            plt.title('X')
+            plt.xlabel('time (s)')
+            plt.ylabel('distance (m)')
+            #plt.axvline(0.2, 0, 1) #vertical line
+            # plt.plot(timeArr,observations[:,0], 'r')
+            plt.plot(timeArr,observations[:,0], 'r.')
+            plt.subplot(223)
+            plt.title('X_dot')
+            plt.xlabel('time (s)')
+            plt.ylabel('speed (m/s)')
+            # plt.plot(timeArr,observations[:,1], 'g')
+            plt.plot(timeArr,observations[:,1], 'g.')
+            plt.subplot(222)
+            plt.title('theta')
+            plt.xlabel('time (s)')
+            plt.ylabel('angle (rad)')
+            theta=np.arctan2(observations[:,3],observations[:,2])
+            # plt.plot(timeArr,theta, 'r')
+            plt.plot(timeArr,theta, 'r.')
+            plt.subplot(224)
+            plt.title('theta_dot')
+            plt.xlabel('time (s)')
+            plt.ylabel('angular speed (rad/s)')
+            # plt.plot(timeArr,observations[:,4], 'g')
+            plt.plot(timeArr,observations[:,4], 'g.')
+            plt.savefig(savePath+'/observations.png', dpi=200)
+            plt.close(fig1)
+
+        else:
+            sns.set_context("paper")
+            sns.set_style("whitegrid")
+            sns.lineplot(x=timeArr, y=observations[:, 0])
+            ym=np.mean(observations[-500:, 0])
+            plt.plot([timeArr[0],timeArr[-1]],[ym,ym],'b--')
+            plt.xlabel('time (s)')
+            plt.ylabel('distance (m)')
+            plt.show()
+            sns.lineplot(x=timeArr, y=np.arctan2(observations[:,3],observations[:,2]))
+            ym=np.mean(np.arctan2(observations[:,3],observations[:,2]))
+            plt.plot([timeArr[0],timeArr[-1]],[ym,ym],'b--')
+            plt.xlabel('time (s)')
+            plt.ylabel('angle (rad)')
+            plt.show()
+
     except:
         print('err occured')
-
-
     ##FOR FINE tuned position/acceleration...
     if plotlyUse:
         fig = px.scatter(x=timeArr, y=observations[:, 0], title='observations through time')
-
         # fig.add_scatter(x=timeArr[:, 0], y=observations[:, 4], name='theta_dot through time')
         fig.add_scatter(x=timeArr, y=observations[:, 4], name='theta_dot through time')
         theta=np.arctan2(observations[:, 3],observations[:, 2])
@@ -107,17 +154,14 @@ def plot(observations = [],timeArr=[], actArr=[], save=True,plotlyUse=False,PLOT
             # LOOK NOISE IN TIME
             fig2 = plt.figure(figsize=(12, 12))
             plt.plot(np.diff(timeArr))
-
-            plt.savefig('./tmp/time_diff.png',dpi=200)
+            plt.savefig(savePath+'time_diff.png',dpi=200)
             plt.close(fig2)
+            fig3 = plt.figure(figsize=(12, 12))
+            plt.plot(timeArr, actArr, '.')
+            plt.savefig('./tmp/time_action.png', dpi=200)
+            plt.close(fig3)
         except:
             print('err of time plot')
-
-    fig3 = plt.figure(figsize=(12, 12))
-    plt.plot(timeArr,actArr,'.')
-    # plt.show()
-    plt.savefig('./tmp/time_action.png',dpi=200)
-    plt.close(fig3)
     if save:
         np.savetxt('./tmp/obs.csv',observations, delimiter=",")
         np.savetxt('./tmp/time.csv',timeArr, delimiter=",")
