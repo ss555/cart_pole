@@ -181,7 +181,7 @@ else:
     #     dynamics = pickle.load(f)
 
 
-def train_agent(dynamics_model, discreteActions = False):
+def train_agent(dynamics_model, discreteActions = True):
     virtual_env = CartPoleNN(dynamics, discreteActions=discreteActions)
     eval_env = CartPoleButter(discreteActions=discreteActions)
     eval_callback = EvalCustomCallback(eval_env=eval_env, eval_freq=5000)
@@ -198,4 +198,4 @@ def train_agent(dynamics_model, discreteActions = False):
     with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
         agent.learn(total_timesteps=150000, callback=[cus_callback, eval_callback])
 
-train_agent(dynamics)
+train_agent(dynamics, discreteActions = True)
