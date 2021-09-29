@@ -405,7 +405,7 @@ class EvalThetaDotMetric(EventCallback):
                 if self.verbose > 0:
                     print("New best mean reward!")
                 # save best model
-                if self.save_model:
+                if self.save_model and self.best_model_save_path is not None:
                     self.model.save(self.best_model_save_path)
                 self.best_mean_reward = mean_reward
 

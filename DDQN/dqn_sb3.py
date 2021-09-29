@@ -9,7 +9,7 @@ from stable_baselines3 import DQN
 # from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
 from custom_callbacks import EvalCustomCallback
 from custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
-from env_custom import CartPoleButter, CartPoleDiscreteHistory, CartPoleButter
+from env_custom import CartPoleButter, CartPoleDiscreteHistory, CartPoleButter, CartPoleButterHistory
 import argparse
 from utils import read_hyperparameters
 from pathlib import Path

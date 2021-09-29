@@ -272,7 +272,7 @@ class CartPoleZmq(gym.Env):
                  MAX_STEPS_PER_EPISODE: int=800,
                  max_pwm=130,
                  discreteActions=True,
-                 x_threshold: float= 0.34,
+                 x_threshold: float= 0.3,
                  Te=0.05,
                  theta_dot_threshold_init:float=13,
                  monitor_filename:str = None,#'monitor.csv',

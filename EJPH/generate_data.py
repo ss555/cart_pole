@@ -33,9 +33,9 @@ kPendViscous=0.07035332644615992,
 #Done episode reward for seed 0,5 + inference
 
 DYNAMIC_FRICTION_SIM = False  # True
-STATIC_FRICTION_SIM = False
+STATIC_FRICTION_SIM = True
 encNoiseVarSim = False
-ACTION_NOISE_SIM = True
+ACTION_NOISE_SIM = False
 RESET_EFFECT = False  # True#False
 EVAL_TENSION_FINAL_PERF = False  # evaluate final PERFORMANCE of a cartpole for different voltages
 SEED_TRAIN = False
@@ -48,7 +48,8 @@ hyperparams = read_hyperparameters('dqn_cartpole_50')
 
 # DONE temps d’apprentissage et note en fonction du coefficient de friction statique 4 valeurs du coefficient:Ksc,virt= 0,0.1∗Ksc,manip,Ksc,manip,10∗Ksc,manipDiscussion
 STATIC_FRICTION_CART = -1.166390864012042
-STATIC_FRICTION_ARR = np.array([0, 0.1, 1, 10]) * STATIC_FRICTION_CART
+STATIC_FRICTION_ARR = np.array([100]) * STATIC_FRICTION_CART #150 not working
+# STATIC_FRICTION_ARR = np.array([0, 0.1, 1, 10]) * STATIC_FRICTION_CART
 
 # DONE temps d’apprentissage et note en fonction de l’amplitude du controle
 TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]#

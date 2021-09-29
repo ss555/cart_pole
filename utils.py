@@ -62,6 +62,9 @@ def read_hyperparameters(name, path="parameters.yml",additional_params=None):
         if "train_freq" in hyperparams and isinstance(hyperparams["train_freq"], list):
             hyperparams["train_freq"] = tuple(hyperparams["train_freq"])
             print('parameters loaded')
+
+        if "n_timesteps" in hyperparams:
+            del hyperparams["n_timesteps"]
         # Convert to python object if needed
         try:
             if isinstance(hyperparams["policy_kwargs"], str):

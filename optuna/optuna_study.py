@@ -200,7 +200,7 @@ if __name__ == "__main__":
 LOAD_PLOT = False
 
 if LOAD_PLOT:
-    with open("./optuna/study.pkl", "rb") as f:
+    with open("./optuna/study_sac.pkl", "rb") as f:
         study = pkl.load(f)
 
 

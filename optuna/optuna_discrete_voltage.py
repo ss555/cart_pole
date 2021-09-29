@@ -229,7 +229,7 @@ if __name__ == "__main__":
     # Write report
     study.trials_dataframe().to_csv(logdir+f"study_results_discrete_cartpole{time.time()}.csv")
 
-    with open(logdir+f"study{time.time()}.pkl", "wb+") as f:
+    with open(logdir+f"study{time.time()}_dqn.pkl", "wb+") as f:
         pkl.dump(study, f)
 
     fig1 = plot_optimization_history(study)
