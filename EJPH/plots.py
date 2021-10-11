@@ -30,7 +30,7 @@ TENSION_RANGE = np.array([2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12])
 SCALE = 1.2
 f_aAr = 20.75180095541654,  # -21.30359185798466,
 f_bAr = 1.059719258572224,  # 1.1088617953891196,
-f_cAr = 1.166390864012042*np.array([0, 0.1, 1, 10]),  # -0.902272006611719,
+f_cAr = 1.166390864012042 * np.array([0, 0.1, 1, 10]),  # -0.902272006611719,
 f_d = 0.09727843708918459,  # 0.0393516077401241, #0.0,#
 wAngular = 4.881653071189049,
 kPendViscousAr = 0.0706*np.array([0, 0.1, 1, 10]).T
@@ -41,7 +41,7 @@ legsVisc = [round(kPendViscous,4) for kPendViscous in kPendViscousAr]
 #plot params
 plt.rcParams['font.family'] = "serif"
 plt.rcParams['font.serif'] = 'Georgia'
-plt.rcParams['font.size'] = 10
+plt.rcParams['font.size'] = 11
 plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams["figure.dpi"] = 100
 colorPalette = d3['Category20'][20]
@@ -314,19 +314,19 @@ if __name__=='__main__':
     offset = 0.2
     axNo[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axNo[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
     axNo[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axNo[1].transAxes, fontsize='x-large')
-    figNo.legend(legsNo, loc='upper center', bbox_to_anchor=(0.5, 0.98), title="Noise std [rad]", ncol=5)
+    figNo.legend(legsNo, loc='upper center', bbox_to_anchor=(0.5, 0.98), title="Noise $\sigma_\Theta$ [$rad$]", ncol=5)
     figNo.savefig('./EJPH/plots/noise_all.pdf')
     figNo.show()
 
     axDy[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axDy[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
     axDy[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axDy[1].transAxes, fontsize='x-large')
-    figDy.legend(legsVisc, loc='upper center', bbox_to_anchor=(0.5, 0.96), title="Viscous friction [N*s/rad]", ncol=5)
+    figDy.legend(legsVisc, loc='upper center', bbox_to_anchor=(0.5, 0.96), title="Viscous friction [$N*s*rad^{-1}$]", ncol=5)
     figDy.savefig('./EJPH/plots/dynamic_all.pdf')
     figDy.show()
 
     axSt[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axSt[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
     axSt[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axSt[1].transAxes, fontsize='x-large')
-    figSt.legend(legsStatic, loc='upper center', bbox_to_anchor=(0.5, 0.96), title="Static friction [N/kg]", ncol=5)
+    figSt.legend(legsStatic, loc='upper center', bbox_to_anchor=(0.5, 0.96), title="Static friction [$N*kg^{-1}$]", ncol=5)
     figSt.savefig('./EJPH/plots/static_all.pdf')
     figSt.show()
 
@@ -375,7 +375,7 @@ if __name__=='__main__':
                 model = DQN.load(f'./EJPH/tension-perf/tension_sim_{tension}_V__best.zip', env=env)
                 theta = 0
                 cosThetaIni = np.cos(theta)
-                sinThetaIni = np.sin(theta)
+                sinThetaIni = np.sin(theta) #\Theta$
                 rewArr = []
                 obs = env.reset(costheta=cosThetaIni, sintheta=sinThetaIni)
                 # env.reset()
@@ -577,7 +577,7 @@ if __name__=='__main__':
 
             return timesteps,epReward
         def findInd(array,elem):
-            for i,elArr in enumerate(array):
+            for i, elArr in enumerate(array):
                 if elem==elArr:
                     return i
             return -1
@@ -637,6 +637,7 @@ if diffSeed:
     legs = [str(leg) + 'V' for leg in legs]
     plot_from_npz(filenames, xl, yl, legends=legs, saveName='./EJPH/plots/greedy_tension_seed.pdf')
 
+'''
 RAINBOW = False
 if RAINBOW:
     print('plotting in rainbow for different voltages applied')
@@ -707,3 +708,4 @@ if RAINBOW:
                loc='best')
     plt.savefig('./EJPH/plots/episode_rainbow.pdf')
     plt.show()
+'''

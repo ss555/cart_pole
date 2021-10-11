@@ -10,7 +10,7 @@ from stable_baselines3 import DQN
 from custom_callbacks import EvalCustomCallback, EvalX_ThetaMetric
 from custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
 from stable_baselines3.common.callbacks import CheckpointCallback
-from env_custom import CartPoleDebug
+from env_custom import CartPoleRK4
 import argparse
 from utils import read_hyperparameters
 from pathlib import Path
@@ -22,10 +22,10 @@ LOAD_MODEL_PATH=None#"./logs/best_model"
 LOAD_BUFFER_PATH=None#"dqn_pi_swingup_bufferN"
 logdir='./logs/'
 checkpoint = CheckpointCallback(save_freq=1000, save_path=logdir)
-env = CartPoleDebug(Te=Te, N_STEPS=EP_STEPS,discreteActions=True,tensionMax=8.4706,resetMode='experimental',sparseReward=False,Km=0.0,n=1)#,integrator='ode')#,integrator='rk4')
+env = CartPoleRK4(Te=Te, N_STEPS=EP_STEPS,discreteActions=True, f_c=-11.66390864012042, resetMode='experimental',sparseReward=False,Km=0.0,n=1)#,integrator='ode')#,integrator='rk4')
 env = Monitor(env, filename=logdir+'basic_simulation_')
-envEvaluation = CartPoleDebug(Te=Te,N_STEPS=EP_STEPS,discreteActions=True,tensionMax=8.4706,resetMode='random',sparseReward=False,Km=0.0,n=1)#,integrator='ode')#,integrator='rk4')
-
+envEvaluation = CartPoleRK4(Te=Te, N_STEPS=EP_STEPS,discreteActions=True, f_c=-2*11.66390864012042,resetMode='random',sparseReward=False,Km=0.0,n=1)#,integrator='ode')#,integrator='rk4')
+#integrator='rk4',
 NORMALISE=False
 if NORMALISE:
     ## Automatically normalize the input features and reward
@@ -48,28 +48,28 @@ callbackSave = SaveOnBestTrainingRewardCallback(check_freq=1000, log_dir=logdir)
 hyperparams = read_hyperparameters('dqn_cartpole_50')
 model = DQN(env=env, **hyperparams)
 
-try:
-    # model for pendulum starting from bottom
-    with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
-        model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback, checkpoint])
-        if NORMALISE:
-            env.training = False
-            # reward normalization is not needed at test time
-            env.norm_reward = False
-            env.save(logdir + 'envNorm.pkl')
-        plot_results(logdir)
-    obs = env.reset()
-    for i in range(1000):
-        action, _states = model.predict(obs)
-        obs, rewards, dones, info = env.step(action)
-        env.render()
-        if dones:
-            env.reset()
 
-finally:
-    model.save("deepq_cartpole")
-    model.save_replay_buffer('replayBufferDQN')
-    # WHEN NORMALISING
+# model for pendulum starting from bottom
+with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
+    model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback, checkpoint])
     if NORMALISE:
+        env.training = False
+        # reward normalization is not needed at test time
+        env.norm_reward = False
         env.save(logdir + 'envNorm.pkl')
     plot_results(logdir)
+obs = env.reset()
+for i in range(1000):
+    action, _states = model.predict(obs)
+    obs, rewards, dones, info = env.step(action)
+    env.render()
+    if dones:
+        env.reset()
+
+
+model.save("deepq_cartpole")
+model.save_replay_buffer('replayBufferDQN')
+# WHEN NORMALISING
+if NORMALISE:
+    env.save(logdir + 'envNorm.pkl')
+plot_results(logdir)

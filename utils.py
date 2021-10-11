@@ -16,6 +16,26 @@ from env_wrappers import load_results
 from bokeh.palettes import d3
 
 
+def rungekutta4(f, y0, t, args=()):
+    '''
+
+    :param f: 1st order derivative
+    :param y0: ini conditions
+    :param t: time interval ex: [0,Te]
+    :param args: arguments for f ex: fs,fv...
+    :return: y (including y0)
+    '''
+    n = len(t)
+    y = np.zeros((n, len(y0)))
+    y[0] = y0
+    for i in range(n - 1):
+        h = t[i+1] - t[i]
+        k1 = f(y[i], t[i], *args)
+        k2 = f(y[i] + k1 * h / 2., t[i] + h / 2., *args)
+        k3 = f(y[i] + k2 * h / 2., t[i] + h / 2., *args)
+        k4 = f(y[i] + k3 * h, t[i] + h, *args)
+        y[i+1] = y[i] + (h / 6.) * (k1 + 2*k2 + 2*k3 + k4)
+    return y
 
 def _save_config(self, saved_hyperparams: Dict[str, Any]) -> None:
     # Save hyperparams
@@ -35,7 +55,6 @@ def evaluate_policy_episodes(
         n_eval_episodes:int=1,
         episode_steps=3000):
     '''
-
     :param env:
     :param model:
     :param n_eval_episodes:
@@ -52,8 +71,8 @@ def evaluate_policy_episodes(
             obs,reward,done,_=env.step(action)
             episodeRewArr[i,episodeLength]=reward
             episodeLength+=1
-        lengthArr[i]=episodeLength
-    return episodeRewArr,lengthArr
+        lengthArr[i] = episodeLength
+    return episodeRewArr, lengthArr
 
 def read_hyperparameters(name, path="parameters.yml",additional_params=None):
     with open(path, "r") as f:
