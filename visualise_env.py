@@ -16,7 +16,7 @@ Te = 5e-2
 N = 1
 # env = gym.make('CartPoleImageC-v0')
 # env = CartPoleRK4(discreteActions=False, n=100)#Te=Te,n=N,integrator='semi-euler',resetMode='experimental')
-env = CartPoleRK4(f_c=-12, discreteActions=False)
+env = CartPoleRK4(f_c=-11, discreteActions=False)
 # env = CartPoleRK4(integrator='ode',discreteActions=False)
 actArr=[0.0]
 timeArr=[0.0]

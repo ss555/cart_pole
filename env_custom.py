@@ -996,7 +996,8 @@ class CartPoleRK4(gym.Env):
                 sintheta = np.sin(theta)
         elif self.kinematics_integrator == 'rk4':
             # [x, x_dot, theta, theta_dot] = self.rk4(self.pendulum_dynamics, y0=[x, x_dot, math.atan2(sintheta, costheta), theta_dot], t=np.linspace(0,0.05,50), args=(action, self.fa, self.fb, self.fc))[-1, :]
-            [x, x_dot, theta, theta_dot] = odeint(self.pendulum_dynamics, y0=[x, x_dot, math.atan2(sintheta, costheta), theta_dot], t=np.linspace(0,0.05,5), args=(action, self.fa, self.fb, self.fc))[-1, :]
+            [x, x_dot, theta, theta_dot] = odeint(self.pendulum_dynamics, y0=[x, x_dot, math.atan2(sintheta, costheta), theta_dot], t=[0, 0.05], args=(action, self.fa, self.fb, self.fc))[-1, :]
+            # [x, x_dot, theta, theta_dot] = odeint(self.pendulum_dynamics, y0=[x, x_dot, math.atan2(sintheta, costheta), theta_dot], t=np.linspace(0,0.05,5), args=(action, self.fa, self.fb, self.fc))[-1, :]
 
         # adding process noise
         if self.Kp != 0:

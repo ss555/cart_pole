@@ -28,6 +28,10 @@ PLOT_EVAL_REWARD = True
 TENSION_PLOT = True
 TENSION_RANGE = np.array([2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12])
 SCALE = 1.2
+FONT_SIZE_LABEL = 12
+FONT_SIZE_AXIS = 10
+
+
 f_aAr = 20.75180095541654,  # -21.30359185798466,
 f_bAr = 1.059719258572224,  # 1.1088617953891196,
 f_cAr = 1.166390864012042 * np.array([0, 0.1, 1, 10]),  # -0.902272006611719,
@@ -38,6 +42,9 @@ legsStatic = np.array([np.round(f_cc,4) for f_cc in f_cAr]).T# 0.0,#
 # kPendViscous = round(float(0.07035332644615992),4)
 # f_c=round(float(1.166390864012042),4)
 legsVisc = [round(kPendViscous,4) for kPendViscous in kPendViscousAr]
+
+
+
 #plot params
 plt.rcParams['font.family'] = "serif"
 plt.rcParams['font.serif'] = 'Georgia'
@@ -91,10 +98,13 @@ def save_show_fig(xArr,yArr,legs=None,title=None,saveName=None, ax=None, fig=Non
             ax.plot(xArr[i], yArr[i] / EP_STEPS, color=colorPalette[i],linewidth=3.0)
         else:
             ax.plot(xArr[i], yArr[i] / EP_STEPS, '--', color=colorPalette[i])
+    plt.rcParams['font.size'] = FONT_SIZE_LABEL
     if title is not None:
         ax.set_title(title)
     ax.set_xlabel('timesteps',)
     ax.set_ylabel('Rewards')
+    plt.rcParams['font.size'] = FONT_SIZE_AXIS
+
     if legs is not None:
         ax.legend(legs, loc='best',bbox_to_anchor=(1.01, 1))
     if fig is not None:
@@ -144,8 +154,12 @@ def plot_from_npz(filenames, xlabel, ylabel, legends=None, title=None, plot_std=
             ax.plot(timesteps, meanRew, 'o--', fillstyle='none', color=colorPalette[i])
         if plot_std:
             plt.fill_between(timesteps, meanRew + stdRew, meanRew - stdRew, alpha=0.2)
+
+    plt.rcParams['font.size'] = FONT_SIZE_LABEL
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
+    plt.rcParams['font.size'] = FONT_SIZE_AXIS
+
     ax.grid()
     if title is not None:
         ax.set_title(title)
@@ -305,8 +319,10 @@ if __name__=='__main__':
         if fillBetween:
             plt.fill_between(timesteps,meanRew + stdRew, meanRew - stdRew, facecolor='red', alpha=0.2)
             plt.fill_between(timesteps,meanRew2 + stdRew2, meanRew2 - stdRew2, facecolor='blue', alpha=0.2)
+        plt.rcParams['font.size'] = FONT_SIZE_LABEL
         plt.xlabel('timesteps')
         plt.ylabel('Rewards')
+        plt.rcParams['font.size'] = FONT_SIZE_AXIS
         # plt.title('Effect of initialisation on the "greedy policy" reward from experimental state')#random
         plt.legend(['random','experimental'])
         plt.savefig('./EJPH/plots/exp-vs-rand-greedy.pdf')
@@ -419,11 +435,15 @@ if __name__=='__main__':
             ax1.legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
             ax2.legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
             # a[1][0].legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
+
+            plt.rcParams['font.size'] = FONT_SIZE_LABEL
             ax1.set_xlabel('timesteps')
             ax2.set_xlabel('timesteps')
             a[1][0].set_xlabel('timesteps')
             ax2.set_ylabel('Rewards')
             a[1][0].set_ylabel('Rewards')
+            plt.rcParams['font.size'] = FONT_SIZE_AXIS
+
             a[1][0].grid()
             # a[1][0].set_title('Episode reward per step')
             # plt.title('Effect of the applied tension on the "greedy policy" reward')
@@ -435,9 +455,11 @@ if __name__=='__main__':
             tensionMax = np.array(TENSION_RANGE)
             plt.plot(tensionMax, scoreArr, 'ro-')
             plt.fill_between(tensionMax, scoreArr + stdArr, scoreArr - stdArr, facecolor='red', alpha=0.5)
+            plt.rcParams['font.size'] = FONT_SIZE_LABEL
             plt.xlabel('Tension (V)')
             plt.ylabel('Rewards')
             plt.title('Effect of the applied tension on the "greedy policy" reward')
+            plt.rcParams['font.size'] = FONT_SIZE_AXIS
             plt.savefig('./EJPH/plots/episode_rew_10000eps')
             plt.show()
             np.savez(
@@ -463,7 +485,6 @@ if __name__=='__main__':
 
 
         #BOXPLOT
-
         Te = 0.05
         EP_STEPS = 800
         scoreArr = np.zeros_like(TENSION_RANGE)
@@ -522,8 +543,10 @@ if __name__=='__main__':
         a[1][1].boxplot(episodeArr, positions=TENSION_RANGE, patch_artist=True)
         a[1][1].grid()
         # sns.boxplot(x=TENSION_RANGE,data=episodeArr)
+        plt.rcParams['font.size'] = FONT_SIZE_LABEL
         a[1][1].set_ylabel('mean reward per step')
         a[1][1].set_xlabel('Applied DC motor Tension (V)')
+        plt.rcParams['font.size'] = FONT_SIZE_AXIS
         INSET = False
         if INSET:
             axins = inset_axes(a[1][1], width="60%", height="80%", loc='lower right', borderpad=2)  # ,bbox_to_anchor=())
