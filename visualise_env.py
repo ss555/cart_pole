@@ -28,7 +28,7 @@ ACTION = [1.0]#[1.0]#right
 DISCRETE=type(env.action_space)==gym.spaces.discrete.Discrete
 
 if mode=='startFromPi':
-    obsArr = [env.reset(costheta=0, sintheta=1,xIni=0)]
+    obsArr = [env.reset(costheta=0, sintheta=1, xIni=0)]
 elif mode=='iniSpeed':
     obsArr = [env.reset(iniSpeed=0.5)]
 else:

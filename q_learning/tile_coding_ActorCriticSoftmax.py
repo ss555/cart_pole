@@ -8,7 +8,7 @@ from env_custom import CartPoleRK4
 # import plot_script
 from cartpoleTileCoder import CartpoleTileCoder
 import pandas as pd
-
+import os
 
 
 test_obs = [[0,0,1,0,0]]
@@ -289,28 +289,35 @@ def train(env,test_agent, plotReward=False):
     print(f'end{np.mean(rewArr[-10:])}')
     return rewArr
 data_list=[]
-for num_tiles in num_tiles_arr:
-    for num_tilings in num_tilings_arr:
-        for ac_step in actor_step_size_arr:
-            for cr_step in critic_step_size_arr:
-                for re_step in reward_step_size_arr:
-                    agent_info = {
-                        "num_tilings": num_tiles,
-                        "num_tiles": num_tilings,
-                        "actor_step_size": ac_step,
-                        "critic_step_size": cr_step,
-                        "avg_reward_step_size": re_step,
-                        "num_actions": 3,
-                        "iht_size": 4096 * 128
-                    }
-                    test_agent.agent_init(agent_info)
-                    try:
-                        reArr = train(env,test_agent)
-                    except:
-                        reArr = [np.NaN]
+try:
+    for num_tiles in num_tiles_arr:
+        for num_tilings in num_tilings_arr:
+            for ac_step in actor_step_size_arr:
+                for cr_step in critic_step_size_arr:
+                    for re_step in reward_step_size_arr:
+                        agent_info = {
+                            "num_tilings": num_tiles,
+                            "num_tiles": num_tilings,
+                            "actor_step_size": ac_step,
+                            "critic_step_size": cr_step,
+                            "avg_reward_step_size": re_step,
+                            "num_actions": 3,
+                            "iht_size": 4096 * 128
+                        }
+                        test_agent.agent_init(agent_info)
+                        try:
+                            reArr = train(env,test_agent)
+                        except:
+                            reArr = [np.NaN]
 
-                    data_list.append({'num_tilings': num_tiles, 'num_tiles': num_tilings,
-                                      'actor_step_size': ac_step, 'critic_step_size': cr_step,
-                                      'avg_reward_step_size': re_step, 'reward': reArr})
-df = pd.DataFrame(data_list)
-df.to_csv('paramsSweep.csv')
+                        data_list.append({'num_tilings': num_tiles, 'num_tiles': num_tilings,
+                                          'actor_step_size': ac_step, 'critic_step_size': cr_step,
+                                 'avg_reward_step_size': re_step, 'reward': reArr})
+except Exception as e:
+    print(e)
+finally:
+    df = pd.DataFrame(data_list)
+    log_path = './q_learning/df/'
+
+    os.makedirs(log_path,exist_ok=True)
+    df.to_csv(log_path+'paramsSweep.csv')
