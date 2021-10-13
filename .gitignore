@@ -7,9 +7,5 @@ todo/
 /sac_cartpole_tensorboard
 cart_pole
 *.zip
-*.npz
-*.csv
 *.png
-!./weights/*/*.csv
-!./weights/*/*.npz
 !./weights/*/*.zip
