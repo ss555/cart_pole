@@ -2,6 +2,7 @@ import sys
 import os
 import numpy as np
 import time
+import subprocess
 sys.path.append(os.path.abspath('./'))
 sys.path.append(os.path.abspath('./..'))
 from utils import linear_schedule, plot
@@ -63,21 +64,8 @@ TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]#
 DYNAMIC_FRICTION_PENDULUM = 0.07035332644615992
 DYNAMIC_FRICTION_ARR = np.array([0, 0.1, 1, 10]) * DYNAMIC_FRICTION_PENDULUM
 
-NOISE_TABLE = np.array([5, 10]) * np.pi / 180
-# NOISE_TABLE = np.array([0, 0.01, 0.05, 0.1, 0.15, 0.5, 1, 5, 10]) * np.pi / 180
-
-#plot params
-plt.rcParams['font.family'] = "serif"
-plt.rcParams['font.serif'] = 'Georgia'
-plt.rcParams['font.size'] = 12
-plt.rcParams['mathtext.fontset'] = 'stix'
-plt.rcParams["figure.dpi"] = 100
-
-colorPalette = d3['Category20'][8]
-
-
-# sns.set_context("paper")
-# sns.set_style("whitegrid")
+# NOISE_TABLE = np.array([5, 10]) * np.pi / 180
+NOISE_TABLE = np.array([0, 0.01, 0.05, 0.1, 0.15, 0.5, 1, 5, 10]) * np.pi / 180
 
 
 # DONE graphique la fonction de recompense qui depends de la tension a 40000 pas

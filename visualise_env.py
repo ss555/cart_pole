@@ -24,7 +24,7 @@ env.reset(xIni=0)
 start_time=time.time()
 #mode of initialisation
 mode='startFromPi' #'iniSpeed' 'oscillate'
-ACTION = [1.0]#[1.0]#right
+ACTION = [0.0]#[1.0]#right
 DISCRETE=type(env.action_space)==gym.spaces.discrete.Discrete
 
 if mode=='startFromPi':

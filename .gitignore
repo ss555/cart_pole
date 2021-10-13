@@ -10,3 +10,6 @@ cart_pole
 *.npz
 *.csv
 *.png
+!./weights/*/*.csv
+!./weights/*/*.npz
+!./weights/*/*.zip

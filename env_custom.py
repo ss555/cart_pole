@@ -648,10 +648,10 @@ class CartPoleRK4(gym.Env):
                  Mcart=0.5,
                  Mpole=0.075,
                  length=0.411488843930847,
-                 f_a=-20.75180095541654,  # -21.30359185798466,
+                 f_a=20.75180095541654,  # -21.30359185798466,
                  f_b=1.059719258572224,  # 1.1088617953891196,
-                 f_c=-1.166390864012042,  # -0.902272006611719,
-                 f_d=-0.09727843708918459,  # 0.0393516077401241, #0.0,#
+                 f_c=1.166390864012042,  # -0.902272006611719,
+                 f_d=0.09727843708918459,  # 0.0393516077401241, #0.0,#
                  wAngular=4.881653071189049,
                  kPendViscous=0.07035332644615992,  # 0.0,#
                  integrator="rk4",
@@ -757,9 +757,9 @@ class CartPoleRK4(gym.Env):
     def _calculate_force(self, action, cart_speed=None):  # TODO fc a 0
         try:
             if action[0] == 0:
-                f = self.masscart * (self.fa * cart_speed + self.fc * np.sign(cart_speed))
+                f = self.masscart * (-self.fa * cart_speed - self.fc * np.sign(cart_speed))
             else:
-                f = self.masscart * (self.fa * cart_speed + self.fb * (self.tensionMax * action[0]) + self.fc * np.sign(cart_speed) + self.fd)
+                f = self.masscart * (-self.fa * cart_speed + self.fb * (self.tensionMax * action[0]) - self.fc * np.sign(cart_speed) - self.fd)
         except:
             print('error on force')
         return f
@@ -779,25 +779,8 @@ class CartPoleRK4(gym.Env):
             pass
         self.wAngularUsed = np.random.normal(self.wAngularIni, self.wAngularStd, 1)[0]
         self.masspole = np.random.normal(self.masspoleIni, self.masspoleStd, 1)[0]
-        if self.kinematics_integrator == 'semi-euler':
-            for i in range(self.n):
-                force = self._calculate_force(action, x_dot)
-                if self.forceStd != 0:
-                    force += np.random.normal(0, scale=self.forceStd * abs(force) / 100)
-                xacc = (force + self.masspole * theta_dot ** 2 * self.length * sintheta + self.masspole * self.g * sintheta * costheta) / (
-                                   self.masscart + self.masspole * sintheta ** 2)
-                thetaacc = -self.wAngularUsed ** 2 * sintheta - xacc / self.length * costheta - theta_dot * self.kPendViscous
-                x_dot += self.tau / self.n * xacc
-                x += x_dot * self.tau / self.n
-                theta_dot += thetaacc * self.tau / self.n
-                theta = math.atan2(sintheta, costheta)
-                theta += theta_dot * self.tau / self.n
-                costheta = np.cos(theta)
-                sintheta = np.sin(theta)
-        elif self.kinematics_integrator == 'rk4':
-            # [x, x_dot, theta, theta_dot] = self.rk4(self.pendulum_dynamics, y0=[x, x_dot, math.atan2(sintheta, costheta), theta_dot], t=np.linspace(0,0.05,50), args=(action, self.fa, self.fb, self.fc))[-1, :]
-            [x, x_dot, theta, theta_dot] = odeint(self.pendulum_dynamics, y0=[x, x_dot, math.atan2(sintheta, costheta), theta_dot], t=[0, 0.05], args=(action, self.fa, self.fb, self.fc))[-1, :]
-            # [x, x_dot, theta, theta_dot] = odeint(self.pendulum_dynamics, y0=[x, x_dot, math.atan2(sintheta, costheta), theta_dot], t=np.linspace(0,0.05,5), args=(action, self.fa, self.fb, self.fc))[-1, :]
+
+        [x, x_dot, theta, theta_dot] = odeint(self.pendulum_dynamics, y0=[x, x_dot, math.atan2(sintheta, costheta), theta_dot], t=[0, 0.05], args=(action, self.fa, self.fb, self.fc))[-1, :]
 
         # adding process noise
         if self.Kp != 0:
@@ -830,14 +813,14 @@ class CartPoleRK4(gym.Env):
 
     def pendulum_dynamics(self, state, t, action, fa, fb, fc):
         [x, x_dot, theta, theta_dot] = state
-        # dqdt = np.zeros_like(state)
+
         costheta, sintheta = [np.cos(theta), np.sin(theta)]
         action = np.array(action).reshape(1)[0]
-        # fdry = self.fc * np.sign(x_dot)
-        fdry = self.fc * np.arctan(1000*x_dot)
-        force = self.masscart * (self.fa * x_dot + fdry)
+        # fdry = -self.fc * np.sign(x_dot)
+        fdry = -self.fc * np.arctan(1000*x_dot)
+        force = self.masscart * (-self.fa * x_dot + fdry)
         if action != 0:
-            force += self.masscart * ( self.fd + self.fb * (self.tensionMax * action) )
+            force += self.masscart * (-self.fd + self.fb * (self.tensionMax * action))
         # force = 0.0
         xacc = (force + self.masspole * theta_dot ** 2 * self.length * sintheta + self.masspole * self.g * sintheta * costheta) / (
                        self.masscart + self.masspole * sintheta ** 2)

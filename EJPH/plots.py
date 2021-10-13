@@ -14,7 +14,7 @@ import glob
 import seaborn as sns
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3 import DQN, SAC
-from env_custom import CartPoleButter
+from env_custom import CartPoleRK4
 from custom_callbacks import EvalCustomCallback, EvalThetaDotMetric, moving_average
 from matplotlib import rcParams, pyplot as plt
 from custom_callbacks import plot_results
@@ -22,7 +22,7 @@ import plotly.express as px
 from bokeh.palettes import d3
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset, inset_axes
 from env_wrappers import load_results, ts2xy, load_data_from_csv
-
+import subprocess
 PLOT_TRAINING_REWARD = True
 PLOT_EVAL_REWARD = True
 TENSION_PLOT = True
@@ -57,12 +57,12 @@ coords = [0.05, 0.95]
 fontSize = 24
 
 
-NUM_TIMESTEPS = 150000
+NUM_Timesteps = 150000
 EVAL_NUM_STEPS = 5000
-timesteps = np.linspace(EVAL_NUM_STEPS, NUM_TIMESTEPS, int(NUM_TIMESTEPS / EVAL_NUM_STEPS))
+Timesteps = np.linspace(EVAL_NUM_STEPS, NUM_Timesteps, int(NUM_Timesteps / EVAL_NUM_STEPS))
 
 xl = 'Timesteps'
-yl = 'Rewards'
+yl = 'Reward/step'
 
 logdir='./plots'
 STEPS_TO_TRAIN=100000
@@ -98,12 +98,11 @@ def save_show_fig(xArr,yArr,legs=None,title=None,saveName=None, ax=None, fig=Non
             ax.plot(xArr[i], yArr[i] / EP_STEPS, color=colorPalette[i],linewidth=3.0)
         else:
             ax.plot(xArr[i], yArr[i] / EP_STEPS, '--', color=colorPalette[i])
-    plt.rcParams['font.size'] = FONT_SIZE_LABEL
     if title is not None:
-        ax.set_title(title)
-    ax.set_xlabel('timesteps',)
-    ax.set_ylabel('Rewards')
-    plt.rcParams['font.size'] = FONT_SIZE_AXIS
+        ax.set_title(title, fontSize=FONT_SIZE_LABEL)
+
+    ax.set_xlabel('Timesteps', fontSize=FONT_SIZE_LABEL)
+    ax.set_ylabel('Reward/step', fontSize=FONT_SIZE_LABEL)
 
     if legs is not None:
         ax.legend(legs, loc='best',bbox_to_anchor=(1.01, 1))
@@ -148,21 +147,21 @@ def plot_from_npz(filenames, xlabel, ylabel, legends=None, title=None, plot_std=
         if ax is None:
             fig, ax = plt.subplots(figsize=(SCALE*6,SCALE*3.7125))
         if i == true_value_index:
-            # ax.plot(timesteps, meanRew, 'o-', color=colorPalette[i])
-            ax.plot(timesteps, meanRew, 'o--', fillstyle='none', color=colorPalette[i])
+            # ax.plot(Timesteps, meanRew, 'o-', color=colorPalette[i])
+            ax.plot(Timesteps, meanRew, 'o--', fillstyle='none', color=colorPalette[i])
         else:
-            ax.plot(timesteps, meanRew, 'o--', fillstyle='none', color=colorPalette[i])
+            ax.plot(Timesteps, meanRew, 'o--', fillstyle='none', color=colorPalette[i])
         if plot_std:
-            plt.fill_between(timesteps, meanRew + stdRew, meanRew - stdRew, alpha=0.2)
+            plt.fill_between(Timesteps, meanRew + stdRew, meanRew - stdRew, alpha=0.2)
 
-    plt.rcParams['font.size'] = FONT_SIZE_LABEL
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    plt.rcParams['font.size'] = FONT_SIZE_AXIS
+
+
+    ax.set_xlabel(xlabel, fontSize=FONT_SIZE_LABEL)
+    ax.set_ylabel(ylabel, fontSize=FONT_SIZE_LABEL)
 
     ax.grid()
     if title is not None:
-        ax.set_title(title)
+        ax.set_title(title, fontSize=FONT_SIZE_LABEL)
     if legends is not None:
         ax.legend(legends,bbox_to_anchor=(1.01, 1))
     if fig is not None:
@@ -314,14 +313,14 @@ if __name__=='__main__':
         sns.set_context("paper")
         sns.set_style("whitegrid")
         fillBetween=False
-        plt.plot(timesteps, meanRew, 'ro-')
-        plt.plot(timesteps, meanRew2, 'bo--')
+        plt.plot(Timesteps, meanRew, 'ro-')
+        plt.plot(Timesteps, meanRew2, 'bo--')
         if fillBetween:
-            plt.fill_between(timesteps,meanRew + stdRew, meanRew - stdRew, facecolor='red', alpha=0.2)
-            plt.fill_between(timesteps,meanRew2 + stdRew2, meanRew2 - stdRew2, facecolor='blue', alpha=0.2)
+            plt.fill_between(Timesteps,meanRew + stdRew, meanRew - stdRew, facecolor='red', alpha=0.2)
+            plt.fill_between(Timesteps,meanRew2 + stdRew2, meanRew2 - stdRew2, facecolor='blue', alpha=0.2)
         plt.rcParams['font.size'] = FONT_SIZE_LABEL
-        plt.xlabel('timesteps')
-        plt.ylabel('Rewards')
+        plt.xlabel('Timesteps')
+        plt.ylabel('Reward/step')
         plt.rcParams['font.size'] = FONT_SIZE_AXIS
         # plt.title('Effect of initialisation on the "greedy policy" reward from experimental state')#random
         plt.legend(['random','experimental'])
@@ -386,8 +385,8 @@ if __name__=='__main__':
             count_tours = 0
             done = False
             if PLOT_EPISODE_REWARD:
-                # env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension, resetMode='experimental', sparseReward=False)
-                env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')#CartPoleButter(tensionMax=tension,resetMode='experimental')
+                # env = CartPoleRK4(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension, resetMode='experimental', sparseReward=False)
+                env = CartPoleRK4(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')#CartPoleRK4(tensionMax=tension,resetMode='experimental')
                 model = DQN.load(f'./EJPH/tension-perf/tension_sim_{tension}_V__best.zip', env=env)
                 theta = 0
                 cosThetaIni = np.cos(theta)
@@ -436,17 +435,13 @@ if __name__=='__main__':
             ax2.legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
             # a[1][0].legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
 
-            plt.rcParams['font.size'] = FONT_SIZE_LABEL
-            ax1.set_xlabel('timesteps')
-            ax2.set_xlabel('timesteps')
-            a[1][0].set_xlabel('timesteps')
-            ax2.set_ylabel('Rewards')
-            a[1][0].set_ylabel('Rewards')
-            plt.rcParams['font.size'] = FONT_SIZE_AXIS
+            ax1.set_xlabel('Timesteps', fontSize=FONT_SIZE_LABEL)
+            ax2.set_xlabel('Timesteps', fontSize=FONT_SIZE_LABEL)
+            a[1][0].set_xlabel('Timesteps', fontSize=FONT_SIZE_LABEL)
+            ax2.set_ylabel('Reward/step', fontSize=FONT_SIZE_LABEL)
+            a[1][0].set_ylabel('Reward/step', fontSize=FONT_SIZE_LABEL)
 
             a[1][0].grid()
-            # a[1][0].set_title('Episode reward per step')
-            # plt.title('Effect of the applied tension on the "greedy policy" reward')
             figm2.savefig('./EJPH/plots/episode_rew_tension.pdf')
             figm2.show()
             figm1.savefig(f'./EJPH/plots/episode_theta{theta/np.pi*180}.pdf')
@@ -457,8 +452,8 @@ if __name__=='__main__':
             plt.fill_between(tensionMax, scoreArr + stdArr, scoreArr - stdArr, facecolor='red', alpha=0.5)
             plt.rcParams['font.size'] = FONT_SIZE_LABEL
             plt.xlabel('Tension (V)')
-            plt.ylabel('Rewards')
-            plt.title('Effect of the applied tension on the "greedy policy" reward')
+            plt.ylabel('Reward/step')
+            plt.title('Effect of the applied tension on the "greedy policy" reward', fontSize=FONT_SIZE_LABEL)
             plt.rcParams['font.size'] = FONT_SIZE_AXIS
             plt.show()
             np.savez(
@@ -489,10 +484,10 @@ if __name__=='__main__':
         scoreArr = np.zeros_like(TENSION_RANGE)
         stdArr = np.zeros_like(TENSION_RANGE)
         episodeArr = []
-        GENERATE_BOXPLOT_DATA=False#False when we load from pickle
+        GENERATE_BOXPLOT_DATA=False #False when we load from pickle
         if GENERATE_BOXPLOT_DATA:
             for i, tension in enumerate(TENSION_RANGE):
-                env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension,
+                env = CartPoleRK4(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension,
                                      resetMode='experimental', sparseReward=False)
                 model = DQN.load(f'./EJPH/tension-perf/tension_sim_{tension}_V__best', env=env)
                 # episode_rewards, episode_lengths = evaluate_policy_episodes(env=env,model=model,n_eval_episodes=100,episode_steps=EP_STEPS)
@@ -541,11 +536,9 @@ if __name__=='__main__':
                 episodeArr=pickle.load(f)
         a[1][1].boxplot(episodeArr, positions=TENSION_RANGE, patch_artist=True)
         a[1][1].grid()
-        # sns.boxplot(x=TENSION_RANGE,data=episodeArr)
-        plt.rcParams['font.size'] = FONT_SIZE_LABEL
-        a[1][1].set_ylabel('mean reward per step')
-        a[1][1].set_xlabel('Applied DC motor Tension (V)')
-        plt.rcParams['font.size'] = FONT_SIZE_AXIS
+
+        a[1][1].set_ylabel('Reward/step', fontSize=FONT_SIZE_LABEL)
+        a[1][1].set_xlabel('Applied DC motor Tension (V)', fontSize=FONT_SIZE_LABEL)
         INSET = False
         if INSET:
             axins = inset_axes(a[1][1], width="60%", height="80%", loc='lower right', borderpad=2)  # ,bbox_to_anchor=())
@@ -576,7 +569,7 @@ if __name__=='__main__':
             '''
             :param filename: name of .npz file
             :return: timeArray , epsiodeReward corresponding to inference
-            NOTE: the wights are saved after nth episodes, that's why we also need to open monitor file to see the correspondance between episodes and timesteps
+            NOTE: the wights are saved after nth episodes, that's why we also need to open monitor file to see the correspondance between episodes and Timesteps
             '''
             dataInf = np.load(filename)
             dataInf.allow_pickle = True
@@ -587,17 +580,17 @@ if __name__=='__main__':
             obsArr = dataInf["modelsObsArr"]
             actArr = dataInf["modelActArr"]
             nameArr = dataInf["filenames"]
-            timesteps = np.zeros(len(obsArr))
+            Timesteps = np.zeros(len(obsArr))
             epReward = np.zeros(len(obsArr))
             for i in range(0, len(obsArr)):
                 print()
                 obs = obsArr[i]
                 act = actArr[i]
                 epReward[i] = np.sum(rewsArr[i])
-                timesteps[i] = np.sum(data['l'][:(i * 10)])
+                Timesteps[i] = np.sum(data['l'][:(i * 10)])
                 print(f'it {i} and {epReward[i]}')
 
-            return timesteps,epReward
+            return Timesteps,epReward
         def findInd(array,elem):
             for i, elArr in enumerate(array):
                 if elem==elArr:
@@ -605,11 +598,13 @@ if __name__=='__main__':
             return -1
         # experimental inference
         # adding inference
-        timesteps7, epRew7 = inferenceResCartpole('./EJPH/real-cartpole/dqn/inference_results.npz')
-        a[0][1].plot(timesteps7, epRew7/EP_STEPS,'o-', color=colorPalette[findInd(TENSION_RANGE,7.1)],linewidth=3.0)
-        # 2.4 V
-        timesteps3, epRew3 = inferenceResCartpole('./weights/dqn2.4V/inference_results.npz')
-        a[0][1].plot(timesteps3, epRew3/EP_STEPS,'o-', color=colorPalette[findInd(TENSION_RANGE,2.4)],linewidth=3.0)
+        EXPERIMENTAL_INFERENCE=False
+        if EXPERIMENTAL_INFERENCE:
+            Timesteps7, epRew7 = inferenceResCartpole('./EJPH/real-cartpole/dqn/inference_results.npz')
+            a[0][1].plot(Timesteps7, epRew7/EP_STEPS,'o-', color=colorPalette[findInd(TENSION_RANGE,7.1)],linewidth=3.0)
+            # 2.4 V
+            Timesteps3, epRew3 = inferenceResCartpole('./weights/dqn2.4V/inference_results.npz')
+            a[0][1].plot(Timesteps3, epRew3/EP_STEPS,'o-', color=colorPalette[findInd(TENSION_RANGE,2.4)],linewidth=3.0)
 
 
         figT.tight_layout()
@@ -620,7 +615,7 @@ if __name__=='__main__':
             tax.set_position([tbox.x0, tbox.y0-shrink*bbox.height, tbox.width, (1-shrink)*tbox.height])
             bax.set_position([bbox.x0, bbox.y0, bbox.width, (1-shrink)*bbox.height])
 
-        figT.legend(legsT, loc='upper center', bbox_to_anchor=(0.5, 1), title="Voltage", ncol=len(legsT))
+        figT.legend(legsT, loc='upper center', bbox_to_anchor=(0.5, 1), title="Applied Tension", ncol=len(legsT))
         #set labels inside
         # setlabel(a[0][0], '(a)')
         # setlabel(a[0][1], '(b)')
@@ -658,6 +653,8 @@ if diffSeed:
     filenames = [filenames[i] for i in idx]
     legs = [str(leg) + 'V' for leg in legs]
     plot_from_npz(filenames, xl, yl, legends=legs, saveName='./EJPH/plots/greedy_tension_seed.pdf')
+os.chdir('./EJPH/plots')
+subprocess.call(['sh', './crop.sh']) #call shell script for pdfcrop
 
 '''
 RAINBOW = False
@@ -671,7 +668,7 @@ if RAINBOW:
     scoreArr5 = np.zeros_like(TENSION_RANGE)
     p1, p2, p3, p4, p5 = 0.2, 0.4, 0.6, 0.8, 1
     for j, tension in enumerate(TENSION_RANGE):
-        env = CartPoleButter(Te=Te, N_STEPS=EP_LENGTH, discreteActions=True, tensionMax=tension,
+        env = CartPoleRK4(Te=Te, N_STEPS=EP_LENGTH, discreteActions=True, tensionMax=tension,
                              resetMode='experimental', sparseReward=False)
         model = DQN.load(f'./EJPH/tension-perf/tension_sim_{tension}_V__best', env=env)
         episode_rewards = 0
@@ -721,7 +718,7 @@ if RAINBOW:
     # plt.hlines(y=EP_LENGTH,xmin=min(TENSION_RANGE),xmax=max(TENSION_RANGE),linestyles='--')
     plt.grid()
     plt.xlabel('Tension (V)')
-    plt.ylabel('Rewards')
+    plt.ylabel('Reward/step')
     # plt.title('Effect of the applied tension on the "greedy policy" reward')
 
     # for p
