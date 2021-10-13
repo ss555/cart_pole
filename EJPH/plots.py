@@ -39,8 +39,6 @@ f_d = 0.09727843708918459,  # 0.0393516077401241, #0.0,#
 wAngular = 4.881653071189049,
 kPendViscousAr = 0.0706*np.array([0, 0.1, 1, 10]).T
 legsStatic = np.array([np.round(f_cc,4) for f_cc in f_cAr]).T# 0.0,#
-# kPendViscous = round(float(0.07035332644615992),4)
-# f_c=round(float(1.166390864012042),4)
 legsVisc = [round(kPendViscous,4) for kPendViscous in kPendViscousAr]
 
 

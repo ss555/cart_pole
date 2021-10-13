@@ -21,24 +21,16 @@ from bokeh.palettes import d3
 STEPS_TO_TRAIN = 150000
 EP_STEPS = 800
 Te = 0.05
-MANUAL_SEED = 0
+MANUAL_SEED = 1
 # simulation results
-'''
-f_a=-20.75180095541654,  # -21.30359185798466,
-f_b=1.059719258572224,  # 1.1088617953891196,
-f_c=-1.166390864012042,  # -0.902272006611719,
-f_d=-0.09727843708918459,  # 0.0393516077401241, #0.0,#
-wAngular=4.881653071189049,
-kPendViscous=0.07035332644615992,  
-'''
 #Done episode reward for seed 0,5 + inference
-DYNAMIC_FRICTION_SIM = False  # True
-STATIC_FRICTION_SIM = False
+DYNAMIC_FRICTION_SIM = True  # True
+STATIC_FRICTION_SIM = True
 encNoiseVarSim = True
 ACTION_NOISE_SIM = True
 RESET_EFFECT = True  # True#False
-EVAL_TENSION_FINAL_PERF = False  # evaluate final PERFORMANCE of a cartpole for different voltages
-SEED_TRAIN = True
+EVAL_TENSION_FINAL_PERF = True  # evaluate final PERFORMANCE of a cartpole for different voltages
+SEED_TRAIN = False
 # other
 PLOT_FINAL_PERFORMANCE_STD = False  # False#
 qLearningVsDQN = False  # compare q-learn and dqn
@@ -54,12 +46,6 @@ STATIC_FRICTION_ARR = np.array([0, 0.1, 1, 10, 20]) * STATIC_FRICTION_CART
 # DONE temps d’apprentissage et note en fonction de l’amplitude du controle
 TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]#
 
-# f_a = -20.75180095541654,  # -21.30359185798466,
-# f_b = 1.059719258572224,  # 1.1088617953891196,
-# f_c = -1.166390864012042,  # -0.902272006611719,
-# f_d = -0.09727843708918459,  # 0.0393516077401241, #0.0,#
-# wAngular = 4.881653071189049,
-# kPendViscous = 0.07035332644615992,  # 0.0,#
 # DONE temps  d’apprentissage  et  note  en  fonction  du  coefficient  de frottement dynamique
 DYNAMIC_FRICTION_PENDULUM = 0.07035332644615992
 DYNAMIC_FRICTION_ARR = np.array([0, 0.1, 1, 10]) * DYNAMIC_FRICTION_PENDULUM
