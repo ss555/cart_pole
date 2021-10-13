@@ -1,0 +1,12 @@
+{
+    "ALPHA0": 1,
+    "GAMMA": 0.99,
+    "decay": 6666.666666666667,
+    "min_epsilon": 0.1,
+    "min_lr": 0.1,
+    "numEpisode": 100000,
+    "resetMode": "experimental",
+    "theta_dot_threshold": 6.283185307179586,
+    "nBins": "[10, 10, 10, 10, 10]",
+    "reward": "without limite theta dot"
+}

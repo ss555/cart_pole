@@ -77,9 +77,10 @@ def initialize_Q(observationNum, actionNum, nBins):
     Q = pd.DataFrame(0.00000000, index=index, columns=columns)
     return Q
 
-def play_one_episode(bins, Q, EPS, ALPHA, observationNum):
+def play_one_episode(bins, Q, EPS, ALPHA, observationNum, render=False):
     observation = env.reset()
-    # env.render()
+    if render:
+        env.render()
     done = False
     cnt = 0  # number of moves in an episode
     state = assignBins(observation, bins, observationNum)
@@ -87,6 +88,7 @@ def play_one_episode(bins, Q, EPS, ALPHA, observationNum):
     totalReward = 0
     act = choose_action(Q, state, EPS)
     # print('initial action', act)
+    dList = [{'timestep':0, 'x':observation[0], 'x_dot':observation[1], 'costheta':observation[2], 'sintheta':observation[3], 'theta_dot':observation[4], 'action':0}]
 
     while not done:
         cnt += 1
@@ -106,7 +108,10 @@ def play_one_episode(bins, Q, EPS, ALPHA, observationNum):
         # print('Qmax', Q.max().max())
         # print('Qmin', Q.min().min())
         # env.render()
-    return totalReward, cnt, state, act, Q
+        if render:
+            dList.append({'timestep':cnt, 'x':observationNew[0], 'x_dot':observationNew[1], 'costheta':observationNew[2], 'sintheta':observationNew[3], 'theta_dot':observationNew[4], 'action':actionNew})
+            env.render()
+    return totalReward, cnt, state, act, Q, dList
 
 def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon, min_lr):
 
@@ -122,9 +127,15 @@ def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon
         ALPHA = 0.1
         episodeReward, episodeLength, state, act, Q = play_one_episode(bins, Q, EPS, ALPHA, observationNum)
 
-        if n % 1000 == 0:
+        if n % 10000 == 0:
             # print(n, '%.4f' % EPS, episodeReward)
+            episodeReward, episodeLength, state, act, Q, dList = play_one_episode(bins, Q, EPS, ALPHA, observationNum, render=True)
+            df = pd.DataFrame.from_dict(dList)
+            df.to_csv(str(n)+'_ep.csv')
             print('{}, \t {:.4f}, \t {}, \t {}, \t {}'.format(n, EPS, episodeReward, state, episodeLength))
+        else:
+            episodeReward, episodeLength, state, act, Q, dList = play_one_episode(bins, Q, EPS, ALPHA, observationNum, render=False)
+
             # print('Qmax', Q.max().max())
         if n % 50000 ==0:
             Q.T.to_csv('Q_'+str(n)+'.csv')
@@ -166,13 +177,13 @@ if __name__ == '__main__':
 
 
 
-    # import time
-    # start_time = time.time()
-    # now = datetime.now()
-    # dt_string = now.strftime("%m%d_%H%M%S")
-    # logpath = '/home/robotfish/Project/cart_pole/q_learning/'+dt_string
-    # os.makedirs(logpath, exist_ok=True)
-    # os.chdir(logpath)
+    import time
+    start_time = time.time()
+    now = datetime.now()
+    dt_string = now.strftime("%m%d_%H%M%S")
+    logpath = '/Users/lfu/Documents/IBRID/0_Script/cart_pole/q_learning/results/'+dt_string
+    os.makedirs(logpath, exist_ok=True)
+    os.chdir(logpath)
     with open('0_INFO.json', 'w') as file:
         json.dump(INFO, file, indent=4)
 
