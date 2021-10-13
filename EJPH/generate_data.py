@@ -31,14 +31,13 @@ wAngular=4.881653071189049,
 kPendViscous=0.07035332644615992,  
 '''
 #Done episode reward for seed 0,5 + inference
-
 DYNAMIC_FRICTION_SIM = False  # True
 STATIC_FRICTION_SIM = False
-encNoiseVarSim = False
-ACTION_NOISE_SIM = False
-RESET_EFFECT = False  # True#False
-EVAL_TENSION_FINAL_PERF = True  # evaluate final PERFORMANCE of a cartpole for different voltages
-SEED_TRAIN = False
+encNoiseVarSim = True
+ACTION_NOISE_SIM = True
+RESET_EFFECT = True  # True#False
+EVAL_TENSION_FINAL_PERF = False  # evaluate final PERFORMANCE of a cartpole for different voltages
+SEED_TRAIN = True
 # other
 PLOT_FINAL_PERFORMANCE_STD = False  # False#
 qLearningVsDQN = False  # compare q-learn and dqn
@@ -64,7 +63,8 @@ TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]#
 DYNAMIC_FRICTION_PENDULUM = 0.07035332644615992
 DYNAMIC_FRICTION_ARR = np.array([0, 0.1, 1, 10]) * DYNAMIC_FRICTION_PENDULUM
 
-NOISE_TABLE = np.array([0, 0.01, 0.05, 0.1, 0.15, 0.5, 1, 5, 10]) * np.pi / 180
+NOISE_TABLE = np.array([5, 10]) * np.pi / 180
+# NOISE_TABLE = np.array([0, 0.01, 0.05, 0.1, 0.15, 0.5, 1, 5, 10]) * np.pi / 180
 
 #plot params
 plt.rcParams['font.family'] = "serif"

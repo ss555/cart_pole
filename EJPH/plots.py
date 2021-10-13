@@ -460,7 +460,6 @@ if __name__=='__main__':
             plt.ylabel('Rewards')
             plt.title('Effect of the applied tension on the "greedy policy" reward')
             plt.rcParams['font.size'] = FONT_SIZE_AXIS
-            plt.savefig('./EJPH/plots/episode_rew_10000eps')
             plt.show()
             np.savez(
                 './EJPH/plots/tension-perf10000ep',
