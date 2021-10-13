@@ -754,16 +754,6 @@ class CartPoleRK4(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def _calculate_force(self, action, cart_speed=None):  # TODO fc a 0
-        try:
-            if action[0] == 0:
-                f = self.masscart * (-self.fa * cart_speed - self.fc * np.sign(cart_speed))
-            else:
-                f = self.masscart * (-self.fa * cart_speed + self.fb * (self.tensionMax * action[0]) - self.fc * np.sign(cart_speed) - self.fd)
-        except:
-            print('error on force')
-        return f
-
     def step(self, action):
         [x, x_dot, costheta, sintheta, theta_dot] = self.state
         if self.discreteActions:
@@ -813,32 +803,17 @@ class CartPoleRK4(gym.Env):
 
     def pendulum_dynamics(self, state, t, action, fa, fb, fc):
         [x, x_dot, theta, theta_dot] = state
-
         costheta, sintheta = [np.cos(theta), np.sin(theta)]
-        action = np.array(action).reshape(1)[0]
-        # fdry = -self.fc * np.sign(x_dot)
-        fdry = -self.fc * np.arctan(1000*x_dot)
+        action = np.array(action).reshape(1)[0]#make in standard format
+        fdry = -self.fc * np.tanh(1000*x_dot)
         force = self.masscart * (-self.fa * x_dot + fdry)
         if action != 0:
             force += self.masscart * (-self.fd + self.fb * (self.tensionMax * action))
-        # force = 0.0
+
         xacc = (force + self.masspole * theta_dot ** 2 * self.length * sintheta + self.masspole * self.g * sintheta * costheta) / (
                        self.masscart + self.masspole * sintheta ** 2)
         thetaacc = -self.wAngularUsed ** 2 * sintheta - xacc / self.length * costheta - theta_dot * self.kPendViscous
         return np.array([x_dot, xacc, theta_dot, thetaacc])
-
-    def rk4(self, f, y0, t, args=()):
-        n = len(t)
-        y = np.zeros((n, len(y0)))
-        y[0] = y0
-        for i in range(n - 1):
-            h = t[i + 1] - t[i]
-            k1 = f(y[i], t[i], *args)
-            k2 = f(y[i] + k1 * h / 2., t[i] + h / 2., *args)
-            k3 = f(y[i] + k2 * h / 2., t[i] + h / 2., *args)
-            k4 = f(y[i] + k3 * h, t[i] + h, *args)
-            y[i + 1] = y[i] + (h / 6.) * (k1 + 2 * k2 + 2 * k3 + k4)
-        return y
 
     def reset(self, costheta=None, sintheta=None, xIni=None, x_ini_speed=None, theta_ini_speed=None):
         self.episodeNum += 1

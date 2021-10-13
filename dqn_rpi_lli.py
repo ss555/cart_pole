@@ -7,6 +7,7 @@ If the WEIGHTS variable is not None, we try to load the selected weights to the 
 import sys
 import os
 import torch
+from distutils.dir_util import copy_tree
 sys.path.append(os.path.abspath('./..'))
 sys.path.append(os.path.abspath('./'))
 from custom_callbacks import plot_results
@@ -91,3 +92,5 @@ if __name__ == '__main__':
             model.save(logdir+f'pwm{PWM}/dqn_rpi.zip')
             model.save_replay_buffer(logdir+f'pwm{PWM}/dqn_rpi_buffer.pkl')
             plot_results(log_save)
+
+        copy_tree(logdir,'./../'+logdir)

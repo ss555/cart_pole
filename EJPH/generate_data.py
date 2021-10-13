@@ -18,6 +18,10 @@ from custom_callbacks import EvalCustomCallback, EvalThetaDotMetric, moving_aver
 from matplotlib import rcParams, pyplot as plt
 import plotly.express as px
 from bokeh.palettes import d3
+from distutils.dir_util import copy_tree
+
+
+#TODO use subprocess to parallelise sim
 STEPS_TO_TRAIN = 150000
 EP_STEPS = 800
 Te = 0.05
@@ -39,7 +43,7 @@ logdir = './EJPH/'
 hyperparams = read_hyperparameters('dqn_cartpole_50')
 
 # DONE temps d’apprentissage et note en fonction du coefficient de friction statique 4 valeurs du coefficient:Ksc,virt= 0,0.1∗Ksc,manip,Ksc,manip,10∗Ksc,manipDiscussion
-STATIC_FRICTION_CART = -1.166390864012042
+STATIC_FRICTION_CART = 1.166390864012042
 # STATIC_FRICTION_ARR = np.array([200]) * STATIC_FRICTION_CART #150 not working
 STATIC_FRICTION_ARR = np.array([0, 0.1, 1, 10, 20]) * STATIC_FRICTION_CART
 
@@ -260,3 +264,5 @@ if EVAL_TENSION_FINAL_PERF_seed:
             model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
         # scoreArr[i] = eval_callback.best_mean_reward # eval_callback.evaluations_results
     plot_results(saveFolder, paperMode=True)
+
+copy_tree('./EJPH','./../EJPH-backup')
