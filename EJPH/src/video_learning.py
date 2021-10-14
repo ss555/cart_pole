@@ -25,8 +25,6 @@ from pathlib import Path
 from gym.wrappers.monitoring.video_recorder import VideoRecorder
 from stable_baselines3.common.callbacks import CheckpointCallback
 
-# os.system("Xvfb :1 -screen 0 1024x768x24 &")
-# os.environ['DISPLAY'] = ':1'
 
 def play(eval_env_id, model, steps: int = 50, deterministic: bool =True, video_path:str='./logs/video/dqn.mp4'):
     num_episodes = 0

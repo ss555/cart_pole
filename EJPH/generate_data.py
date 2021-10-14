@@ -28,13 +28,13 @@ Te = 0.05
 MANUAL_SEED = 1
 # simulation results
 #Done episode reward for seed 0,5 + inference
-DYNAMIC_FRICTION_SIM = True  # True
-STATIC_FRICTION_SIM = True
-encNoiseVarSim = True
+DYNAMIC_FRICTION_SIM = False  # True
+STATIC_FRICTION_SIM = False
+encNoiseVarSim = False
 ACTION_NOISE_SIM = True
-RESET_EFFECT = True  # True#False
-EVAL_TENSION_FINAL_PERF = True  # evaluate final PERFORMANCE of a cartpole for different voltages
-SEED_TRAIN = True
+RESET_EFFECT = False  # True#False
+EVAL_TENSION_FINAL_PERF = False  # evaluate final PERFORMANCE of a cartpole for different voltages
+SEED_TRAIN = False
 # other
 PLOT_FINAL_PERFORMANCE_STD = False  # False#
 qLearningVsDQN = False  # compare q-learn and dqn
@@ -167,8 +167,8 @@ if ACTION_NOISE_SIM:#Action noise in % for standart deviation
     Path(savePath).mkdir(exist_ok=True)
     for forceStd in FORCE_STD_ARR:
         filename = savePath+f'/force_std%_{forceStd}_'
-        env0 = CartPoleRK4(Te=Te, N_STEPS=EP_STEPS, resetMode='experimental',sparseReward=False, forceStd=forceStd)
-        envEval = CartPoleRK4(Te=Te, N_STEPS=EP_STEPS, resetMode='experimental',sparseReward=False, forceStd=forceStd)
+        env0 = CartPoleRK4(Te=Te, integrator='rk4', N_STEPS=EP_STEPS, resetMode='experimental',sparseReward=False, forceStd=forceStd)
+        envEval = CartPoleRK4(Te=Te, integrator='rk4', N_STEPS=EP_STEPS, resetMode='experimental',sparseReward=False, forceStd=forceStd)
         env = Monitor(env0, filename=logdir + f'action-noise/actionStd%_{forceStd}_')
         eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000)
         model = DQN(env=env, **hyperparams, seed=MANUAL_SEED)

@@ -112,7 +112,11 @@ def moving_average(values, window):
     weights = np.repeat(1.0, window) / window
     return np.convolve(values, weights, 'valid')
 
-
+# def return_data_time(log_folder, window_size=30, title='Learning Curve',only_return_data=False, paperMode=False):
+#     x_varArr, y_varArr=plot_results(log_folder,window_size,only_return_data=True)
+#     y_varArr=[]
+#     t_Arr=[]
+#     return x_varArr, y_varArr, t_Arr#TO
 def plot_results(log_folder, window_size=30, title='Learning Curve',only_return_data=False, paperMode=False):
     """
     plot the results or returns data from log files
@@ -138,11 +142,6 @@ def plot_results(log_folder, window_size=30, title='Learning Curve',only_return_
                 sns.set_context("paper")
                 sns.set_style("whitegrid")
             else:
-                # plot params
-                # plt.rcParams['font.family'] = "serif"
-                # plt.rcParams['font.serif'] = 'Georgia'
-                # plt.rcParams['font.size'] = 10
-                # plt.rcParams['mathtext.fontset'] = 'stix'
                 plt.rcParams["figure.dpi"] = 100
 
         x_varArr.append(x_var)

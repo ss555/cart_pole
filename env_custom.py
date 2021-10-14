@@ -13,6 +13,7 @@ import torch
 from matplotlib import pyplot as plt
 from scipy.integrate import odeint
 from scipy import integrate
+from utils import rungekutta4
 
 def reward_fnCos(x, costheta, sintheta=0, theta_dot=0, sparse=False, Kx=5, x_threshold=0.5):
     if sparse:
@@ -654,7 +655,7 @@ class CartPoleRK4(gym.Env):
                  f_d=0.09727843708918459,  # 0.0393516077401241, #0.0,#
                  wAngular=4.881653071189049,
                  kPendViscous=0.07035332644615992,  # 0.0,#
-                 integrator="rk4",
+                 integrator="ode",
                  tensionMax=12,#7.0588235294117645,  # 150PWM
                  FILTER=False,
                  n=1,  # 2,5
@@ -769,8 +770,12 @@ class CartPoleRK4(gym.Env):
             pass
         self.wAngularUsed = np.random.normal(self.wAngularIni, self.wAngularStd, 1)[0]
         self.masspole = np.random.normal(self.masspoleIni, self.masspoleStd, 1)[0]
-
-        [x, x_dot, theta, theta_dot] = odeint(self.pendulum_dynamics, y0=[x, x_dot, math.atan2(sintheta, costheta), theta_dot], t=[0, 0.05], args=(action, self.fa, self.fb, self.fc))[-1, :]
+        if self.kinematics_integrator=='ode':
+            [x, x_dot, theta, theta_dot] = odeint(self.pendulum_dynamics, y0=[x, x_dot, math.atan2(sintheta, costheta), theta_dot], t=[0, 0.05], args=(action, self.fa, self.fb, self.fc))[-1, :]
+        else:
+            [x, x_dot, theta, theta_dot] = rungekutta4(self.pendulum_dynamics,
+                                                  y0=[x, x_dot, math.atan2(sintheta, costheta), theta_dot], t=[0, 0.05],
+                                                  args=(action, self.fa, self.fb, self.fc))[-1, :]
 
         # adding process noise
         if self.Kp != 0:

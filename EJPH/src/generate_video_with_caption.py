@@ -5,34 +5,48 @@ from matplotlib.animation import FuncAnimation, FFMpegWriter
 from custom_callbacks import plot_results
 
 if __name__ == '__main__':
-
+  Te = 0.05
   # figure and axes containing the signals
   # fig,(pos_ax,ang_ax) = plt.subplots(2,1)
-  pos_fig,pos_ax = plt.subplots()
-  ang_fig,ang_ax = plt.subplots()
+
 
   #import from csv
-  xArrEx, yArrEx, tArr = plot_results('./EJPH/real-cartpole/dqn_7.1V', only_return_data=True)
+  xArrEx, yArrEx, _ = plot_results('./EJPH/real-cartpole/dqn_7.1V', only_return_data=True)
+  xArrEx = xArrEx[0]*Te # time(s) frame
+  yArrEx = yArrEx[0]/800 # reward per step
+
+  LENGTH = len(xArrEx)
   # define the signals
-  ref_time = data.get('simple').custom_data().get('reference_signal').get('time')
-  ref_position = data.get('simple').custom_data().get('reference_signal').get('position')
-  time = data.get('simple').time(time_shift=True)
-  # positions = { test : data.get(test).state(0) for test in tests }
+  fig = plt.figure()
+  ax = plt.axes(xlim=(0, xArrEx[-1]), ylim = (min(yArrEx), max(yArrEx)))
+  ax.set_xlabel('Time [s]')
+  ax.set_ylabel('Reward/step')
+  line,  = ax.plot([],[],lw=2)
+  # fig,ax = plt.subplots()
+  ax.set_title('Training reward evolution')
 
-  # figure and axes containing the signals
-  # fig,(pos_ax,ang_ax) = plt.subplots(2,1)
-  pos_fig,pos_ax = plt.subplots()
-  ang_fig,ang_ax = plt.subplots()
+  def animate(i,xArrEx,yArrEx):
+    # curve.set_data(xArrEx[0:i],yArrEx[0:i]*0.05)
+    try:
+      line.set_data(xArrEx[0:i],yArrEx[0:i])
+      return line,
+    except Exception as e:
+      print(e)
 
-  pos_ax.set_xticks([])
-  pos_ax.set_yticks([])
-  pos_ax.set_facecolor('k')
-  pos_fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
-  ang_ax.set_xticks([])
-  ang_ax.set_yticks([])
-  ang_ax.set_facecolor('k')
-  ang_fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
+  # pos_ax.set_xticks([])
+  # pos_ax.set_yticks([])
+  # pos_ax.set_facecolor('k')
+  # pos_fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
 
+  # create animation using the animate() function
+  myAnimation = FuncAnimation(fig, animate(xArrEx,yArrEx), frames=np.arange(1,LENGTH), interval=100000)
+  myAnimation.save('./EJPH/training_dqn7.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+
+  myAnimation = FuncAnimation(fig, animate(xArrEx,yArrEx), frames=np.arange(1,LENGTH), interval=100000)
+  myAnimation.save('./EJPH/training_dqn7.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+
+  fig.show()
+  '''
   # settings for plotting
   with_prediction = False
   dt = (time[-1]-time[0])/(len(time)-1)
@@ -47,29 +61,11 @@ if __name__ == '__main__':
 
   # plot the reference
   pos_ax.plot(ref_time, ref_position, '-w', label='reference')
-  ang_ax.plot(ref_time, [np.pi]*len(ref_time), '-w', label='reference')
-  max_angle = 0.15
-  ang_ax.set_ylim(np.pi-max_angle, np.pi+max_angle)
 
   # generate the lines
   colors = {
-    "simple": "#BF0000",
-    "lerp": "#0000FF",
-    "laguerre": "#800080"
+    "simple": "#BF0000"
   }
-  signals = [
-    Signal(
-      test,
-      colors.get(test),
-      data.get(test),
-      tpast,
-      tfuture,
-      pos_ax,
-      ang_ax,
-      with_prediction = with_prediction
-    )
-    for test in tests
-  ]
 
   # to be called in the beginning of the animation
   def init():
@@ -85,27 +81,24 @@ if __name__ == '__main__':
     istart = max(0, i-int(tpast/dt))
     istop = istart + int((tpast+tfuture)/dt)
     pos_ax.set_xlim(time[istart], time[istop])
-    ang_ax.set_xlim(time[istart], time[istop])
     return artists
 
   # pos_ax.legend()
   # ang_ax.legend()
   print("Creating animations")
   max_frame = int(tmax/dt)-2
-  pos_animation = FuncAnimation(pos_fig, update, max_frame, interval=int(1000*dt))
-  ang_animation = FuncAnimation(ang_fig, update, max_frame, interval=int(1000*dt))
+  pos_animation = FuncAnimation(pos_fig, update, max_frame, interval=int(LENGTH*dt))
 
   print("Saving animations")
   fps = 1/dt
   animation_pairs = [
-    (pos_animation, "position"),
-    (ang_animation, "angle")
+    (pos_animation, "training"),
   ]
   for animation,animation_name in animation_pairs:
-    out_name = prefix + animation_name + ("-with-prediction" if with_prediction else "") + ".mp4"
+    out_name = animation_name + ("-reward" if with_prediction else "") + ".mp4"
     print("Saving", out_name)
     animation.save(out_name, writer=FFMpegWriter(fps=fps))
-  # pos_animation.save(prefix + "position.mp4", writer=FFMpegWriter(fps=fps))
-  # ang_animation.save(prefix + "angle.mp4", writer=FFMpegWriter(fps=fps))
+  pos_animation.save("position.mp4", writer=FFMpegWriter(fps=fps))
 
   plt.show()
+  '''
