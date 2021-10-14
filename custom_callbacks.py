@@ -320,7 +320,7 @@ class EvalThetaDotMetric(EventCallback):
         eval_freq: int = 10000,
         log_path: str = None,
         best_model_save_path: str = None,
-        save_model = False,
+        save_model = True,
         deterministic: bool = True,
         render: bool = False,
         verbose: int = 1,
