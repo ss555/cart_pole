@@ -314,8 +314,8 @@ if __name__=='__main__':
         plt.plot(Timesteps, meanRew, 'ro-')
         plt.plot(Timesteps, meanRew2, 'bo--')
         if fillBetween:
-            plt.fill_between(Timesteps,meanRew + stdRew, meanRew - stdRew, facecolor='red', alpha=0.2)
-            plt.fill_between(Timesteps,meanRew2 + stdRew2, meanRew2 - stdRew2, facecolor='blue', alpha=0.2)
+            plt.fill_between(Timesteps, meanRew + stdRew, meanRew - stdRew, facecolor='red', alpha=0.2)
+            plt.fill_between(Timesteps, meanRew2 + stdRew2, meanRew2 - stdRew2, facecolor='blue', alpha=0.2)
         plt.rcParams['font.size'] = FONT_SIZE_LABEL
         plt.xlabel('Timesteps')
         plt.ylabel('Reward/step')
@@ -383,22 +383,21 @@ if __name__=='__main__':
             count_tours = 0
             done = False
             if PLOT_EPISODE_REWARD:
-                # env = CartPoleRK4(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension, resetMode='experimental', sparseReward=False)
-                env = CartPoleRK4(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')#CartPoleRK4(tensionMax=tension,resetMode='experimental')
+                env = CartPoleRK4(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')
                 model = DQN.load(f'./EJPH/tension-perf/tension_sim_{tension}_V__best.zip', env=env)
                 theta = 0
                 cosThetaIni = np.cos(theta)
                 sinThetaIni = np.sin(theta) #\Theta$
                 rewArr = []
                 obs = env.reset(costheta=cosThetaIni, sintheta=sinThetaIni)
-                # env.reset()
+
                 thetaArr, thetaDotArr, xArr, xDotArr = [], [], [], []
                 for j in range(EP_STEPS):
                     act,_ = model.predict(obs,deterministic=True)
                     obs, rew, done, _ = env.step(act)
                     rewArr.append(rew)
-                    # if tension==4.7:
-                    #     env.render()
+                    if tension==4.7:
+                        env.render()
                     angle, count_tours = calculate_angle(prev_angle_value, obs[2], obs[3], count_tours)
                     prev_angle_value = angle
                     thetaArr.append(angle+count_tours*np.pi*2)

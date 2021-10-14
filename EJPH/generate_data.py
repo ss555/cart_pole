@@ -25,7 +25,7 @@ from distutils.dir_util import copy_tree
 STEPS_TO_TRAIN = 150000
 EP_STEPS = 800
 Te = 0.05
-MANUAL_SEED = 1
+MANUAL_SEED = 0
 # simulation results
 #Done episode reward for seed 0,5 + inference
 DYNAMIC_FRICTION_SIM = True  # True
@@ -34,7 +34,7 @@ encNoiseVarSim = True
 ACTION_NOISE_SIM = True
 RESET_EFFECT = True  # True#False
 EVAL_TENSION_FINAL_PERF = True  # evaluate final PERFORMANCE of a cartpole for different voltages
-SEED_TRAIN = False
+SEED_TRAIN = True
 # other
 PLOT_FINAL_PERFORMANCE_STD = False  # False#
 qLearningVsDQN = False  # compare q-learn and dqn
@@ -45,7 +45,7 @@ hyperparams = read_hyperparameters('dqn_cartpole_50')
 # DONE temps d’apprentissage et note en fonction du coefficient de friction statique 4 valeurs du coefficient:Ksc,virt= 0,0.1∗Ksc,manip,Ksc,manip,10∗Ksc,manipDiscussion
 STATIC_FRICTION_CART = 1.166390864012042
 # STATIC_FRICTION_ARR = np.array([200]) * STATIC_FRICTION_CART #150 not working
-STATIC_FRICTION_ARR = np.array([0, 0.1, 1, 10, 20]) * STATIC_FRICTION_CART
+STATIC_FRICTION_ARR = np.array([0, 0.1, 1, 10]) * STATIC_FRICTION_CART
 
 # DONE temps d’apprentissage et note en fonction de l’amplitude du controle
 TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]#

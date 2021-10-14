@@ -2,6 +2,7 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, FFMpegWriter
+from custom_callbacks import plot_results
 
 if __name__ == '__main__':
 
@@ -11,7 +12,7 @@ if __name__ == '__main__':
   ang_fig,ang_ax = plt.subplots()
 
   #import from csv
-
+  xArrEx, yArrEx, tArr = plot_results('./EJPH/real-cartpole/dqn_7.1V', only_return_data=True)
   # define the signals
   ref_time = data.get('simple').custom_data().get('reference_signal').get('time')
   ref_position = data.get('simple').custom_data().get('reference_signal').get('position')
