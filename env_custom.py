@@ -777,6 +777,7 @@ class CartPoleRK4(gym.Env):
             theta_dot = np.random.normal(theta_dot, self.Kp / self.tau, 1)[0]
             x_dot = np.random.normal(x_dot, 6e-3 * self.Kp / self.tau, 1)[0]
             theta = np.random.normal(theta, self.Kp, 1)[0]
+            x = np.random.normal(x, 6e-3 * self.Kp, 1)[0]
         costheta = np.cos(theta)
         sintheta = np.sin(theta)
         self.state = np.array([x, x_dot, np.cos(theta), np.sin(theta), theta_dot], dtype=np.float32)
@@ -790,11 +791,12 @@ class CartPoleRK4(gym.Env):
         cost = reward_fnCos(x, costheta, sintheta=sintheta, theta_dot=theta_dot, sparse=self.sparseReward)
         if x == -self.x_threshold or x == self.x_threshold:
             cost = cost - self.MAX_STEPS_PER_EPISODE / 2
-        # adding noise on observed variables (on x is negligible)
+        # adding noise on observed variables (on x is negligible?)
         if self.Km != 0:
             theta_dot = np.random.normal(theta_dot, self.Km / self.tau, 1)[0]
             x_dot = np.random.normal(x_dot, 6e-3 * self.Km / self.tau, 1)[0]
             theta = np.random.normal(theta, self.Km, 1)[0]
+            x = np.random.normal(x, 6e-3 * self.Km, 1)[0]
         # # # filtering
         if self.FILTER:
             x_dot = self.iirX_dot.filter(x_dot)
@@ -807,9 +809,11 @@ class CartPoleRK4(gym.Env):
         action = np.array(action).reshape(1)[0]#make in standard format
         fdry = -self.fc * np.tanh(1000*x_dot)
         force = self.masscart * (-self.fa * x_dot + fdry)
+
         if action != 0:
             force += self.masscart * (-self.fd + self.fb * (self.tensionMax * action))
-
+        if self.forceStd != 0:
+            force += np.random.normal(0, scale=self.forceStd * abs(force) / 100)
         xacc = (force + self.masspole * theta_dot ** 2 * self.length * sintheta + self.masspole * self.g * sintheta * costheta) / (
                        self.masscart + self.masspole * sintheta ** 2)
         thetaacc = -self.wAngularUsed ** 2 * sintheta - xacc / self.length * costheta - theta_dot * self.kPendViscous

@@ -62,7 +62,8 @@ Timesteps = np.linspace(EVAL_NUM_STEPS, NUM_Timesteps, int(NUM_Timesteps / EVAL_
 xl = 'Timesteps'
 yl = 'Reward/step'
 
-logdir='./plots'
+logdir='./EJPH/plots'
+os.makedirs(logdir, exist_ok=True)
 STEPS_TO_TRAIN=100000
 EP_STEPS=800
 Te=0.05
@@ -217,27 +218,27 @@ if __name__=='__main__':
         xArr, yArr, legsSt = plot_results('./EJPH/static-friction', title=t2, only_return_data=True)
         legsSt = [round(float(leg[1:]), 4) for leg in legsSt[:, -2]]
         xArr, yArr, legsSt = sort_arr_from_legs(xArr, yArr, legsSt)
-        save_show_fig(xArr, yArr, legsSt, saveName='./EJPH/plots/static.pdf', true_value_index=2)  # ,title=t2
+        # save_show_fig(xArr, yArr, legsSt, saveName='./EJPH/plots/static.pdf', true_value_index=2)  # ,title=t2
         save_show_fig(xArr, yArr, ax=axSt[0], true_value_index=-1)  # ,title=t2
         # save_show_fig(xArr, yArr, legs, saveName='./EJPH/plots/static.pdf')  # ,title=t2
 
         xArr, yArr, legsDy = plot_results('./EJPH/dynamic-friction', title=t3, only_return_data=True)
         legsDy = [round(float(leg),4) for leg in legsDy[:, -2]]
         xArr, yArr, legsDy = sort_arr_from_legs(xArr, yArr, legsDy)
-        save_show_fig(xArr, yArr, legsDy, saveName='./EJPH/plots/dynamic.pdf', true_value_index=2)  # ,title=t3
+        # save_show_fig(xArr, yArr, legsDy, saveName='./EJPH/plots/dynamic.pdf', true_value_index=2)  # ,title=t3
         save_show_fig(xArr, yArr, ax=axDy[0], true_value_index=2)  # ,title=t3
 
         xArr, yArr, legsNo = plot_results(dirNoise, title=t4, only_return_data=True)
         legsNo = [round(float(leg), 4) for leg in legsNo[:, -3]]
         xArr, yArr, legsNo = sort_arr_from_legs(xArr, yArr, legsNo)
-        save_show_fig(xArr, yArr, legsNo, saveName='./EJPH/plots/noise.pdf', true_value_index=4)  # ,title=t4
+        # save_show_fig(xArr, yArr, legsNo, saveName='./EJPH/plots/noise.pdf', true_value_index=4)  # ,title=t4
         save_show_fig(xArr, yArr, ax=axNo[0],  true_value_index=4)  # ,title=t4
 
         xArr, yArr, legsAc = plot_results('./EJPH/action-noise', title=t5, only_return_data=True)
         legsAc = [float(leg) for leg in legsAc[:, -2]]
         xArr, yArr, legsAc = sort_arr_from_legs(xArr, yArr, legsAc)
-        save_show_fig(xArr, yArr, legsAc, saveName='./EJPH/plots/action_noise.pdf', true_value_index=2)  # ,title=t5
-        save_show_fig(xArr, yArr, ax=axAc[0], true_value_index=1)  # ,title=t5
+        # save_show_fig(xArr, yArr, legsAc, saveName='./EJPH/plots/action_noise.pdf', true_value_index=2)  # ,title=t5
+        save_show_fig(xArr, yArr, ax=axAc[0])#, true_value_index=1)  # ,title=t5
 
         xArr, yArr, legs = plot_results('./EJPH/experimental-vs-random', title=t6, only_return_data=True)
         legs = [leg for leg in legs[:, -2]]
@@ -270,9 +271,8 @@ if __name__=='__main__':
         idx = sorted(range(len(legs)), key=lambda k: legs[k])
         legs = [legs[i] for i in idx]
         filenames = [filenames[i] for i in idx]
-        plot_from_npz(filenames, xl, yl,legends=legsVisc, saveName='./EJPH/plots/greedy_dynamic.pdf', true_value_index=2)
+        plot_from_npz(filenames, xl, yl,legends=legsVisc)#, saveName='./EJPH/plots/greedy_dynamic.pdf', true_value_index=2)
         plot_from_npz(filenames, xl, yl, ax=axDy[1],  true_value_index=2)
-        # plot_from_npz(filenames, xl, yl,legends=legs, saveName='./EJPH/plots/greedy_dynamic.pdf')
 
         filenames = sorted(glob.glob(dirStatic + '/*.npz'))
         legs = np.array([legend.split('_') for legend in filenames])
@@ -280,9 +280,8 @@ if __name__=='__main__':
         idx = sorted(range(len(legs)), key=lambda k: legs[k])
         legs = [legs[i] for i in idx]
         filenames = [filenames[i] for i in idx]
-        plot_from_npz(filenames, xl, yl, legends=legsStatic, saveName='./EJPH/plots/greedy_static.pdf', true_value_index=2)
+        plot_from_npz(filenames, xl, yl, legends=legsStatic)#, saveName='./EJPH/plots/greedy_static.pdf', true_value_index=2)
         plot_from_npz(filenames, xl, yl, ax=axSt[1],  true_value_index=2)
-        # plot_from_npz(filenames, xl, yl,legends=legs, saveName='./EJPH/plots/greedy_static.pdf')
 
         filenames = sorted(glob.glob(dirNoise + '/*.npz'))
         legs = np.array([legend.split('_') for legend in filenames])
@@ -290,7 +289,7 @@ if __name__=='__main__':
         idx = sorted(range(len(legs)), key=lambda k: legs[k])
         legs = [legs[i] for i in idx]
         filenames = [filenames[i] for i in idx]
-        plot_from_npz(filenames, xl, yl, legends=legs, saveName='./EJPH/plots/greedy_noise.pdf', true_value_index=4)
+        plot_from_npz(filenames, xl, yl, legends=legs)#, saveName='./EJPH/plots/greedy_noise.pdf', true_value_index=4)
         plot_from_npz(filenames, xl, yl, ax=axNo[1],  true_value_index=4)
 
         filenames = sorted(glob.glob(dirAction + '/*.npz'))
@@ -299,7 +298,7 @@ if __name__=='__main__':
         idx = sorted(range(len(legs)), key=lambda k: legs[k])
         legs = [legs[i] for i in idx]
         filenames = [filenames[i] for i in idx]
-        plot_from_npz(filenames, xl, yl, legends=legs, saveName='./EJPH/plots/greedy_action.pdf')
+        # plot_from_npz(filenames, xl, yl, legends=legs)#, saveName='./EJPH/plots/greedy_action.pdf')
         plot_from_npz(filenames, xl, yl, ax=axAc[1],  true_value_index=1)
 
         data = np.load('./EJPH/experimental-vs-random/_random_.npz')
@@ -411,7 +410,6 @@ if __name__=='__main__':
                         # fig.add_scatter(x=np.linspace(1,EP_STEPS,EP_STEPS), y=thetaArr, name=f'volt: {tension}')
                         # fig2.add_scatter(x=np.linspace(1,EP_STEPS,EP_STEPS), y=xArr, name=f'volt: {tension}')
                         break
-                        # ax1.savefig(logdir+'/thetaA.pdf')
                 ax2.plot(moving_average(rewArr,20), color = colorPalette[i])
                 a[1][0].plot(moving_average(rewArr,20), '--', color = colorPalette[i])
             else:

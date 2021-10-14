@@ -25,7 +25,7 @@ from distutils.dir_util import copy_tree
 STEPS_TO_TRAIN = 150000
 EP_STEPS = 800
 Te = 0.05
-MANUAL_SEED = 0
+MANUAL_SEED = 1
 # simulation results
 #Done episode reward for seed 0,5 + inference
 DYNAMIC_FRICTION_SIM = True  # True
