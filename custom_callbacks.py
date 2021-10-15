@@ -1,4 +1,6 @@
 import csv
+import sys
+
 from stable_baselines3.common.callbacks import BaseCallback
 from tqdm.auto import tqdm
 import os
@@ -125,7 +127,11 @@ def plot_results(log_folder, window_size=30, title='Learning Curve',only_return_
     """  # x, y = ts2xy(load_results(log_folder), 'walltime_hrs')#'timesteps')
     x_varArr=[]
     y_varArr=[]
-    data_frame, legends = load_results(log_folder)
+    try:
+        data_frame, legends = load_results(log_folder)
+    except:
+        print(f'error occured treating folder : {log_folder}')
+        sys.exit(0)
     for data in data_frame:
         # Convert to hours
         x_var = np.cumsum(data.l.values)
