@@ -373,10 +373,8 @@ if __name__=='__main__':
         PLOT_EPISODE_REWARD = True
         figm1, ax1 = plt.subplots()
         figm2, ax2 = plt.subplots()
-        #plt theta,x
-        # fig = px.scatter()
-        # fig2 = px.scatter()
-        # fig = px.scatter(x=[0], y=[0])
+        # from video_learning import play
+        from gym.wrappers.monitoring.video_recorder import VideoRecorder
         TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]
         for i, tension in enumerate(TENSION_RANGE):
             prev_angle_value = 0.0
@@ -396,8 +394,6 @@ if __name__=='__main__':
                     act,_ = model.predict(obs,deterministic=True)
                     obs, rew, done, _ = env.step(act)
                     rewArr.append(rew)
-                    if tension==4.7:
-                        env.render()
                     angle, count_tours = calculate_angle(prev_angle_value, obs[2], obs[3], count_tours)
                     prev_angle_value = angle
                     thetaArr.append(angle+count_tours*np.pi*2)
