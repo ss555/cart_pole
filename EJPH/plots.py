@@ -196,10 +196,13 @@ if __name__=='__main__':
         #experimental setup training
         #7.1V
         legsT.append(f'{float(round(dcVoltage1,2))}(experiment 1)')
+        legsT.append(f'{float(round(dcVoltage1,2))}(experiment 2)')
         xArrEx, yArrEx, _ = plot_results('./EJPH/real-cartpole/dqn_7.1V', only_return_data=True)
+        xArrEx2, yArrEx2, _ = plot_results('./weights/dqn50-real/pwm51', only_return_data=True)
         # xArrT.append(xArrEx[0])
         # yArrT.append(yArrEx[0])
         a[0][0].plot(xArrEx[0], yArrEx[0]/EP_STEPS, color=colorPalette[np.where(TENSION_RANGE == 7.1)[0][0]],linewidth=3.0)
+        a[0][0].plot(xArrEx2[0], yArrEx2[0]/EP_STEPS, color=colorPalette[np.where(TENSION_RANGE == 2.4)[0][0]],linewidth=3.0)
         #12V
         # xArrEx, yArrEx, _ = plot_results('./weights/dqn12V/continue', only_return_data=True)
         # xArrT.append(xArrEx[0])
@@ -220,7 +223,6 @@ if __name__=='__main__':
         xArr, yArr, legsSt = sort_arr_from_legs(xArr, yArr, legsSt)
         # save_show_fig(xArr, yArr, legsSt, saveName='./EJPH/plots/static.pdf', true_value_index=2)  # ,title=t2
         save_show_fig(xArr, yArr, ax=axSt[0], true_value_index=-1)  # ,title=t2
-        # save_show_fig(xArr, yArr, legs, saveName='./EJPH/plots/static.pdf')  # ,title=t2
 
         xArr, yArr, legsDy = plot_results('./EJPH/dynamic-friction', title=t3, only_return_data=True)
         legsDy = [round(float(leg),4) for leg in legsDy[:, -2]]
@@ -294,11 +296,10 @@ if __name__=='__main__':
 
         filenames = sorted(glob.glob(dirAction + '/*.npz'))
         legs = np.array([legend.split('_') for legend in filenames])
-        legs=[round(float(leg),4) for leg in legs[:,-2]]
+        legs = [round(float(leg),4) for leg in legs[:,-2]]
         idx = sorted(range(len(legs)), key=lambda k: legs[k])
         legs = [legs[i] for i in idx]
         filenames = [filenames[i] for i in idx]
-        # plot_from_npz(filenames, xl, yl, legends=legs)#, saveName='./EJPH/plots/greedy_action.pdf')
         plot_from_npz(filenames, xl, yl, ax=axAc[1],  true_value_index=1)
 
         data = np.load('./EJPH/experimental-vs-random/_random_.npz')

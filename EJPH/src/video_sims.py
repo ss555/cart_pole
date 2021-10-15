@@ -15,7 +15,7 @@ import gym
 import cartpole
 sys.path.append(os.path.abspath('./'))
 from stable_baselines3.common.vec_env import VecVideoRecorder, DummyVecEnv
-from env_custom import CartPoleButter
+from env_custom import CartPoleRK4
 from utils import linear_schedule
 from custom_callbacks import plot_results
 # from env_wrappers import Monitor
@@ -24,7 +24,7 @@ from stable_baselines3 import DQN
 # from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
 from custom_callbacks import EvalCustomCallback
 from custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback
-from env_custom import CartPoleButter, CartPoleDebug, CartPoleDiscreteHistory #,CartPoleContinous,CartPoleDiscreteHistory#,CartPoleDiscreteButter2
+from env_custom import CartPoleRK4 #,CartPoleContinous,CartPoleDiscreteHistory#,CartPoleDiscreteButter2
 import argparse
 from utils import read_hyperparameters
 from pathlib import Path
@@ -51,7 +51,7 @@ if __name__=='__main__':
     TRAIN=True
     filenames = sorted(glob(os.path.join(dirTension, "*" + EXT)), key=os.path.getmtime)
     Te = 0.05
-    # env = CartPoleButter()
+    # env = CartPoleRK4()
     env = gym.make('cartpoleSwingD-v0')
     eval_env = DummyVecEnv([lambda: env])
     num_steps = 6e4
