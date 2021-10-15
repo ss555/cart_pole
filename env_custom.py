@@ -655,7 +655,7 @@ class CartPoleRK4(gym.Env):
                  f_d=0.09727843708918459,  # 0.0393516077401241, #0.0,#
                  wAngular=4.881653071189049,
                  kPendViscous=0.07035332644615992,  # 0.0,#
-                 integrator="ode",
+                 integrator='ode',
                  tensionMax=12,#7.0588235294117645,  # 150PWM
                  FILTER=False,
                  n=1,  # 2,5
