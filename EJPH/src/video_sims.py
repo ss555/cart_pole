@@ -14,24 +14,15 @@ import os
 import gym
 import cartpole
 sys.path.append(os.path.abspath('./'))
-from stable_baselines3.common.vec_env import VecVideoRecorder, DummyVecEnv
-from env_custom import CartPoleRK4
-from utils import linear_schedule
-from custom_callbacks import plot_results
-# from env_wrappers import Monitor
-from stable_baselines3.common.monitor import Monitor
 from stable_baselines3 import DQN
-# from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
-from custom_callbacks import EvalCustomCallback
-from custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback
 from env_custom import CartPoleRK4 #,CartPoleContinous,CartPoleDiscreteHistory#,CartPoleDiscreteButter2
 import argparse
-from utils import read_hyperparameters
+from utils import read_hyperparameters, evaluate_policy_episodes
 from pathlib import Path
 from gym.wrappers.monitoring.video_recorder import VideoRecorder
 from stable_baselines3.common.callbacks import CheckpointCallback
-from video_learning import play
 from glob import glob
+from env_wrappers import VideoRecorderWrapper
 # os.system("Xvfb :1 -screen 0 1024x768x24 &")
 # os.environ['DISPLAY'] = ':1'
 #FOLDER DIRS
@@ -43,36 +34,66 @@ dirAction = './EJPH/action-noise'
 dirReset = './EJPH/experimental-vs-random'
 EXT = '.zip'
 
-
-
-
-if __name__=='__main__':
-    EP_STEPS = 10
-    TRAIN=True
-    filenames = sorted(glob(os.path.join(dirTension, "*" + EXT)), key=os.path.getmtime)
-    Te = 0.05
-    # env = CartPoleRK4()
-    env = gym.make('cartpoleSwingD-v0')
-    eval_env = DummyVecEnv([lambda: env])
-    num_steps = 6e4
-    prefix = 'dqn-learn'
-    video_folder = './logs/video'
-    # record_video_learning(eval_env, model, video_length=EP_STEPS, video_folder='./logs/video')
-    os.makedirs(video_folder,exist_ok=True)
+def evaluate_policy(env,model,steps):
+    data=[]
+    obs=env.reset()
+    for i in range(int(steps)):
+        action=model.predict(obs,deterministic=True)
+        obs,rew,done,_=env.step(action[0])
+        data.append((obs,rew,done))
+        if done:
+            break
+    return data
+def videoSimulate(video_folder,env,file,video_name):
+    os.makedirs(video_folder, exist_ok=True)
     # # Start the video at step=0 and record 500 steps
-    eval_env = VecVideoRecorder(eval_env, video_folder=video_folder, record_video_trigger=lambda step: step == 0, video_length=num_steps, name_prefix=prefix)
-    if TRAIN:
-        hyperparams = read_hyperparameters('dqn_50')
-        model = DQN(env=eval_env, **hyperparams)
-    else:
-        path_weights = './weights/dqn50-sim/best_model'
-        model = DQN.load(path_weights)
-        model.env = eval_env
-    checkpoint = CheckpointCallback(save_freq=10000, save_path=video_folder)
-    with ProgressBarManager(num_steps) as cus_callback:
-        model.learn(total_timesteps=num_steps, callback=[cus_callback, checkpoint])
+    eval_env = VideoRecorderWrapper(env, video_folder=video_folder, record_video_trigger=lambda step: step == 0,
+                                    name_prefix=video_name)
+    model = DQN.load(file, env=eval_env)
+    evaluate_policy(env=eval_env, model=model, steps=num_steps_inference)
     # Close the video recorder
     eval_env.close()
+if __name__=='__main__':
+    EP_STEPS = 10
+    TRAIN = True
+
+    Te = 0.05
+    num_steps = 6e2
+    num_steps_inference = 8e2
+    #
+    # filenames = sorted(glob(os.path.join(dirTension, "*" + EXT)), key=os.path.getmtime)
+    # for file in filenames:
+    #     TENSION = float(file.split('_')[2])
+    #
+    #     video_name = f'{TENSION}V'
+    #     env = CartPoleRK4(tensionMax=TENSION, title_to_show = video_name)
+    #     video_folder = './EJPH/video/tension/'
+    #     videoSimulate(video_folder, env, file, video_name)
 
 
-    # play(eval_env_id='cartpoleSwingD-v0', model=model, video_path='./logs/video/dqn_model.mp4')
+    # filenames = sorted(glob(os.path.join(dirStatic, "*" + EXT)), key=os.path.getmtime)
+    # for file in filenames:
+    #     f_c = float(file.split('_')[2])
+    #     video_name = str(f_c) + ' [N/kg]'
+    #     env = CartPoleRK4(f_c = f_c, title_to_show = video_name)
+    #     video_folder = './EJPH/video/static/'
+    #     videoSimulate(video_folder, env, file, video_name)
+
+    # filenames = sorted(glob(os.path.join(dirDynamic, "*" + EXT)), key=os.path.getmtime)
+    # from matplotlib import pyplot as plt
+    # for file in filenames:
+    #     k_pend = round(float(file.split('_')[3]),5)
+    #     # video_name = f'{k_pend}'
+    #     video_name = f'{k_pend}'
+    #     # video_name = str(k_pend)+" [$N*s*rad^{-1}$]"
+    #     env = CartPoleRK4(kPendViscous=k_pend, title_to_show=video_name)
+    #     video_folder = './EJPH/video/viscous/'
+    #     videoSimulate(video_folder, env, file, video_name = video_name)
+
+    filenames = sorted(glob(os.path.join(dirNoise, "*" + EXT)), key=os.path.getmtime)
+    for file in filenames:
+        Km = round(float(file.split('_')[-3]),6)
+        video_name = str(Km)
+        env = CartPoleRK4(Km = Km, title_to_show = video_name)
+        video_folder = './EJPH/video/noise/'
+        videoSimulate(video_folder, env, file, video_name)

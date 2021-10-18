@@ -1,5 +1,6 @@
 __all__ = ["Monitor", "ResultsWriter", "get_monitor_files", "load_results"]
-
+from typing import Callable
+from gym.wrappers.monitoring import video_recorder
 import csv
 import json
 import os
@@ -275,3 +276,120 @@ def load_data_from_csv(path_to_file: str):
         headers.append(header)
         data_frame["t"] += header["t_start"]
     return data_frame, headers
+
+# def play(eval_env_id, model, steps: int = 50, deterministic: bool =True, video_path:str='./logs/video/dqn.mp4'):
+#     '''
+#
+#     :param eval_env_id: env id or environement
+#     :param model: RL model
+#     :param steps: num of steps for inference
+#     :param deterministic: action?
+#     :param video_path: save path
+#     :return:
+#     '''
+#     num_episodes = 0
+#     video_recorder = None
+#     env0 = gym.make(eval_env_id)
+#     env = DummyVecEnv([lambda: env0])
+#     video_recorder = VideoRecorder(env, video_path, enabled=video_path is not None)
+#     obs = env.reset()
+#     for i in range(steps):
+#         env.unwrapped.render()
+#         video_recorder.capture_frame()
+#         action = model.predict(obs, deterministic=deterministic)
+#         obs, rew, done, info = env.step(action)
+#         if done:
+#             obs = env.reset()
+#     if video_recorder.enabled:
+#         # save video of first episode
+#         print("Saved video.")
+#         video_recorder.close()
+#         video_recorder.enabled = False
+
+class VideoRecorderWrapper(gym.Wrapper):
+    """
+    :param venv:
+    :param video_folder: Where to save videos
+    :param record_video_trigger: Function that defines when to start recording.
+                                        The function takes the current number of step,
+                                        and returns whether we should start recording or not.
+    :param video_length:  Length of recorded videos (done for security if we forget to close the env to avoid memory leakage)
+    :param name_prefix: Prefix to the video name
+    """
+
+    def __init__(
+        self,
+        venv: gym.Env,
+        video_folder: str,
+        record_video_trigger: Callable[[int], bool],
+        video_length: int = 20000,
+        name_prefix: str = "rl-video",
+    ):
+
+
+        super().__init__(venv)
+        # self.env.metadata = venv.metadata
+        self.venv = venv
+        self.record_video_trigger = record_video_trigger
+        self.video_recorder = None
+
+        self.video_folder = os.path.abspath(video_folder)
+        # Create output folder if needed
+        os.makedirs(self.video_folder, exist_ok=True)
+
+        self.name_prefix = name_prefix
+        self.step_id = 0
+        self.video_length = video_length
+
+        self.recording = False
+        self.recorded_frames = 0
+
+    def reset(self):
+        obs = self.venv.reset()
+        self.start_video_recorder()
+        return obs
+
+    def start_video_recorder(self) -> None:
+        self.close_video_recorder()
+
+        video_name = f"{self.name_prefix}"
+        # video_name = f"{self.name_prefix}-step-{self.step_id}-to-step-{self.step_id + self.video_length}"
+        base_path = os.path.join(self.video_folder, video_name)
+        self.video_recorder = video_recorder.VideoRecorder(
+            env=self.venv, base_path=base_path, metadata={"step_id": self.step_id}
+        )
+
+        self.video_recorder.capture_frame()
+        self.recorded_frames = 1
+        self.recording = True
+
+    def _video_enabled(self) -> bool:
+        return self.record_video_trigger(self.step_id)
+
+    def step(self, action):
+        obs, rews, dones, infos = self.venv.step(action)
+
+        self.step_id += 1
+        if self.recording:
+            self.video_recorder.capture_frame()
+            self.recorded_frames += 1
+            if self.recorded_frames > self.video_length:
+                print(f"Saving video to {self.video_recorder.path}")
+                self.close_video_recorder()
+        elif self._video_enabled():
+            self.start_video_recorder()
+
+        return obs, rews, dones, infos
+
+    def close_video_recorder(self) -> None:
+        if self.recording:
+            self.video_recorder.close()
+        self.recording = False
+        self.recorded_frames = 1
+
+    def close(self) -> None:
+        self.env.close()
+        self.close_video_recorder()
+
+    def __del__(self):
+        self.close()

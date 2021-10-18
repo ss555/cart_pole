@@ -1,5 +1,6 @@
 '''
-records the video of the training on openai gym
+records the video of the training on openai gym environement
+DOESN'T work with the non-registered environements.
 '''
 
 import sys
@@ -8,8 +9,8 @@ import os
 import gym
 import cartpole
 sys.path.append(os.path.abspath('./'))
-from stable_baselines3.common.vec_env import VecVideoRecorder, DummyVecEnv
-from env_custom import CartPoleButter
+from stable_baselines3.common.vec_env import VecVideoRecorder, DummyVecEnv,SubprocVecEnv
+from env_custom import CartPoleRK4
 from utils import linear_schedule
 from custom_callbacks import plot_results
 # from env_wrappers import Monitor
@@ -18,7 +19,7 @@ from stable_baselines3 import DQN
 # from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
 from custom_callbacks import EvalCustomCallback
 from custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback
-from env_custom import CartPoleButter, CartPoleDebug, CartPoleDiscreteHistory #,CartPoleContinous,CartPoleDiscreteHistory#,CartPoleDiscreteButter2
+from env_custom import CartPoleRK4 #,CartPoleContinous,CartPoleDiscreteHistory#,CartPoleDiscreteButter2
 import argparse
 from utils import read_hyperparameters
 from pathlib import Path
@@ -26,40 +27,20 @@ from gym.wrappers.monitoring.video_recorder import VideoRecorder
 from stable_baselines3.common.callbacks import CheckpointCallback
 
 
-def play(eval_env_id, model, steps: int = 50, deterministic: bool =True, video_path:str='./logs/video/dqn.mp4'):
-    num_episodes = 0
-    video_recorder = None
-    env0 = gym.make(eval_env_id)
-    env = DummyVecEnv([lambda: env0])
-    video_recorder = VideoRecorder(
-        env, video_path, enabled=video_path is not None)
-    obs = env.reset()
-    for i in range(steps):
-        env.unwrapped.render()
-        video_recorder.capture_frame()
-        action = model.predict(obs, deterministic=deterministic)
-        obs, rew, done, info = env.step(action)
-        if done:
-            obs = env.reset()
-    if video_recorder.enabled:
-        # save video of first episode
-        print("Saved video.")
-        video_recorder.close()
-        video_recorder.enabled = False
 
 
 
 
 if __name__=='__main__':
     EP_STEPS = 10
-    TRAIN=True
+    TRAIN = True
 
     Te = 0.05
-    # env = CartPoleButter()
-    env = gym.make('cartpoleSwingD-v0')
-    eval_env = DummyVecEnv([lambda: env])
-    num_steps = 6e4
-    prefix = 'dqn-learn'
+    # eval_env = CartPoleRK4()
+    eval_env = gym.make('cartpoleSwingD-v0')
+    eval_env = SubprocVecEnv([lambda: eval_env])
+    num_steps = 1e3
+    prefix = 'dafsdfasdf'
     video_folder = './logs/video'
     # record_video_learning(eval_env, model, video_length=EP_STEPS, video_folder='./logs/video')
     os.makedirs(video_folder,exist_ok=True)

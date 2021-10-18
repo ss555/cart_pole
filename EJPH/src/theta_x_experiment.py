@@ -78,9 +78,11 @@ PLOT_EVAL_REWARD=True
 TENSION_PLOT = True
 TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]
 SCALE = 1.2
+LABEL_SIZE = 14
 
 # path = './EJPH/real-cartpole/dqn/inference_results.npz'
 # data
+
 def calculate_angle(prev_value, cos, sin, count=0):
     '''
     :param prev_value:
@@ -133,11 +135,11 @@ for ind,file in enumerate(filenames):
     ax[0].plot(best[:, 0], color=colorPalette[colorId[ind]])
     ax[1].plot(thetaArr, color=colorPalette[colorId[ind]])
 
-ax[0].set_xlabel('timesteps')
-ax[0].set_ylabel('x [m]')
+ax[0].set_xlabel('timesteps', fontSize=LABEL_SIZE)
+ax[0].set_ylabel('x [m]', fontSize=LABEL_SIZE)
 
-ax[1].set_xlabel('timesteps')
-ax[1].set_ylabel('theta [rad]')
+ax[1].set_xlabel('timesteps', fontSize=LABEL_SIZE)
+ax[1].set_ylabel('$\Theta$ [rad]', fontSize=LABEL_SIZE)
 ax[0].grid()
 ax[1].grid()
 

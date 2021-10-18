@@ -53,7 +53,7 @@ def evaluate_policy_episodes(
         env: Union[gym.Env, VecEnv],
         model:"base_class.BaseAlgorithm",
         n_eval_episodes:int=1,
-        episode_steps=3000):
+        episode_steps=800):
     '''
     :param env:
     :param model:
