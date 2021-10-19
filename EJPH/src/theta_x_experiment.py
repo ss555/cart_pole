@@ -52,31 +52,12 @@ EVAL_NUM_STEPS = 5000
 timesteps = np.linspace(EVAL_NUM_STEPS, NUM_TIMESTEPS, int(NUM_TIMESTEPS / EVAL_NUM_STEPS))
 
 xl = 'Timesteps'
-yl = 'Rewards'
+yl = 'Reward/step'
 
 logdir='./plots'
 STEPS_TO_TRAIN=100000
 EP_STEPS=800
 Te=0.05
-#FOLDER DIRS
-dirTension = './EJPH/tension-perf'
-dirStatic = './EJPH/static-friction'
-dirDynamic = './EJPH/dynamic-friction'
-dirNoise = './EJPH/encoder-noise'
-dirAction = './EJPH/action-noise'
-dirReset = './EJPH/experimental-vs-random'
-#TITLES IF NEEDED
-t1="Effect of applied tension on training reward"
-t2='Effect of static friction on training reward'
-t3='Effect of viscous friction of a pendulum on training reward'
-t4='Effect of measurement noise on training reward'
-t5='Effect of action noise on training reward (std in %)'
-t6='Effect of initialisation on training reward'
-
-PLOT_TRAINING_REWARD=True
-PLOT_EVAL_REWARD=True
-TENSION_PLOT = True
-TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]
 SCALE = 1.2
 LABEL_SIZE = 14
 
@@ -98,18 +79,21 @@ def calculate_angle(prev_value, cos, sin, count=0):
         return np.arctan2(sin, cos), count
     return np.arctan2(sin, cos), count
 
-filenames = ['./EJPH/real-cartpole/dqn_7.1V/inference_results.npz', './weights/dqn2.4V/inference_results.npz']
+filenamesNpz = ['./EJPH/real-cartpole/dqn_7.1V/inference_results.npz', './weights/dqn50-real/pwm51/inference_results.npz']
+filenamesCsv = ['./EJPH/real-cartpole/dqn_7.1V/monitor.csv', './weights/dqn50-real/pwm51/monitor.csv']
+# filenames = ['./EJPH/real-cartpole/dqn_7.1V/inference_results.npz', './weights/dqn2.4V/inference_results.npz']
 tensions = [7.1, 2.4]
 colorId = [4,0]
 legsT = [str(tension) + 'V' for tension in tensions]
 SCALE=1.2
 fig,ax=plt.subplots(nrows=2, ncols=1, figsize=(SCALE*6,SCALE*2*3.7125))
-for ind,file in enumerate(filenames):
+for file, monitor, ind in zip(filenamesNpz,filenamesCsv, np.arange(2)):
     dataInf = np.load(file)
     dataInf.allow_pickle=True
     #monitor file
-    data,name = load_data_from_csv('./weights/backup/dqn2.4V(copy)/monitor.csv')
+    # data,name = load_data_from_csv('./weights/backup/dqn2.4V(copy)/monitor.csv')
     # data,name = load_data_from_csv('./EJPH/real-cartpole/dqn/monitor.csv')
+    data,name = load_data_from_csv(monitor)
     timesteps = np.zeros((16,))
     rewsArr = dataInf["modelRewArr"]
     obsArr  = dataInf["modelsObsArr"]
@@ -135,17 +119,17 @@ for ind,file in enumerate(filenames):
     ax[0].plot(best[:, 0], color=colorPalette[colorId[ind]])
     ax[1].plot(thetaArr, color=colorPalette[colorId[ind]])
 
-ax[0].set_xlabel('timesteps', fontSize=LABEL_SIZE)
+ax[0].set_xlabel('Timesteps', fontSize=LABEL_SIZE)
 ax[0].set_ylabel('x [m]', fontSize=LABEL_SIZE)
 
-ax[1].set_xlabel('timesteps', fontSize=LABEL_SIZE)
+ax[1].set_xlabel('Timesteps', fontSize=LABEL_SIZE)
 ax[1].set_ylabel('$\Theta$ [rad]', fontSize=LABEL_SIZE)
 ax[0].grid()
 ax[1].grid()
 
 ax[0].text(coords[0], coords[1], chr(97) + ')', transform=ax[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
 ax[1].text(coords[0], coords[1], chr(98) + ')', transform=ax[1].transAxes, fontsize='x-large')
-fig.legend(legsT, loc='upper center', bbox_to_anchor=(0.5, 0.95), title="Voltage", ncol=len(legsT))
+fig.legend(legsT, loc='upper center', bbox_to_anchor=(0.5, 0.95), title="Applied tension", ncol=len(legsT))
 # fig.tight_layout()
 fig.savefig('./EJPH/plots/theta_x.pdf')
 fig.show()

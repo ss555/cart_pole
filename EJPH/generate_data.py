@@ -30,9 +30,9 @@ video_folder = None
 # simulation results
 #Done episode reward for seed 0,5 + inference
 DYNAMIC_FRICTION_SIM = False  # True
-STATIC_FRICTION_SIM = False
-encNoiseVarSim = False
-ACTION_NOISE_SIM = True
+STATIC_FRICTION_SIM = True
+encNoiseVarSim = True
+ACTION_NOISE_SIM = False
 RESET_EFFECT = False  # True#False
 EVAL_TENSION_FINAL_PERF = False  # evaluate final PERFORMANCE of a cartpole for different voltages
 SEED_TRAIN = False

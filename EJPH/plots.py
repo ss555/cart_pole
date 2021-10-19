@@ -198,11 +198,10 @@ if __name__=='__main__':
         legsT.append(f'{float(round(dcVoltage1,2))}(experiment 1)')
         legsT.append(f'{float(round(dcVoltage1,2))}(experiment 2)')
         xArrEx, yArrEx, _ = plot_results('./EJPH/real-cartpole/dqn_7.1V', only_return_data=True)
-        xArrEx2, yArrEx2, _ = plot_results('./weights/dqn50-real/pwm51', only_return_data=True)
+
         # xArrT.append(xArrEx[0])
         # yArrT.append(yArrEx[0])
         a[0][0].plot(xArrEx[0], yArrEx[0]/EP_STEPS, color=colorPalette[np.where(TENSION_RANGE == 7.1)[0][0]],linewidth=3.0)
-        a[0][0].plot(xArrEx2[0], yArrEx2[0]/EP_STEPS, color=colorPalette[np.where(TENSION_RANGE == 2.4)[0][0]],linewidth=3.0)
         #12V
         # xArrEx, yArrEx, _ = plot_results('./weights/dqn12V/continue', only_return_data=True)
         # xArrT.append(xArrEx[0])
@@ -210,12 +209,13 @@ if __name__=='__main__':
         # a[0][0].plot(xArrEx[0], yArrEx[0]/EP_STEPS, 'o-', color=colorPalette[np.where(TENSION_RANGE == 12)[0][0]])
         #2.4V
         #3.5V
-        PLOT_SMALL_REAL_TENSION=False
+        PLOT_SMALL_REAL_TENSION=True
         if PLOT_SMALL_REAL_TENSION:
             dcVoltage3 = 2.4
-            xArrEx, yArrEx, _ = plot_results(f'./weights/dqn{dcVoltage3}V', only_return_data=True)
-            legsT.append(f'{float(round(dcVoltage3,2))}(experiment 2)')
-            a[0][0].plot(xArrEx[0], yArrEx[0]/EP_STEPS, color=colorPalette[np.where(TENSION_RANGE == 2.4)[0][0]],linewidth=3.0)
+            xArrEx2, yArrEx2, _ = plot_results('./weights/dqn50-real/pwm51', only_return_data=True)
+
+            a[0][0].plot(xArrEx2[0], yArrEx2[0] / EP_STEPS, color=colorPalette[np.where(TENSION_RANGE == 2.4)[0][0]],
+                         linewidth=3.0)
 
         #static friciton
         xArr, yArr, legsSt = plot_results('./EJPH/static-friction', title=t2, only_return_data=True)
@@ -456,14 +456,15 @@ if __name__=='__main__':
             )
         print('done inference on voltages')
         #indexes 12,14 are best found by theta_x_experiment.py
-        filenames = ['./EJPH/real-cartpole/dqn_7.1V/inference_results.npz', './weights/dqn2.4V/inference_results.npz']
+        filenames = ['./EJPH/real-cartpole/dqn_7.1V/inference_results.npz', './weights/dqn50-real/pwm51/inference_results.npz']
+        #old #filenames = ['./EJPH/real-cartpole/dqn_7.1V/inference_results.npz', './weights/dqn2.4V/inference_results.npz']
         if PLOT_SMALL_REAL_TENSION:
-            data = np.load('./weights/dqn2.4V/inference_results.npz')
+            data = np.load(filenames[1])
             data.allow_pickle=True
             rewsArr = data["modelRewArr"]
-            a[1][0].plot(moving_average(rewsArr[12], 20), linewidth=3.0, color=colorPalette[0])
+            a[1][0].plot(moving_average(rewsArr[9], 20), linewidth=3.0, color=colorPalette[0])
 
-        data = np.load('./EJPH/real-cartpole/dqn_7.1V/inference_results.npz')
+        data = np.load(filenames[0])
         data.allow_pickle = True
         rewsArr = data["modelRewArr"]
         a[1][0].plot(moving_average(rewsArr[14], 20), linewidth=3.0, color=colorPalette[4])
@@ -557,17 +558,16 @@ if __name__=='__main__':
         # figT.legend(legsT,bbox_to_anchor=(1, -0.25, 1., .102),title="Voltage",
         #            ncol=8, mode="expand", borderaxespad=0.)
         # figT.legend(legsT,loc='upper center', bbox_to_anchor=(0., 1.05, 1., .102),)
-        def inferenceResCartpole(filename: str = ''):
+        def inferenceResCartpole(filename: str = '', monitorFileName: str = ''):
             '''
             :param filename: name of .npz file
-            :return: timeArray , epsiodeReward corresponding to inference
+            :return: timeArray, epsiodeReward corresponding to inference
             NOTE: the wights are saved after nth episodes, that's why we also need to open monitor file to see the correspondance between episodes and Timesteps
             '''
             dataInf = np.load(filename)
             dataInf.allow_pickle = True
             # monitor file
-            data, name = load_data_from_csv('./EJPH/real-cartpole/dqn/monitor.csv')
-
+            data, name = load_data_from_csv(monitorFileName)#'./EJPH/real-cartpole/dqn/monitor.csv')
             rewsArr = dataInf["modelRewArr"]
             obsArr = dataInf["modelsObsArr"]
             actArr = dataInf["modelActArr"]
@@ -590,12 +590,14 @@ if __name__=='__main__':
             return -1
         # experimental inference
         # adding inference
-        EXPERIMENTAL_INFERENCE=False
+        EXPERIMENTAL_INFERENCE=True
         if EXPERIMENTAL_INFERENCE:
-            Timesteps7, epRew7 = inferenceResCartpole('./EJPH/real-cartpole/dqn/inference_results.npz')
+            Timesteps7, epRew7 = inferenceResCartpole('./EJPH/real-cartpole/dqn_7.1V/inference_results.npz',
+                                                      monitorFileName='./EJPH/real-cartpole/dqn_7.1V/monitor.csv')
             a[0][1].plot(Timesteps7, epRew7/EP_STEPS,'o-', color=colorPalette[findInd(TENSION_RANGE,7.1)],linewidth=3.0)
             # 2.4 V
-            Timesteps3, epRew3 = inferenceResCartpole('./weights/dqn2.4V/inference_results.npz')
+            Timesteps3, epRew3 = inferenceResCartpole('./weights/dqn50-real/pwm51/inference_results.npz',
+                                                      monitorFileName='./weights/dqn50-real/pwm51/monitor.csv')
             a[0][1].plot(Timesteps3, epRew3/EP_STEPS,'o-', color=colorPalette[findInd(TENSION_RANGE,2.4)],linewidth=3.0)
 
 
