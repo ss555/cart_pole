@@ -94,7 +94,6 @@ def save_show_fig(xArr,yArr,legs=None,title=None,saveName=None, ax=None, fig=Non
     for i in range(len(xArr)):
         if i==true_value_index:
             ax.plot(xArr[i], yArr[i] / EP_STEPS, '--', color=colorPalette[i])
-            # ax.plot(xArr[i], yArr[i]/EP_STEPS, color=colorPalette[i])
         elif i==experimental_value_index:
             ax.plot(xArr[i], yArr[i] / EP_STEPS, color=colorPalette[i],linewidth=3.0)
         else:
@@ -122,15 +121,6 @@ def generate_legends(legends):
     legends = np.array([legend.split('_') for legend in legends])
     return legends
 
-def setlabel(ax, label, loc=2, borderpad=0.6, **kwargs):
-    legend = ax.get_legend()
-    if legend:
-        ax.add_artist(legend)
-    line, = ax.plot(np.NaN,np.NaN,color='none',label=label)
-    label_legend = ax.legend(handles=[line],loc=loc,handlelength=0,handleheight=0,handletextpad=0,borderaxespad=0,borderpad=borderpad,frameon=False,**kwargs)
-    label_legend.remove()
-    ax.add_artist(label_legend)
-    line.remove()
 
 #plots
 figT, a     = plt.subplots(nrows=2, ncols=2, figsize=(SCALE*10,SCALE*8))#Tension
@@ -589,11 +579,7 @@ if __name__=='__main__':
             bax.set_position([bbox.x0, bbox.y0, bbox.width, (1-shrink)*bbox.height])
 
         figT.legend(legsT, loc='upper center', bbox_to_anchor=(0.5, 1), title="Applied Tension", ncol=len(legsT))
-        #set labels inside
-        # setlabel(a[0][0], '(a)')
-        # setlabel(a[0][1], '(b)')
-        # setlabel(a[1][0], '(c)')
-        # setlabel(a[1][1], '(d)')
+
 
 
         a[0][0].text(coords[0], coords[1], chr(97) + ')', transform=a[0][0].transAxes, fontsize='x-large')#font={'size' : fontSize})

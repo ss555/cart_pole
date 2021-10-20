@@ -17,7 +17,7 @@ import plotly.express as px
 from bokeh.palettes import d3
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset, inset_axes
 from env_wrappers import load_results, ts2xy, load_data_from_csv
-
+from generate_video_with_caption import animateFromData
 PLOT_TRAINING_REWARD=True
 PLOT_EVAL_REWARD=True
 TENSION_PLOT = True
@@ -87,6 +87,7 @@ colorId = [4,0]
 legsT = [str(tension) + 'V' for tension in tensions]
 SCALE=1.2
 fig,ax=plt.subplots(nrows=2, ncols=1, figsize=(SCALE*6,SCALE*2*3.7125))
+thetaAnimation=[]
 for file, monitor, ind in zip(filenamesNpz,filenamesCsv, np.arange(2)):
     dataInf = np.load(file)
     dataInf.allow_pickle=True
@@ -105,7 +106,7 @@ for file, monitor, ind in zip(filenamesNpz,filenamesCsv, np.arange(2)):
         epReward[i] = np.sum(rewsArr[i])
         timesteps[i] = np.sum(data['l'][:(i*10)])
         print(f'it {i} and {epReward[i]}')
-    best = np.array(obsArr[np.argmax(epReward)])
+    best = np.array(obsArr[np.argmax(epReward)])#observations for best learnt policy
 
     thetaArr = []
     prev_angle_value = np.arctan2(best[0,3],best[0,2])
@@ -118,6 +119,9 @@ for file, monitor, ind in zip(filenamesNpz,filenamesCsv, np.arange(2)):
     #plot
     ax[0].plot(best[:, 0], color=colorPalette[colorId[ind]])
     ax[1].plot(thetaArr, color=colorPalette[colorId[ind]])
+    thetaAnimation.append(thetaArr)
+animateFromData(saveVideoName='./EJPH/thetaEvolution.mp4',xData=np.arange(800),yData=thetaAnimation)
+    # animateFromData(xData=np.vstack((np.arange(800),np.arange(800))),Data=np.vstack((best[:, 0],thetaArr)))
 
 ax[0].set_xlabel('Timesteps', fontSize=LABEL_SIZE)
 ax[0].set_ylabel('x [m]', fontSize=LABEL_SIZE)

@@ -71,7 +71,7 @@ def inferenceResCartpole(filename: str = '', monitorFileName: str = ''):
         obs = obsArr[i]
         act = actArr[i]
         epReward[i] = np.sum(rewsArr[i])
-        Timesteps[i] = np.sum(data['l'][:(i * 10)])
+        Timesteps[i] = np.sum(data['l'][:((i+1) * 10)])
         print(f'it {i} and {epReward[i]}')
 
     return Timesteps, epReward
