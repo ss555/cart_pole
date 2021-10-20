@@ -1,8 +1,10 @@
 import sys
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, FFMpegWriter
 from custom_callbacks import plot_results
+from utils import inferenceResCartpole
 
 if __name__ == '__main__':
   Te = 0.05
@@ -16,17 +18,29 @@ if __name__ == '__main__':
   yArrEx = yArrEx[0]/800 # reward per step
 
   LENGTH = len(xArrEx)
-  # define the signals
+  # define the signalse
   fig = plt.figure()
   ax = plt.axes(xlim=(0, xArrEx[-1]), ylim = (min(yArrEx), max(yArrEx)))
   ax.set_xlabel('Time [s]')
   ax.set_ylabel('Reward/step')
   line,  = ax.plot([],[],lw=2)
-  # fig,ax = plt.subplots()
   ax.set_title('Training reward evolution')
 
-  def animate(i,xArrEx,yArrEx):
-    # curve.set_data(xArrEx[0:i],yArrEx[0:i]*0.05)
+  axIn = plt.axes(xlim=(0, xArrEx[-1]), ylim=(min(yArrEx), max(yArrEx)))
+  axIn.set_xlabel('Time [s]')
+  axIn.set_ylabel('Reward/step')
+  line,  = ax.plot([],[],lw=2)
+  axIn.set_title('Inference reward evolution')
+
+  # axIn = plt.axes(xlim=(0, xArrEx[-1]), ylim=(min(yArrEx), max(yArrEx)))
+  # axIn.set_xlabel('Time [s]')
+  # axIn.set_ylabel('Reward/step')
+  # line,  = ax.plot([],[],lw=2)
+  # ax.set_title('Position(m)')
+
+
+
+  def animate(i,xArrEx,yArrEx):#,xlabel,ylablel,title):
     try:
       line.set_data(xArrEx[0:i],yArrEx[0:i])
       return line,
@@ -40,12 +54,28 @@ if __name__ == '__main__':
 
   # create animation using the animate() function
   myAnimation = FuncAnimation(fig, animate(xArrEx,yArrEx), frames=np.arange(1,LENGTH), interval=100000)
-  myAnimation.save('./EJPH/training_dqn7.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+  myAnimation.save('./EJPH/training_dqn7.mp4', fps=30, extra_args=['-vcodec', 'libx264','-pix_fmt', 'yuv720p'])
+  # myAnimation.save('./EJPH/training_dqn7.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
 
-  myAnimation = FuncAnimation(fig, animate(xArrEx,yArrEx), frames=np.arange(1,LENGTH), interval=100000)
-  myAnimation.save('./EJPH/training_dqn7.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+  #inference
+  Timesteps7, epRew7 = inferenceResCartpole('./EJPH/real-cartpole/dqn_7.1V/inference_results.npz',
+                                            monitorFileName='./EJPH/real-cartpole/dqn_7.1V/monitor.csv')
+
+
+
+  myAnimation = FuncAnimation(fig, animate(Timesteps7,epRew7), frames=np.arange(1,epRew7.shape[-1]), interval=100000)
+  myAnimation.save('./EJPH/dqn7inf.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+
+  #rew best inference
+  # myAnimation = FuncAnimation(fig, animate(Timesteps7, epRew7), frames=np.arange(1, LENGTH), interval=100000)
+  # myAnimation.save('./EJPH/dqn7epReward.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+  # # theta, x best inf
+  # myAnimation = FuncAnimation(fig, animate(Timesteps7, epRew7), frames=np.arange(1, LENGTH), interval=100000)
+  # myAnimation.save('./EJPH/dqn7cosTheta.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
 
   fig.show()
+
+
   '''
   # settings for plotting
   with_prediction = False

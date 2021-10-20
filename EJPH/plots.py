@@ -23,6 +23,8 @@ from bokeh.palettes import d3
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset, inset_axes
 from env_wrappers import load_results, ts2xy, load_data_from_csv
 import subprocess
+from utils import inferenceResCartpole
+
 PLOT_TRAINING_REWARD = True
 PLOT_EVAL_REWARD = True
 TENSION_PLOT = True
@@ -558,31 +560,8 @@ if __name__=='__main__':
         # figT.legend(legsT,bbox_to_anchor=(1, -0.25, 1., .102),title="Voltage",
         #            ncol=8, mode="expand", borderaxespad=0.)
         # figT.legend(legsT,loc='upper center', bbox_to_anchor=(0., 1.05, 1., .102),)
-        def inferenceResCartpole(filename: str = '', monitorFileName: str = ''):
-            '''
-            :param filename: name of .npz file
-            :return: timeArray, epsiodeReward corresponding to inference
-            NOTE: the wights are saved after nth episodes, that's why we also need to open monitor file to see the correspondance between episodes and Timesteps
-            '''
-            dataInf = np.load(filename)
-            dataInf.allow_pickle = True
-            # monitor file
-            data, name = load_data_from_csv(monitorFileName)#'./EJPH/real-cartpole/dqn/monitor.csv')
-            rewsArr = dataInf["modelRewArr"]
-            obsArr = dataInf["modelsObsArr"]
-            actArr = dataInf["modelActArr"]
-            nameArr = dataInf["filenames"]
-            Timesteps = np.zeros(len(obsArr))
-            epReward = np.zeros(len(obsArr))
-            for i in range(0, len(obsArr)):
-                print()
-                obs = obsArr[i]
-                act = actArr[i]
-                epReward[i] = np.sum(rewsArr[i])
-                Timesteps[i] = np.sum(data['l'][:(i * 10)])
-                print(f'it {i} and {epReward[i]}')
 
-            return Timesteps,epReward
+
         def findInd(array,elem):
             for i, elArr in enumerate(array):
                 if elem==elArr:

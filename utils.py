@@ -12,7 +12,7 @@ from collections import OrderedDict
 from stable_baselines3.common.vec_env import VecEnv
 # Import seaborn
 import seaborn as sns
-from env_wrappers import load_results
+from env_wrappers import load_results, load_data_from_csv
 from bokeh.palettes import d3
 
 
@@ -48,6 +48,33 @@ def _save_config(self, saved_hyperparams: Dict[str, Any]) -> None:
         yaml.dump(ordered_args, f)
 
     print(f"Log path: {self.save_path}")
+
+
+def inferenceResCartpole(filename: str = '', monitorFileName: str = ''):
+    '''
+    :param filename: name of .npz file
+    :return: timeArray, epsiodeReward corresponding to inference
+    NOTE: the weights are saved after nth episodes, that's why we also need to open monitor file to see the correspondance between episodes and Timesteps
+    '''
+    dataInf = np.load(filename)
+    dataInf.allow_pickle = True
+    # monitor file
+    data, name = load_data_from_csv(monitorFileName)  # './EJPH/real-cartpole/dqn/monitor.csv')
+    rewsArr = dataInf["modelRewArr"]
+    obsArr = dataInf["modelsObsArr"]
+    actArr = dataInf["modelActArr"]
+    nameArr = dataInf["filenames"]
+    Timesteps = np.zeros(len(obsArr))
+    epReward = np.zeros(len(obsArr))
+    for i in range(0, len(obsArr)):
+        print()
+        obs = obsArr[i]
+        act = actArr[i]
+        epReward[i] = np.sum(rewsArr[i])
+        Timesteps[i] = np.sum(data['l'][:(i * 10)])
+        print(f'it {i} and {epReward[i]}')
+
+    return Timesteps, epReward
 
 def evaluate_policy_episodes(
         env: Union[gym.Env, VecEnv],
