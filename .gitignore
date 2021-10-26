@@ -8,6 +8,7 @@ todo/
 cart_pole
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 __pycache__/
 .vscode/settings.json
@@ -19,5 +20,8 @@ __pycache__/
 .vscode/
 >>>>>>> 0acee2fb98061c68734693f755e40ef5e3fc81fd
 =======
+=======
+>>>>>>> e1b581df6fdde7f02f3f63c53be43ef3288490e1
 *.zip
->>>>>>> 0cadb220227cbd37a8b3de7827d0bdb2055778f8
+*.png
+!./weights/*/*.zip

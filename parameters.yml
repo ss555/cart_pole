@@ -48,17 +48,19 @@ dqn_50:
 
 
 sac_cartpole_50:
-    policy: 'MlpPolicy'
-    gamma: 0.995
-    learning_rate: 0.017524168884482706
-    batch_size: 64
-    buffer_size: 10000
-    learning_starts: 0
-    train_freq: [ 1, "episode" ]
-    tau: 0.001
-    policy_kwargs: "dict(log_std_init=-0.9655242596737095,net_arch=[400,300],use_sde=True)"
+  policy: 'MlpPolicy'
+  learning_rate: !!float 1e-3
+  buffer_size: 300000
+  batch_size: 1024
+  ent_coef: 'auto'
+  gamma: 0.99
+  tau: 0.02
+  train_freq: [1,"episode"] #64
+  gradient_steps: -1 #64
+  learning_starts: 0 #10000
+  use_sde: True
+  policy_kwargs: "dict(log_std_init=-0.965524, net_arch=[400, 300])"
 
-#    gamma': 0.995, 'lr': 0.017524168884482706, 'batch_size': 16, 'buffer_size': 50000, 'learning_starts': 0, 'tau': 0.001, 'log_std_init': -3.7723764861238194, 'net_arch': 'big'
 
 #    policy: 'MlpPolicy'
 #    gamma: 0.98
@@ -72,7 +74,7 @@ sac_cartpole_50:
 
 
 #use_sed: True
-saccartpole_50:
+sac_cartpole_50test:
     policy: 'MlpPolicy'
     gamma: 0.98
     learning_rate: 0.0045
