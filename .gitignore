@@ -7,6 +7,7 @@ todo/
 /sac_cartpole_tensorboard
 cart_pole
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 __pycache__/
 .vscode/settings.json
@@ -14,6 +15,9 @@ __pycache__/
 *.out
 *.json
 *.html
+=======
+.vscode/
+>>>>>>> 0acee2fb98061c68734693f755e40ef5e3fc81fd
 =======
 *.zip
 >>>>>>> 0cadb220227cbd37a8b3de7827d0bdb2055778f8

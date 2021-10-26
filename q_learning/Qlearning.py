@@ -79,7 +79,8 @@ def initialize_Q(observationNum, actionNum, nBins):
 
 def play_one_episode(bins, Q, EPS, ALPHA, observationNum, render=False):
     observation = env.reset()
-    # env.render()
+    if render:
+        env.render()
     done = False
     cnt = 0  # number of moves in an episode
     state = assignBins(observation, bins, observationNum)
@@ -125,7 +126,7 @@ def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon
         ALPHA = 0.1
         episodeReward, episodeLength, state, act, Q = play_one_episode(bins, Q, EPS, ALPHA, observationNum)
 
-        if n % 1000 == 0:
+        if n % 10000 == 0:
             # print(n, '%.4f' % EPS, episodeReward)
             episodeReward, episodeLength, state, act, Q, dList = play_one_episode(bins, Q, EPS, ALPHA, observationNum, render=True)
             df = pd.DataFrame.from_dict(dList)
@@ -133,6 +134,8 @@ def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon
             print('{}, \t {:.4f}, \t {}, \t {}, \t {}'.format(n, EPS, episodeReward, state, episodeLength))
         else:
             episodeReward, episodeLength, state, act, Q, dList = play_one_episode(bins, Q, EPS, ALPHA, observationNum, render=False)
+
+            # print('Qmax', Q.max().max())
         if n % 50000 ==0:
             Q.T.to_csv('Q_'+str(n)+'.csv')
 
@@ -148,35 +151,21 @@ def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon
 if __name__ == '__main__':
 
 
-<<<<<<< HEAD
     numEpisode=100000
-=======
-    numEpisode=5000000
->>>>>>> 0cadb220227cbd37a8b3de7827d0bdb2055778f8
     EP_STEPS=800
     Te=0.05
     resetMode='experimental'
 
-<<<<<<< HEAD
     # env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode=resetMode, sparseReward=False,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)#,integrator='ode')#,integrator='rk4')
     env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode=resetMode, sparseReward=False,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)#,integrator='ode')#,integrator='rk4')
-=======
-    env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode=resetMode, sparseReward=False)#,integrator='ode')#,integrator='rk4')
->>>>>>> 0cadb220227cbd37a8b3de7827d0bdb2055778f8
 
     actionNum = env.action_space.n
     observationNum = env.observation_space.shape[0]
 
     ALPHA0 = 1
-<<<<<<< HEAD
     GAMMA = 0.99
     decay = numEpisode/10
     min_epsilon = 0.1
-=======
-    GAMMA = 0.95
-    decay = 20000
-    min_epsilon = 0.05
->>>>>>> 0cadb220227cbd37a8b3de7827d0bdb2055778f8
     min_lr = 0.1
 
     x_threshold = env.x_threshold
@@ -187,13 +176,13 @@ if __name__ == '__main__':
 
 
 
-    # import time
-    # start_time = time.time()
-    # now = datetime.now()
-    # dt_string = now.strftime("%m%d_%H%M%S")
-    # logpath = '/home/robotfish/Project/cart_pole/q_learning/'+dt_string
-    # os.makedirs(logpath, exist_ok=True)
-    # os.chdir(logpath)
+    import time
+    start_time = time.time()
+    now = datetime.now()
+    dt_string = now.strftime("%m%d_%H%M%S")
+    logpath = '/Users/lfu/Documents/IBRID/0_Script/cart_pole/q_learning/results/'+dt_string
+    os.makedirs(logpath, exist_ok=True)
+    os.chdir(logpath)
     with open('0_INFO.json', 'w') as file:
         json.dump(INFO, file, indent=4)
 
