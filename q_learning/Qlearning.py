@@ -88,7 +88,7 @@ def play_one_episode(bins, Q, EPS, ALPHA, observationNum, render=False):
     totalReward = 0
     act = choose_action(Q, state, EPS)
     # print('initial action', act)
-    dList = [{'timestep':0, 'x':observation[0], 'x_dot':observation[1], 'costheta':observation[2], 'sintheta':observation[3], 'theta_dot':observation[4], 'action':0}]
+    dList = [{'timestep':0, 'x':observation[0], 'x_dot':observation[1], 'costheta':observation[2], 'sintheta':observation[3], 'theta_dot':observation[4], 'action':0, 'reward':0}]
 
     while not done:
         cnt += 1
@@ -108,7 +108,7 @@ def play_one_episode(bins, Q, EPS, ALPHA, observationNum, render=False):
         # print('Qmax', Q.max().max())
         # print('Qmin', Q.min().min())
         if render:
-            dList.append({'timestep':cnt, 'x':observationNew[0], 'x_dot':observationNew[1], 'costheta':observationNew[2], 'sintheta':observationNew[3], 'theta_dot':observationNew[4], 'action':actionNew})
+            dList.append({'timestep':cnt, 'x':observationNew[0], 'x_dot':observationNew[1], 'costheta':observationNew[2], 'sintheta':observationNew[3], 'theta_dot':observationNew[4], 'action':actionNew, 'reward':reward})
             #env.render()
     return totalReward, cnt, state, act, Q, dList
 
@@ -170,7 +170,7 @@ if __name__ == '__main__':
 
     x_threshold = env.x_threshold
     theta_dot_threshold = 12
-    nBins = [3, 3, 5, 5, 5]
+    nBins = [10, 10, 10, 10, 10]
     # nBins = [30, 30, 50, 50, 50]
     INFO = {'ALPHA0': ALPHA0, 'GAMMA': GAMMA, 'decay':decay, 'min_epsilon':min_epsilon, 'min_lr':min_lr, 'numEpisode': numEpisode, 'resetMode':resetMode, 'theta_dot_threshold':theta_dot_threshold, 'nBins':str(nBins), 'reward':'without limit theta dot'}
 
