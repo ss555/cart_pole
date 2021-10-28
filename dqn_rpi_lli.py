@@ -26,11 +26,11 @@ from glob import glob
 import numpy as np
 import time
 #Simulation parameters
-Te=0.05 #sampling time
-EP_STEPS=800 #num steps in an episode
-STEPS_TO_TRAIN=150000
-PWM = 51 #PWM command to apply 0-255
-INFERENCE_STEPS = 2000 #steps to test the model
+Te = 0.05 #sampling time
+EP_STEPS = 800 #num steps in an episode
+STEPS_TO_TRAIN = 150000
+PWM = 151 #PWM command to apply 0-255
+INFERENCE_STEPS = 800 #steps to test the model
 
 TRAIN = False#True #if true train, else only inf
 x_threshold = 0.33 #limit on cart total: 33*2+5*2(hard)+4*2(soft) = 84 <84.5(rail)
@@ -45,27 +45,25 @@ REPLAY_BUFFER_WEIGHTS = None#f'./weights/dqn50-real/pwm{PWM}/dqn_rpi_buffer.pkl'
 logdir = f'./weights/dqn50-real/pwm{PWM}'
 #initialisaiton of a socket and a gym env
 pendulePy = PendulePy(wait=5, host='rpi5') #host:IP_ADRESS
-env0 = CartPoleZmq(pendulePy=pendulePy, x_threshold=x_threshold, max_pwm = PWM)
+env = CartPoleZmq(pendulePy=pendulePy, x_threshold=x_threshold, max_pwm = PWM)
 torch.manual_seed(MANUAL_SEED)
-env = Monitor(env0,logdir)
+
 TRAINING = False
 INFERENCE_PATH = log_save
 
 if __name__ == '__main__':
     try:
 
-
-
-
         if TRAIN:
             # callbacks
             # Use deterministic actions for evaluation and SAVE the best model
             # eval_callback = EvalCustomCallback(env, best_model_save_path=log_save + '/best.zip', log_path=log_save, eval_freq=10000, n_eval_episodes=1, deterministic=True, render=False)
             # callbackSave = SaveOnBestTrainingRewardCallback(log_dir=log_save, monitor_filename = log_save+'/training_exp_dqn.csv')
-            checkpoint = CheckPointEpisode(save_path=logdir)
+            env = Monitor(env, logdir)
+            checkpoint = CheckPointEpisode(save_path=logdir, save_freq_ep=1)
             if WEIGHTS == None:
                 hyperparams = read_hyperparameters('dqn_cartpole_50')
-                model = DQN(env=env, **hyperparams)
+                model = DQN(env=env, seed = MANUAL_SEED, **hyperparams)
             else:  # transfer learning or inference #2.4 20&30 nothing
 
                 try:

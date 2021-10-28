@@ -8,6 +8,8 @@ import os
 import gym
 import cartpole
 sys.path.append(os.path.abspath('./'))
+sys.path.append(os.path.abspath('./../..'))
+sys.path.append(os.path.abspath('./..'))
 import sys
 import os
 # sys.path.append(os.path.abspath('./..'))
@@ -70,29 +72,29 @@ if __name__=='__main__':
         videoSimulate(video_folder, env, file, video_name)
 
 
-    filenames = sorted(glob(os.path.join(dirStatic, "*" + EXT)), key=os.path.getmtime)
-    for file in filenames:
-        f_c = float(file.split('_')[-3])
-        video_name = str(f_c)
-        env = CartPoleRK4(f_c = f_c, title_to_show = video_name)
-        video_folder = './EJPH/video/static/'
-        videoSimulate(video_folder, env, file, video_name)
+    # filenames = sorted(glob(os.path.join(dirStatic, "*" + EXT)), key=os.path.getmtime)
+    # for file in filenames:
+    #     f_c = round(float(file.split('_')[-3]),4)
+    #     video_name = str(f_c)
+    #     env = CartPoleRK4(f_c = f_c, title_to_show = video_name)
+    #     video_folder = './EJPH/video/static/'
+    #     videoSimulate(video_folder, env, file, video_name)
 
-    filenames = sorted(glob(os.path.join(dirDynamic, "*" + EXT)), key=os.path.getmtime)
-    from matplotlib import pyplot as plt
-    for file in filenames:
-        k_pend = round(float(file.split('_')[3]),5)
-        # video_name = f'{k_pend}'
-        video_name = f'{k_pend}'
-        # video_name = str(k_pend)+" [$N*s*rad^{-1}$]"
-        env = CartPoleRK4(kPendViscous=k_pend, title_to_show=video_name)
-        video_folder = './EJPH/video/viscous/'
-        videoSimulate(video_folder, env, file, video_name = video_name)
-
-    filenames = sorted(glob(os.path.join(dirNoise, "*" + EXT)), key=os.path.getmtime)
-    for file in filenames:
-        Km = round(float(file.split('_')[-4]),6)
-        video_name = str(Km)
-        env = CartPoleRK4(Km = Km, title_to_show = video_name)
-        video_folder = './EJPH/video/noise/'
-        videoSimulate(video_folder, env, file, video_name)
+    # filenames = sorted(glob(os.path.join(dirDynamic, "*" + EXT)), key=os.path.getmtime)
+    # from matplotlib import pyplot as plt
+    # for file in filenames:
+    #     k_pend = round(float(file.split('_')[3]),5)
+    #     # video_name = f'{k_pend}'
+    #     video_name = f'{k_pend}'
+    #     # video_name = str(k_pend)+" [$N*s*rad^{-1}$]"
+    #     env = CartPoleRK4(kPendViscous=k_pend, title_to_show=video_name)
+    #     video_folder = './EJPH/video/viscous/'
+    #     videoSimulate(video_folder, env, file, video_name = video_name)
+    #
+    # filenames = sorted(glob(os.path.join(dirNoise, "*" + EXT)), key=os.path.getmtime)
+    # for file in filenames:
+    #     Km = round(float(file.split('_')[-4]),6)
+    #     video_name = str(Km)
+    #     env = CartPoleRK4(Km = Km, title_to_show = video_name)
+    #     video_folder = './EJPH/video/noise/'
+    #     videoSimulate(video_folder, env, file, video_name)

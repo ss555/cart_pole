@@ -30,11 +30,11 @@ video_folder = None
 # simulation results
 #Done episode reward for seed 0,5 + inference
 DYNAMIC_FRICTION_SIM = False  # True
-STATIC_FRICTION_SIM = True
-encNoiseVarSim = True
-ACTION_NOISE_SIM = False
+STATIC_FRICTION_SIM = False
+encNoiseVarSim = False
+ACTION_NOISE_SIM = False #False
 RESET_EFFECT = False  # True#False
-EVAL_TENSION_FINAL_PERF = False  # evaluate final PERFORMANCE of a cartpole for different voltages
+EVAL_TENSION_FINAL_PERF = True  # evaluate final PERFORMANCE of a cartpole for different voltages
 SEED_TRAIN = False
 # other
 PLOT_FINAL_PERFORMANCE_STD = False  # False#
@@ -49,7 +49,9 @@ STATIC_FRICTION_CART = 1.166390864012042
 STATIC_FRICTION_ARR = np.array([0, 0.1, 1, 10]) * STATIC_FRICTION_CART
 
 # DONE temps d’apprentissage et note en fonction de l’amplitude du controle
-TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]#
+TENSION_RANGE = np.arange(6.5,7.1,0.1)#
+# TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]#
+# TENSION_RANGE = [4.7]#
 
 # DONE temps  d’apprentissage  et  note  en  fonction  du  coefficient  de frottement dynamique
 DYNAMIC_FRICTION_PENDULUM = 0.07035332644615992
@@ -69,7 +71,6 @@ if EVAL_TENSION_FINAL_PERF:
     # rainbow to plot in inference at different timesteps
     for i, tension in enumerate(TENSION_RANGE):
         env = CartPoleRK4(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')
-
         envEval = CartPoleRK4(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')
         filename = logdir + f'/tension-perf/tension_sim_{tension}_V_'
         if video_folder is not None:

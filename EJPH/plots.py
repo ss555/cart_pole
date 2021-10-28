@@ -39,7 +39,7 @@ f_bAr = 1.059719258572224,  # 1.1088617953891196,
 f_cAr = 1.166390864012042 * np.array([0, 0.1, 1, 10]),  # -0.902272006611719,
 f_d = 0.09727843708918459,  # 0.0393516077401241, #0.0,#
 wAngular = 4.881653071189049,
-kPendViscousAr = 0.0706*np.array([0, 0.1, 1, 10]).T
+kPendViscousAr = 0.07035*np.array([0, 0.1, 1, 10]).T
 legsStatic = np.array([np.round(f_cc,4) for f_cc in f_cAr]).T# 0.0,#
 legsVisc = [round(kPendViscous,4) for kPendViscous in kPendViscousAr]
 
@@ -188,7 +188,7 @@ if __name__=='__main__':
         #experimental setup training
         #7.1V
         legsT.append(f'{float(round(dcVoltage1,2))}(experiment 1)')
-        legsT.append(f'{float(round(dcVoltage1,2))}(experiment 2)')
+
         xArrEx, yArrEx, _ = plot_results('./EJPH/real-cartpole/dqn_7.1V', only_return_data=True)
 
         # xArrT.append(xArrEx[0])
@@ -205,7 +205,7 @@ if __name__=='__main__':
         if PLOT_SMALL_REAL_TENSION:
             dcVoltage3 = 2.4
             xArrEx2, yArrEx2, _ = plot_results('./weights/dqn50-real/pwm51', only_return_data=True)
-
+            legsT.append(f'{float(round(dcVoltage3, 2))}(experiment 2)')
             a[0][0].plot(xArrEx2[0], yArrEx2[0] / EP_STEPS, color=colorPalette[np.where(TENSION_RANGE == 2.4)[0][0]],
                          linewidth=3.0)
 

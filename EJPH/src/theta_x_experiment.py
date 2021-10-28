@@ -21,6 +21,8 @@ from generate_video_with_caption import animateFromData
 PLOT_TRAINING_REWARD=True
 PLOT_EVAL_REWARD=True
 TENSION_PLOT = True
+ANIMATE = False
+
 TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]
 SCALE = 1.2
 f_aAr = 20.75180095541654,  # -21.30359185798466,
@@ -88,6 +90,7 @@ legsT = [str(tension) + 'V' for tension in tensions]
 SCALE=1.2
 fig,ax=plt.subplots(nrows=2, ncols=1, figsize=(SCALE*6,SCALE*2*3.7125))
 thetaAnimation=[]
+xAnimation=[]
 for file, monitor, ind in zip(filenamesNpz,filenamesCsv, np.arange(2)):
     dataInf = np.load(file)
     dataInf.allow_pickle=True
@@ -120,7 +123,13 @@ for file, monitor, ind in zip(filenamesNpz,filenamesCsv, np.arange(2)):
     ax[0].plot(best[:, 0], color=colorPalette[colorId[ind]])
     ax[1].plot(thetaArr, color=colorPalette[colorId[ind]])
     thetaAnimation.append(thetaArr)
-animateFromData(saveVideoName='./EJPH/thetaEvolution.mp4',xData=np.arange(800),yData=thetaAnimation)
+    xAnimation.append(best[:, 0])
+# animateFromData(saveVideoName='./EJPH/thetaEvolution.mp4', dotAtEveryPoint=True, xData=np.arange(800),yData=thetaAnimation, title='$\Theta$ evolution', ylabel='$\Theta$ [rad]', fps=50)
+# animateFromData(saveVideoName='./EJPH/xEvolution.mp4', dotAtEveryPoint=True, xData=np.arange(800),yData=xAnimation, title='$x$ evolution', ylabel='$x$ [m]', fps=50)
+if ANIMATE:
+    animateFromData(saveVideoName='./EJPH/thetaEvolution.mp4', dotMode='end', xData=np.arange(800),yData=thetaAnimation, title='$\Theta$ evolution', ylabel='$\Theta$ [rad]', fps=50)
+    animateFromData(saveVideoName='./EJPH/xEvolution.mp4', dotMode='end', xData=np.arange(800),yData=xAnimation, title='$x$ evolution', ylabel='$x$ [m]', fps=50)
+
     # animateFromData(xData=np.vstack((np.arange(800),np.arange(800))),Data=np.vstack((best[:, 0],thetaArr)))
 
 ax[0].set_xlabel('Timesteps', fontSize=LABEL_SIZE)
