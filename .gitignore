@@ -6,8 +6,6 @@ other/
 todo/
 /sac_cartpole_tensorboard
 cart_pole
-<<<<<<< HEAD
-.vscode/
-=======
 *.zip
->>>>>>> 0cadb220227cbd37a8b3de7827d0bdb2055778f8
+*.png
+!./weights/*/*.zip

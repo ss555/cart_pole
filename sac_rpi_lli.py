@@ -14,7 +14,7 @@ import argparse
 from utils import read_hyperparameters
 from pathlib import Path
 from pendule_pi import PendulePy
-
+from distutils.dir_util import copy_tree
 
 #Simulation parameters
 Te=0.05 #sampling time
@@ -35,8 +35,8 @@ If the WEIGHTS variable is not None, we try to load the selected weights to the 
 #paths to save monitor, models...
 log_save=f'./weights/sac50-real/pwm{PWM}'
 Path(log_save).mkdir(parents=True, exist_ok=True)
-WEIGHTS = None#f'./weights/sac50-real/pwm{PWM}/sac_rpi.zip'# #sac_rpi.zip
-REPLAY_BUFFER_WEIGHTS = None#f'./weights/sac50-real/pwm{PWM}/sac_rpi_buffer.pkl'  #None
+WEIGHTS = None #f'./weights/sac50-real/pwm{PWM}/sac_rpi.zip'# #sac_rpi.zip
+REPLAY_BUFFER_WEIGHTS = None #f'./weights/sac50-real/pwm{PWM}/sac_rpi_buffer.pkl'  #None
 
 #initialisaiton of a socket and a gym env
 pendulePy = PendulePy(wait=5, host='rpi5') #host:IP_ADRESS
@@ -44,7 +44,7 @@ env = CartPoleZmq(pendulePy=pendulePy, discreteActions=False, x_threshold=x_thre
 torch.manual_seed(MANUAL_SEED)
 # evaluation environement may be different from training i.e different reinitialisation
 # envEval = CartPoleZmq(pendulePy=pendulePy,MAX_STEPS_PER_EPISODE=2000)
-
+env = Monitor(env,log_save)
 
 if __name__ == '__main__':
     try:
@@ -94,3 +94,5 @@ if __name__ == '__main__':
             model.save(f'./weights/sac50-real/pwm{PWM}/sac_rpi.zip')
             model.save_replay_buffer(f'./weights/sac50-real/pwm{PWM}/sac_rpi_buffer.pkl')
             plot_results(log_save)
+
+        copy_tree('./weights', './../weights')

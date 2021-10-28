@@ -3,12 +3,14 @@ import os
 import numpy as np
 import seaborn as sns
 import time
+
 sys.path.append(os.path.abspath('./'))
 sys.path.append(os.path.abspath('./..'))
 from stable_baselines3 import DQN, SAC
 from env_custom import CartPoleButter
 from matplotlib import pyplot as plt
 from time import time
+
 # sns.set_context("paper")
 # sns.set_style("whitegrid")
 #plot params
@@ -22,6 +24,7 @@ start_time=time()
 TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]
 Te=0.05
 EP_STEPS=800
+
 scoreArr=np.zeros_like(TENSION_RANGE)
 stdArr=np.zeros_like(TENSION_RANGE)
 episodeArr=[]
@@ -73,6 +76,7 @@ fig,ax=plt.subplots(figsize=(5*scale,5*scale))
 ax.boxplot(episodeArr, positions=TENSION_RANGE, patch_artist=True)
 ax.grid()
 # sns.boxplot(x=TENSION_RANGE,data=episodeArr)
+
 ax.set_ylabel('mean reward per step')
 ax.set_xlabel('Applied DC motor Tension (V)')
 

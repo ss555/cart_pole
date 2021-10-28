@@ -1,4 +1,6 @@
 import csv
+import sys
+
 from stable_baselines3.common.callbacks import BaseCallback
 from tqdm.auto import tqdm
 import os
@@ -112,7 +114,11 @@ def moving_average(values, window):
     weights = np.repeat(1.0, window) / window
     return np.convolve(values, weights, 'valid')
 
-
+# def return_data_time(log_folder, window_size=30, title='Learning Curve',only_return_data=False, paperMode=False):
+#     x_varArr, y_varArr=plot_results(log_folder,window_size,only_return_data=True)
+#     y_varArr=[]
+#     t_Arr=[]
+#     return x_varArr, y_varArr, t_Arr#TO
 def plot_results(log_folder, window_size=30, title='Learning Curve',only_return_data=False, paperMode=False):
     """
     plot the results or returns data from log files
@@ -121,7 +127,11 @@ def plot_results(log_folder, window_size=30, title='Learning Curve',only_return_
     """  # x, y = ts2xy(load_results(log_folder), 'walltime_hrs')#'timesteps')
     x_varArr=[]
     y_varArr=[]
-    data_frame, legends = load_results(log_folder)
+    try:
+        data_frame, legends = load_results(log_folder)
+    except:
+        print(f'error occured treating folder : {log_folder}')
+        sys.exit(0)
     for data in data_frame:
         # Convert to hours
         x_var = np.cumsum(data.l.values)
@@ -138,11 +148,6 @@ def plot_results(log_folder, window_size=30, title='Learning Curve',only_return_
                 sns.set_context("paper")
                 sns.set_style("whitegrid")
             else:
-                # plot params
-                # plt.rcParams['font.family'] = "serif"
-                # plt.rcParams['font.serif'] = 'Georgia'
-                # plt.rcParams['font.size'] = 10
-                # plt.rcParams['mathtext.fontset'] = 'stix'
                 plt.rcParams["figure.dpi"] = 100
 
         x_varArr.append(x_var)
@@ -405,7 +410,7 @@ class EvalThetaDotMetric(EventCallback):
                 if self.verbose > 0:
                     print("New best mean reward!")
                 # save best model
-                if self.save_model:
+                if self.save_model and self.best_model_save_path is not None:
                     self.model.save(self.best_model_save_path)
                 self.best_mean_reward = mean_reward
 
