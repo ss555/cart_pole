@@ -123,9 +123,7 @@ class CartPole(gym.Env):
         except:
             print('error on force')
         return f
-
-    def step(self, action):
-        [x, x_dot, costheta, sintheta, theta_dot] = self.state
+    def preprocess_action(self,action):
         if self.discreteActions:
             if action == 0:
                 action = [-1.0]
@@ -137,6 +135,10 @@ class CartPole(gym.Env):
                 raise Exception
         else:  # continous
             pass
+        return action
+    def step(self, action):
+        [x, x_dot, costheta, sintheta, theta_dot] = self.state
+        self.preprocess_action(action)
 
         if self.kinematics_integrator == 'semi-euler':
             for i in range(self.n):
@@ -152,10 +154,11 @@ class CartPole(gym.Env):
                 costheta = np.cos(theta)
                 sintheta = np.sin(theta)
         else:
-
             [x, x_dot, theta, theta_dot] = odeint(self.pend, [x, x_dot, math.atan2(sintheta, costheta), theta_dot],
                                                   [0, 0.05], args=(action, self.fa, self.fb, self.fc))[-1, :]
-        # adding process noise
+
+    def filter(self, x, x_dot, theta, theta_dot):
+        #adding process noise
         if self.Kp != 0:
             theta_dot = np.random.normal(theta_dot, self.Kp / self.tau, 1)[0]
             x_dot = np.random.normal(x_dot, 6e-3 * self.Kp / self.tau, 1)[0]
@@ -606,6 +609,7 @@ class CartPoleNN(CartPole):
 
 
     def step(self, action):
+        super(CartPole, self).preprocess_action()
         if self.discreteActions:
             if action == 0:
                 action = [-1.0]
@@ -640,6 +644,27 @@ class CartPoleNN(CartPole):
     def close(self):
         super(CartPole, self).close()
 
+class CartPoleNNs(CartPole):
+    '''
+    class to simulate cartpole as neural network (requires torch NN model)
+    '''
+    def __init__(self,
+                 models):  # 0.1
+        super(CartPole, self).__init__()
+        self.models = models
+
+    def seed(self, seed=5):
+        self.np_random, seed = seeding.np_random(seed)
+        return [seed]
+
+    def reset(self, costheta=None, sintheta=None, xIni=None, x_ini_speed=None, theta_ini_speed=None):
+        return super(CartPole, self).reset()
+
+    def render(self, mode='human'):
+        return super(CartPole, self).render()
+
+    def close(self):
+        super(CartPole, self).close()
 
 class CartPoleRK4(gym.Env):
     metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 20}

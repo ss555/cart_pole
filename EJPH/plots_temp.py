@@ -76,10 +76,6 @@ dirDynamic = './EJPH/dynamic-friction'
 dirNoise = './EJPH/encoder-noise'
 dirAction = './EJPH/action-noise'
 dirReset = './EJPH/experimental-vs-random'
-
-#
-dqnInf7 = './weights/dqn50-real/pwm151/inference_results.npz'#'./EJPH/real-cartpole/dqn_7.1V/inference_results.npz'
-dqnTraining7 = './weights/dqn50-real/pwm151/monitor.csv'
 #TITLES IF NEEDED
 t1="Effect of applied voltage on training reward"
 t2='Effect of static friction on training reward'
@@ -183,19 +179,18 @@ if __name__=='__main__':
     if PLOT_TRAINING_REWARD:
 
         xArr, yArr, legs = plot_results('./EJPH/tension-perf',only_return_data=True)  # ,title=t1) #'Effect of varying tension on the learning'
-        legs = [round(float(leg), 2) for leg in legs[:, -3]]
+        legs = [round(float(leg),2) for leg in legs[:, -3]]
         xArrT, yArrT, legsT = sort_arr_from_legs(xArr, yArr, legs) # ,title=t1
-        # xArrT, yArrT, legsT = xArrT[4:10], yArrT[4:10], legsT[4:10]
+        xArrT, yArrT, legsT = xArrT[4:10], yArrT[4:10], legsT[4:10]
         save_show_fig(xArrT, yArrT, ax=a[0][0])
-        #experimental training 150pwm
+        #experimental training150pwm
         dcVoltage1 = 150/255*12
         dcVoltage2 = 12
         #experimental setup training
         #7.1V
         legsT.append(f'{float(round(dcVoltage1,2))}(experiment 1)')
 
-        xArrEx, yArrEx, _ = plot_results('./weights/dqn50-real/pwm151', only_return_data=True)
-        # xArrEx, yArrEx, _ = plot_results('./EJPH/real-cartpole/dqn_7.1V', only_return_data=True)
+        xArrEx, yArrEx, _ = plot_results('./EJPH/real-cartpole/dqn_7.1V', only_return_data=True)
 
         # xArrT.append(xArrEx[0])
         # yArrT.append(yArrEx[0])
@@ -207,12 +202,13 @@ if __name__=='__main__':
         # a[0][0].plot(xArrEx[0], yArrEx[0]/EP_STEPS, 'o-', color=colorPalette[np.where(TENSION_RANGE == 12)[0][0]])
         #2.4V
         #3.5V
-        PLOT_SMALL_REAL_TENSION = True
+        PLOT_SMALL_REAL_TENSION=True
         if PLOT_SMALL_REAL_TENSION:
             dcVoltage3 = 2.4
             xArrEx2, yArrEx2, _ = plot_results('./weights/dqn50-real/pwm51', only_return_data=True)
             legsT.append(f'{float(round(dcVoltage3, 2))}(experiment 2)')
-            a[0][0].plot(xArrEx2[0], yArrEx2[0] / EP_STEPS, color=colorPalette[np.where(TENSION_RANGE == 2.4)[0][0]], linewidth=3.0)
+            a[0][0].plot(xArrEx2[0], yArrEx2[0] / EP_STEPS, color=colorPalette[np.where(TENSION_RANGE == 2.4)[0][0]],
+                         linewidth=3.0)
 
         #static friciton
         xArr, yArr, legsSt = plot_results('./EJPH/static-friction', title=t2, only_return_data=True)
@@ -261,6 +257,8 @@ if __name__=='__main__':
         legs = [legs[i] for i in idx]
         filenames = [filenames[i] for i in idx]
         legs = [str(leg) + 'V' for leg in legs]
+
+        # plot_from_npz(filenames[4:10], xl, yl, ax=a[0][1], true_value_index=4)
         plot_from_npz(filenames, xl, yl, ax=a[0][1], true_value_index=4)
 
 
@@ -284,7 +282,7 @@ if __name__=='__main__':
 
         filenames = sorted(glob.glob(dirNoise + '/*.npz'))
         legs = np.array([legend.split('_') for legend in filenames])
-        legs = [round(float(leg),4) for leg in legs[:,-3]]
+        legs=[round(float(leg),4) for leg in legs[:,-3]]
         idx = sorted(range(len(legs)), key=lambda k: legs[k])
         legs = [legs[i] for i in idx]
         filenames = [filenames[i] for i in idx]
@@ -297,7 +295,6 @@ if __name__=='__main__':
         idx = sorted(range(len(legs)), key=lambda k: legs[k])
         legs = [legs[i] for i in idx]
         filenames = [filenames[i] for i in idx]
-        plot_from_npz(filenames, xl, yl, saveName=logdir+'/greedy_action.pdf', legends=legs)
         plot_from_npz(filenames, xl, yl, ax=axAc[1],  true_value_index=1)
 
         data = np.load('./EJPH/experimental-vs-random/_random_.npz')
@@ -319,7 +316,7 @@ if __name__=='__main__':
         plt.ylabel('Normalised return')
         plt.rcParams['font.size'] = FONT_SIZE_AXIS
         # plt.title('Effect of initialisation on the "greedy policy" reward from experimental state')#random
-        plt.legend(['random', 'experimental'])
+        plt.legend(['random','experimental'])
         plt.savefig('./EJPH/plots/exp-vs-rand-greedy.pdf')
         plt.show()
     offset = 0.2
@@ -454,22 +451,19 @@ if __name__=='__main__':
             )
         print('done inference on voltages')
         #indexes 12,14 are best found by theta_x_experiment.py
-        filenames = ['./weights/dqn50-real/pwm151/inference_results.npz', './weights/dqn50-real/pwm51/inference_results.npz']
-        #filenames = ['./EJPH/real-cartpole/dqn_7.1V/inference_results.npz', './weights/dqn50-real/pwm51/inference_results.npz']
+        filenames = ['./EJPH/real-cartpole/dqn_7.1V/inference_results.npz', './weights/dqn50-real/pwm51/inference_results.npz']
         #old #filenames = ['./EJPH/real-cartpole/dqn_7.1V/inference_results.npz', './weights/dqn2.4V/inference_results.npz']
         if PLOT_SMALL_REAL_TENSION:
             data = np.load(filenames[1])
             data.allow_pickle=True
             rewsArr = data["modelRewArr"]
-            idMax = np.argmax([np.sum(x) for x in rewsArr])
-            a[1][0].plot(moving_average(rewsArr[idMax], 20), linewidth=3.0, color=colorPalette[0])
+            a[1][0].plot(moving_average(rewsArr[0], 20), linewidth=3.0, color=colorPalette[0])
             # a[1][0].plot(moving_average(rewsArr[9], 20), linewidth=3.0, color=colorPalette[0])
 
         data = np.load(filenames[0])
         data.allow_pickle = True
         rewsArr = data["modelRewArr"]
-        idMax = np.argmax([np.sum(x) for x in rewsArr])
-        a[1][0].plot(moving_average(rewsArr[idMax], 20), linewidth=3.0, color=colorPalette[4])
+        a[1][0].plot(moving_average(rewsArr[14], 20), linewidth=3.0, color=colorPalette[4])
 
 
 
@@ -561,18 +555,18 @@ if __name__=='__main__':
         #            ncol=8, mode="expand", borderaxespad=0.)
         # figT.legend(legsT,loc='upper center', bbox_to_anchor=(0., 1.05, 1., .102),)
 
+
         def findInd(array,elem):
             for i, elArr in enumerate(array):
                 if elem==elArr:
                     return i
             return -1
-
         # experimental inference
         # adding inference
         EXPERIMENTAL_INFERENCE=True
         if EXPERIMENTAL_INFERENCE:
-            Timesteps7, epRew7 = inferenceResCartpole(dqnInf7,
-                                                      monitorFileName=dqnTraining7)
+            Timesteps7, epRew7 = inferenceResCartpole('./EJPH/real-cartpole/dqn_7.1V/inference_results.npz',
+                                                      monitorFileName='./EJPH/real-cartpole/dqn_7.1V/monitor.csv')
             a[0][1].plot(Timesteps7, epRew7/EP_STEPS,'o-', color=colorPalette[findInd(TENSION_RANGE,7.1)],linewidth=3.0)
             # 2.4 V
             Timesteps3, epRew3 = inferenceResCartpole('./weights/dqn50-real/pwm51/inference_results.npz',

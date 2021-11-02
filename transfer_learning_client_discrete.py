@@ -20,9 +20,7 @@ LOAD_BUFFER_PATH = None #'./weights/dqn2.4V/dqn_pi_swingup_bufferN.pkl'#'./EJPH/
 
 PORT = 65432
 TENSION = 12 #3.5 #75pwm 2.4 45PWM
-# logdir = './EJPH/real-cartpole/dqn/continue'
 logdir = f'./weights/dqn12V/continue'
-# logdir = f'./weights/dqn{TENSION}V/'
 #SPECIFY INFERENCE PATH IF mode = 'INFERENCE'
 INFERENCE_PATH = logdir#'./EJPH/real-cartpole/dqn'
 os.makedirs(logdir, exist_ok=True)

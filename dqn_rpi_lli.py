@@ -7,6 +7,7 @@ If the WEIGHTS variable is not None, we try to load the selected weights to the 
 import sys
 import os
 import torch
+import re
 from distutils.dir_util import copy_tree
 sys.path.append(os.path.abspath('./..'))
 sys.path.append(os.path.abspath('./'))
@@ -83,6 +84,9 @@ if __name__ == '__main__':
             modelsObsArr, modelActArr, modelRewArr = [],[],[]
             filenames = (sorted(glob(os.path.join(INFERENCE_PATH, "checkpoint*" + '.zip')), key=os.path.getmtime))
             for modelName in filenames:
+                checkNum = re.findall('[0-9]+',modelName)
+                if (int(checkNum[-1])-1)%10!=0:
+                    continue
                 print(f'loading {modelName}')
                 s_time = time.time()
                 model = DQN.load(modelName, env=env)
