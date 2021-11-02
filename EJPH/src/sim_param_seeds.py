@@ -5,6 +5,7 @@ import time
 import subprocess
 sys.path.append(os.path.abspath('./'))
 sys.path.append(os.path.abspath('./..'))
+sys.path.append(os.path.abspath('./../..'))
 from utils import linear_schedule, plot
 from custom_callbacks import plot_results
 from env_wrappers import Monitor
@@ -74,7 +75,7 @@ for j in range(1, 6):
         filename = logdir + f'/seed_{j}_tension_sim_{tension}_V_'
         env = Monitor(env, filename=filename)
         model = DQN(env=env, **hyperparams, seed=MANUAL_SEED)
-        eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000, deterministic=True)
+        eval_callback = EvalThetaDotMetric(envEval, save_model=False, log_path=filename, eval_freq=5000, deterministic=True)
         print(f'simulation for {tension} V')
         with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
             model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
