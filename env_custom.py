@@ -123,9 +123,7 @@ class CartPole(gym.Env):
         except:
             print('error on force')
         return f
-
-    def step(self, action):
-        [x, x_dot, costheta, sintheta, theta_dot] = self.state
+    def preprocess_action(self,action):
         if self.discreteActions:
             if action == 0:
                 action = [-1.0]
@@ -137,6 +135,10 @@ class CartPole(gym.Env):
                 raise Exception
         else:  # continous
             pass
+        return action
+    def step(self, action):
+        [x, x_dot, costheta, sintheta, theta_dot] = self.state
+        self.preprocess_action(action)
 
         if self.kinematics_integrator == 'semi-euler':
             for i in range(self.n):
@@ -152,10 +154,11 @@ class CartPole(gym.Env):
                 costheta = np.cos(theta)
                 sintheta = np.sin(theta)
         else:
-
             [x, x_dot, theta, theta_dot] = odeint(self.pend, [x, x_dot, math.atan2(sintheta, costheta), theta_dot],
                                                   [0, 0.05], args=(action, self.fa, self.fb, self.fc))[-1, :]
-        # adding process noise
+
+    def filter(self, x, x_dot, theta, theta_dot):
+        #adding process noise
         if self.Kp != 0:
             theta_dot = np.random.normal(theta_dot, self.Kp / self.tau, 1)[0]
             x_dot = np.random.normal(x_dot, 6e-3 * self.Kp / self.tau, 1)[0]
@@ -606,6 +609,7 @@ class CartPoleNN(CartPole):
 
 
     def step(self, action):
+        super(CartPole, self).preprocess_action()
         if self.discreteActions:
             if action == 0:
                 action = [-1.0]
@@ -640,8 +644,30 @@ class CartPoleNN(CartPole):
     def close(self):
         super(CartPole, self).close()
 
+class CartPoleNNs(CartPole):
+    '''
+    class to simulate cartpole as neural network (requires torch NN model)
+    '''
+    def __init__(self,
+                 models):  # 0.1
+        super(CartPole, self).__init__()
+        self.models = models
+
+    def seed(self, seed=5):
+        self.np_random, seed = seeding.np_random(seed)
+        return [seed]
+
+    def reset(self, costheta=None, sintheta=None, xIni=None, x_ini_speed=None, theta_ini_speed=None):
+        return super(CartPole, self).reset()
+
+    def render(self, mode='human'):
+        return super(CartPole, self).render()
+
+    def close(self):
+        super(CartPole, self).close()
 
 class CartPoleRK4(gym.Env):
+    metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 20}
     def __init__(self,
                  Te=0.05,
                  discreteActions=True,
@@ -670,7 +696,8 @@ class CartPoleRK4(gym.Env):
                  x_threshold=0.36,
                  thetaDotReset=None,
                  thetaReset=None,
-                 THETA_DOT_LIMIT=100):  # 0.1
+                 THETA_DOT_LIMIT=100,
+                 title_to_show = ''):  # 0.1
         '''
         :param Te: sampling time
         :param discreteActions: to use discrete Actions("True" to use with DQN) or continous ("False" to use with SAC)
@@ -747,6 +774,7 @@ class CartPoleRK4(gym.Env):
         self.THETA_DOT_LIMIT = THETA_DOT_LIMIT
         self.total_count = 0  # how many steps from the start of initialisation
         self.episodeNum = 0
+        self.title_to_show = title_to_show
         if self.FILTER:
             self.iirTheta_dot = iir_filter.IIR_filter(signal.butter(4, 0.9, 'lowpass', output='sos'))  # 2nd param 0.3
             self.iirX_dot = iir_filter.IIR_filter(signal.butter(4, 0.5, 'lowpass', output='sos'))
@@ -922,7 +950,7 @@ class CartPoleRK4(gym.Env):
         self.carttrans.set_translation(cartx, carty)
         self.poletrans.set_rotation(theta + np.pi)
 
-        return self.viewer.render(return_rgb_array=mode == 'rgb_array', text_to_show=text)
+        return self.viewer.render(return_rgb_array=mode == 'rgb_array', text_to_show=text, title_to_show=self.title_to_show)
 
     def close(self):
         if self.viewer:

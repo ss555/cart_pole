@@ -19,21 +19,22 @@ from matplotlib import rcParams, pyplot as plt
 import plotly.express as px
 from bokeh.palettes import d3
 from distutils.dir_util import copy_tree
-
+from env_wrappers import VideoRecorderWrapper
 
 #TODO use subprocess to parallelise sim
 STEPS_TO_TRAIN = 150000
 EP_STEPS = 800
 Te = 0.05
 MANUAL_SEED = 1
+video_folder = None
 # simulation results
 #Done episode reward for seed 0,5 + inference
 DYNAMIC_FRICTION_SIM = False  # True
 STATIC_FRICTION_SIM = False
 encNoiseVarSim = False
-ACTION_NOISE_SIM = True
+ACTION_NOISE_SIM = False #False
 RESET_EFFECT = False  # True#False
-EVAL_TENSION_FINAL_PERF = False  # evaluate final PERFORMANCE of a cartpole for different voltages
+EVAL_TENSION_FINAL_PERF = True  # evaluate final PERFORMANCE of a cartpole for different voltages
 SEED_TRAIN = False
 # other
 PLOT_FINAL_PERFORMANCE_STD = False  # False#
@@ -48,7 +49,9 @@ STATIC_FRICTION_CART = 1.166390864012042
 STATIC_FRICTION_ARR = np.array([0, 0.1, 1, 10]) * STATIC_FRICTION_CART
 
 # DONE temps d’apprentissage et note en fonction de l’amplitude du controle
-TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]#
+TENSION_RANGE = np.arange(6.5,7.1,0.1)#
+# TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]#
+# TENSION_RANGE = [4.7]#
 
 # DONE temps  d’apprentissage  et  note  en  fonction  du  coefficient  de frottement dynamique
 DYNAMIC_FRICTION_PENDULUM = 0.07035332644615992
@@ -70,6 +73,11 @@ if EVAL_TENSION_FINAL_PERF:
         env = CartPoleRK4(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')
         envEval = CartPoleRK4(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')
         filename = logdir + f'/tension-perf/tension_sim_{tension}_V_'
+        if video_folder is not None:
+            env = VideoRecorderWrapper(env, video_folder=video_folder, record_video_trigger=lambda step: step == 0,
+                             video_length=STEPS_TO_TRAIN, name_prefix=filename)
+            envEval = VideoRecorderWrapper(envEval, video_folder=video_folder, record_video_trigger=lambda step: step == 0,
+                                       video_length=STEPS_TO_TRAIN, name_prefix=filename)
         env = Monitor(env, filename=filename)
         model = DQN(env=env, **hyperparams, seed=MANUAL_SEED)
         eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000, deterministic=True)

@@ -16,35 +16,6 @@ dqn_cartpole_50:
     batch_size : 1024
     policy_kwargs : 'dict(net_arch=[256, 256])'
 
-dqn_cartpole_50_4_7v:
-    policy: 'MlpPolicy'
-    gamma: 0.99
-    train_freq: [ 1, "episode" ]
-    gradient_steps: -1
-    verbose: 0
-    policy_kwargs: 'dict(net_arch=[128, 128])'
-    learnig_rate: 0.000310457235402147
-    batch_size: 256
-    buffer_size: 10000
-    exploration_final_eps: 0.03709646281103806
-    exploration_fraction: 0.2653075452197593
-    target_update_interval: 200
-    learning_starts: 10000
-
-dqn_50:
-    policy: 'MlpPolicy'
-    gamma: 0.995
-    learning_rate: 0.0012186785606740538
-    batch_size: 256
-    buffer_size: 10000
-    exploration_final_eps: 0.16961315591755904
-    exploration_fraction: 0.30509773867413825
-    target_update_interval: 16
-    learning_starts: 0
-    gradient_steps: -1
-    train_freq: [ 1, "episode" ]
-    policy_kwargs: 'dict(net_arch=[256, 256])'
-
 
 
 sac_cartpole_50:
@@ -98,20 +69,6 @@ dqn_cartpole_20:
     learning_starts: 10000
     train_freq: [1, "episode"]
     policy_kwargs: "dict(net_arch=[64,128])"
-
-dqn_cartpole_sim_20:
-    policy: 'MlpPolicy'
-    gamma: 0.95
-    learning_rate: 0.0018307754257612685
-    batch_size: 512
-    buffer_size: 1000000
-    exploration_final_eps: 0.02633362231811897
-    exploration_fraction: 0.22175283117941602
-    target_update_interval: 1
-    learning_starts: 10000
-    train_freq: 1000
-    gradient_steps: 500
-    policy_kwargs: "dict(net_arch=[64,64])"
 
 atari:
 #    env_wrapper:
