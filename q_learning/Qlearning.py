@@ -8,7 +8,7 @@ import os,sys,inspect
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
-from env_custom import CartPoleButter
+from env_custom import *
 import gym
 import pandas as pd
 #pd.options.plotting.backend = "plotly"
@@ -79,8 +79,8 @@ def initialize_Q(observationNum, actionNum, nBins):
 
 def play_one_episode(bins, Q, EPS, ALPHA, observationNum, render=False):
     observation = env.reset()
-    if render:
-        env.render()
+    # if render:
+    #     env.render()
     done = False
     cnt = 0  # number of moves in an episode
     state = assignBins(observation, bins, observationNum)
@@ -124,7 +124,7 @@ def play_many_episodes(observationNum, actionNum, nBins, numEpisode, min_epsilon
         # ALPHA = 0.1get_learning_rate(n, min_lr, decay)
         # ALPHA = ALPHA0
         ALPHA = 0.1
-        episodeReward, episodeLength, state, act, Q = play_one_episode(bins, Q, EPS, ALPHA, observationNum)
+        # episodeReward, episodeLength, state, act, Q = play_one_episode(bins, Q, EPS, ALPHA, observationNum)
 
         if n % 10000 == 0:
             # print(n, '%.4f' % EPS, episodeReward)
@@ -157,7 +157,7 @@ if __name__ == '__main__':
     resetMode='experimental'
 
     # env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode=resetMode, sparseReward=False,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)#,integrator='ode')#,integrator='rk4')
-    env = CartPoleButter(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode=resetMode, sparseReward=False,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)#,integrator='ode')#,integrator='rk4')
+    env = CartPoleRK4(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=8.4706, resetMode=resetMode, sparseReward=False,f_a=0,f_c=0,f_d=0, kPendViscous=0.0)#,integrator='ode')#,integrator='rk4')
 
     actionNum = env.action_space.n
     observationNum = env.observation_space.shape[0]
@@ -172,7 +172,7 @@ if __name__ == '__main__':
     theta_dot_threshold = 12
     nBins = [10, 10, 10, 10, 10]
     # nBins = [30, 30, 50, 50, 50]
-    INFO = {'ALPHA0': ALPHA0, 'GAMMA': GAMMA, 'decay':decay, 'min_epsilon':min_epsilon, 'min_lr':min_lr, 'numEpisode': numEpisode, 'resetMode':resetMode, 'theta_dot_threshold':theta_dot_threshold, 'nBins':str(nBins), 'reward':'without limit theta dot'}
+    INFO = {'ALPHA0': ALPHA0, 'GAMMA': GAMMA, 'decay':decay, 'min_epsilon':min_epsilon, 'min_lr':min_lr, 'numEpisode': numEpisode, 'resetMode':resetMode, 'theta_dot_threshold':theta_dot_threshold, 'nBins':str(nBins), 'reward':'with limit theta dot'}
 
 
 
@@ -180,7 +180,7 @@ if __name__ == '__main__':
     start_time = time.time()
     now = datetime.now()
     dt_string = now.strftime("%m%d_%H%M%S")
-    logpath = '/Users/lfu/Documents/IBRID/0_Script/cart_pole/q_learning/results/'+dt_string
+    logpath = './results/'+dt_string
     os.makedirs(logpath, exist_ok=True)
     os.chdir(logpath)
     with open('0_INFO.json', 'w') as file:
