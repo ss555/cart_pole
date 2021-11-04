@@ -9,7 +9,7 @@ from utils import linear_schedule, plot
 from custom_callbacks import plot_results
 from env_wrappers import Monitor
 # from stable_baselines3.common.monitor import Monitor
-from stable_baselines3 import DQN, SAC
+from stable_baselines3 import DQN, SAC, PPO
 from env_custom import CartPoleRK4
 from utils import read_hyperparameters
 from pathlib import Path
@@ -49,8 +49,8 @@ STATIC_FRICTION_CART = 1.166390864012042
 STATIC_FRICTION_ARR = np.array([0, 0.1, 1, 10]) * STATIC_FRICTION_CART
 
 # DONE temps d’apprentissage et note en fonction de l’amplitude du controle
-TENSION_RANGE = np.arange(6.5,7.1,0.1)#
-# TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]#
+# TENSION_RANGE = np.arange(6.5,7.1,0.1)#
+TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]#
 # TENSION_RANGE = [4.7]#
 
 # DONE temps  d’apprentissage  et  note  en  fonction  du  coefficient  de frottement dynamique

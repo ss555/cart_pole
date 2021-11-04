@@ -16,8 +16,8 @@ if __name__ == '__main__':
 
   # figure and axes containing the signals
   # fig,(pos_ax,ang_ax) = plt.subplots(2,1)
-  pos_fig,pos_ax = plt.subplots()
-  ang_fig,ang_ax = plt.subplots()
+  pos_fig, pos_ax = plt.subplots()
+  ang_fig, ang_ax = plt.subplots()
 
   pos_ax.set_xticks([])
   pos_ax.set_yticks([])

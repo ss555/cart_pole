@@ -25,9 +25,15 @@ from env_wrappers import load_results, ts2xy, load_data_from_csv
 import subprocess
 from utils import inferenceResCartpole
 
-PLOT_TRAINING_REWARD = True
-PLOT_EVAL_REWARD = True
-TENSION_PLOT = True
+PLOT_TRAINING_REWARD = False
+PLOT_EVAL_REWARD = False
+
+GENERATE_BOXPLOT_DATA = False  # False when we load from pickle
+INSET = False
+TENSION_PLOT = False
+diffSeed = True
+PLOT_ACTION_NOISE = True
+
 TENSION_RANGE = np.array([2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12])
 SCALE = 1.2
 FONT_SIZE_LABEL = 12
@@ -61,7 +67,7 @@ NUM_Timesteps = 150000
 EVAL_NUM_STEPS = 5000
 Timesteps = np.linspace(EVAL_NUM_STEPS, NUM_Timesteps, int(NUM_Timesteps / EVAL_NUM_STEPS))
 
-xl = 'Time steps'
+xl = 'Time step'
 yl = 'Normalised return'
 
 logdir='./EJPH/plots'
@@ -105,7 +111,7 @@ def save_show_fig(xArr,yArr,legs=None,title=None,saveName=None, ax=None, fig=Non
     if title is not None:
         ax.set_title(title, fontSize=FONT_SIZE_LABEL)
 
-    ax.set_xlabel('Time steps', fontSize=FONT_SIZE_LABEL)
+    ax.set_xlabel('Time step', fontSize=FONT_SIZE_LABEL)
     ax.set_ylabel('Normalised return', fontSize=FONT_SIZE_LABEL)
 
     if legs is not None:
@@ -137,18 +143,20 @@ figAc, axAc = plt.subplots(nrows=2, ncols=1, figsize=(SCALE*6,SCALE*2*3.7125))
 #helper fcs
 def plot_from_npz(filenames, xlabel, ylabel, legends=None, title=None, plot_std=False,saveName=None, ax=None, fig=None, true_value_index=None):
     for i,filename in enumerate(filenames):
-        data = np.load(filename)
-        meanRew, stdRew = np.mean(data["results"], axis=1)/EP_STEPS, np.std(data["results"], axis=1, keepdims=False)/EP_STEPS
-        if ax is None:
-            fig, ax = plt.subplots(figsize=(SCALE*6,SCALE*3.7125))
-        if i == true_value_index:
-            # ax.plot(Timesteps, meanRew, 'o-', color=colorPalette[i])
-            ax.plot(Timesteps, meanRew, 'o--', fillstyle='none', color=colorPalette[i])
-        else:
-            ax.plot(Timesteps, meanRew, 'o--', fillstyle='none', color=colorPalette[i])
-        if plot_std:
-            plt.fill_between(Timesteps, meanRew + stdRew, meanRew - stdRew, alpha=0.2)
-
+        try:
+            data = np.load(filename)
+            meanRew, stdRew = np.mean(data["results"], axis=1)/EP_STEPS, np.std(data["results"], axis=1, keepdims=False)/EP_STEPS
+            if ax is None:
+                fig, ax = plt.subplots(figsize=(SCALE*6,SCALE*3.7125))
+            if i == true_value_index:
+                # ax.plot(Timesteps, meanRew, 'o-', color=colorPalette[i])
+                ax.plot(Timesteps, meanRew, 'o--', fillstyle='none', color=colorPalette[i])
+            else:
+                ax.plot(Timesteps, meanRew, 'o--', fillstyle='none', color=colorPalette[i])
+            if plot_std:
+                plt.fill_between(Timesteps, meanRew + stdRew, meanRew - stdRew, alpha=0.2)
+        except:
+            print('problem plot_from_npz')
 
 
     ax.set_xlabel(xlabel, fontSize=FONT_SIZE_LABEL)
@@ -315,37 +323,38 @@ if __name__=='__main__':
             plt.fill_between(Timesteps, meanRew + stdRew, meanRew - stdRew, facecolor='red', alpha=0.2)
             plt.fill_between(Timesteps, meanRew2 + stdRew2, meanRew2 - stdRew2, facecolor='blue', alpha=0.2)
         plt.rcParams['font.size'] = FONT_SIZE_LABEL
-        plt.xlabel('Time steps')
+        plt.xlabel('Time step')
         plt.ylabel('Normalised return')
         plt.rcParams['font.size'] = FONT_SIZE_AXIS
         # plt.title('Effect of initialisation on the "greedy policy" reward from experimental state')#random
         plt.legend(['random', 'experimental'])
         plt.savefig('./EJPH/plots/exp-vs-rand-greedy.pdf')
         plt.show()
-    offset = 0.2
-    axNo[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axNo[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
-    axNo[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axNo[1].transAxes, fontsize='x-large')
-    figNo.legend(legsNo, loc='upper center', bbox_to_anchor=(0.5, 0.98), title="Noise $\sigma_\Theta$ [$rad$]", ncol=5)
-    figNo.savefig('./EJPH/plots/noise_all.pdf')
-    figNo.show()
 
-    axDy[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axDy[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
-    axDy[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axDy[1].transAxes, fontsize='x-large')
-    figDy.legend(legsVisc, loc='upper center', bbox_to_anchor=(0.5, 0.96), title="Viscous friction [$N*s*rad^{-1}$]", ncol=5)
-    figDy.savefig('./EJPH/plots/dynamic_all.pdf')
-    figDy.show()
+        offset = 0.2
+        axNo[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axNo[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
+        axNo[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axNo[1].transAxes, fontsize='x-large')
+        figNo.legend(legsNo, loc='upper center', bbox_to_anchor=(0.5, 0.98), title="Noise $\sigma_\Theta$ [$rad$]", ncol=5)
+        figNo.savefig('./EJPH/plots/noise_all.pdf')
+        figNo.show()
 
-    axSt[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axSt[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
-    axSt[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axSt[1].transAxes, fontsize='x-large')
-    figSt.legend(legsStatic, loc='upper center', bbox_to_anchor=(0.5, 0.96), title="Static friction [$N*kg^{-1}$]", ncol=5)
-    figSt.savefig('./EJPH/plots/static_all.pdf')
-    figSt.show()
+        axDy[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axDy[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
+        axDy[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axDy[1].transAxes, fontsize='x-large')
+        figDy.legend(legsVisc, loc='upper center', bbox_to_anchor=(0.5, 0.96), title="Viscous friction [$N*s*rad^{-1}$]", ncol=5)
+        figDy.savefig('./EJPH/plots/dynamic_all.pdf')
+        figDy.show()
 
-    axAc[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axAc[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
-    axAc[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axAc[1].transAxes, fontsize='x-large')
-    figAc.legend(legsAc, loc='upper center', bbox_to_anchor=(0.5, 0.96), title="Action noise std [%]", ncol=5)
-    figAc.savefig('./EJPH/plots/action_all.pdf')
-    figAc.show()
+        axSt[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axSt[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
+        axSt[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axSt[1].transAxes, fontsize='x-large')
+        figSt.legend(legsStatic, loc='upper center', bbox_to_anchor=(0.5, 0.96), title="Static friction [$N*kg^{-1}$]", ncol=5)
+        figSt.savefig('./EJPH/plots/static_all.pdf')
+        figSt.show()
+
+        axAc[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axAc[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
+        axAc[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axAc[1].transAxes, fontsize='x-large')
+        figAc.legend(legsAc, loc='upper center', bbox_to_anchor=(0.5, 0.96), title="Action noise std [%]", ncol=5)
+        figAc.savefig('./EJPH/plots/action_all.pdf')
+        figAc.show()
 
 
     print('generated train/inf')
@@ -425,9 +434,9 @@ if __name__=='__main__':
             ax2.legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
             # a[1][0].legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
 
-            ax1.set_xlabel('Time steps', fontSize=FONT_SIZE_LABEL)
-            ax2.set_xlabel('Time steps', fontSize=FONT_SIZE_LABEL)
-            a[1][0].set_xlabel('Time steps', fontSize=FONT_SIZE_LABEL)
+            ax1.set_xlabel('Time step', fontSize=FONT_SIZE_LABEL)
+            ax2.set_xlabel('Time step', fontSize=FONT_SIZE_LABEL)
+            a[1][0].set_xlabel('Time step', fontSize=FONT_SIZE_LABEL)
             ax2.set_ylabel('Normalised return', fontSize=FONT_SIZE_LABEL)
             a[1][0].set_ylabel('Normalised return', fontSize=FONT_SIZE_LABEL)
 
@@ -479,7 +488,7 @@ if __name__=='__main__':
         scoreArr = np.zeros_like(TENSION_RANGE)
         stdArr = np.zeros_like(TENSION_RANGE)
         episodeArr = []
-        GENERATE_BOXPLOT_DATA=False #False when we load from pickle
+
         if GENERATE_BOXPLOT_DATA:
             for i, tension in enumerate(TENSION_RANGE):
                 env = CartPoleRK4(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension,
@@ -534,7 +543,7 @@ if __name__=='__main__':
 
         a[1][1].set_ylabel('Normalised return', fontSize=FONT_SIZE_LABEL)
         a[1][1].set_xlabel('Applied DC motor Tension (V)', fontSize=FONT_SIZE_LABEL)
-        INSET = False
+
         if INSET:
             axins = inset_axes(a[1][1], width="60%", height="80%", loc='lower right', borderpad=2)  # ,bbox_to_anchor=())
             axins.boxplot(episodeArr[2:], positions=TENSION_RANGE[2:], patch_artist=True)
@@ -588,7 +597,7 @@ if __name__=='__main__':
             tax.set_position([tbox.x0, tbox.y0-shrink*bbox.height, tbox.width, (1-shrink)*tbox.height])
             bax.set_position([bbox.x0, bbox.y0, bbox.width, (1-shrink)*bbox.height])
 
-        figT.legend(legsT, loc='upper center', bbox_to_anchor=(0.5, 1), title="Applied Tension", ncol=len(legsT))
+        figT.legend(legsT, loc='upper center', bbox_to_anchor=(0.5, 1), title="Applied voltage", ncol=len(legsT))
 
 
 
@@ -599,31 +608,80 @@ if __name__=='__main__':
         figT.savefig('./EJPH/plots/tension_all.pdf')
         figT.show()
 
-
-
+        os.chdir('./EJPH/plots') #change direction for plots
+        subprocess.call(['sh', './crop.sh'])  # call shell script for pdfcrop
 
 
 
 
 
 #D subplot: apprentissage, inference, boxplot
-diffSeed = False
+
+
+
+dirTensionNoise = './EJPH/tensions-noise'
+dirTensionSeed = './EJPH/tension-perf-seed'
+
+
+saveName = ['./EJPH/plots/greedy_tension_seed.pdf', './EJPH/plots/tension_noise_1.pdf', './EJPH/plots/tension_6.5-7.0.pdf']
+
 if diffSeed:
-    xArr, yArr, legs = plot_results('./EJPH/tension-perf-seed',only_return_data=True)  # ,title=t1) #'Effect of varying tension on the learning'
+    filenames = sorted(glob.glob(dirTensionSeed + '/*.npz', ),key=os.path.getmtime)
+    fTensionSeed, ax_seed = plt.subplots(2, 5, figsize=(28,10))
+    xArr, yArr, legs = plot_results(dirTensionSeed, only_return_data=True)  # ,title=t1) #'Effect of varying tension on the learning'
     legs = [float(leg) for leg in legs[:, -3]]
     xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
-    save_show_fig(xArr, yArr, legs, saveName='./EJPH/plots/tension-seed.pdf')  # ,title=t1
+    for i in range(5):
+        legsl = [legs[j*5+i] for j in range(6)]
+        xArrl = [xArr[j*5+i] for j in range(6)]
+        yArrl = [yArr[j*5+i] for j in range(6)]
+        filenamesl = [filenames[j*5+i] for j in range(5)]
+        save_show_fig(xArrl, yArrl, ax=ax_seed[0][i]) # ,title=t1
+        plot_from_npz(filenamesl, xl, yl, ax=ax_seed[1][i])
+    legsl = [round(leg,2) for leg in legsl]
+    fTensionSeed.legend(legsl, loc='upper center', bbox_to_anchor=(0.5, 1), title="Applied voltage", ncol=len(legsl))
+    fTensionSeed.savefig(saveName[0])
 
-    filenames = sorted(glob.glob(dirTension + '-seed/*.npz'))
+def plot_train_inference(dir, saveName, figsize=(10,15)):
+    filenames = sorted(glob.glob(dir + '/*.npz'))
+    fTension, ax = plt.subplots(2, figsize=figsize)
+    xArr, yArr, legs = plot_results(dir, only_return_data=True)  # ,title=t1) #'Effect of varying tension on the learning'
+    legs = [round(float(leg), 2) for leg in legs[:, -3]]
+    xArrT, yArrT, legsT = sort_arr_from_legs(xArr, yArr, legs)
+    save_show_fig(xArrT, yArrT, ax=ax[0])
+    # save_show_fig(xArrT, yArrT, legs=legs, ax=ax[0])
+
     legs = np.array([legend.split('_') for legend in filenames])
-    legs = [float(leg) for leg in legs[:, -3]]
-    idx = sorted(range(len(legs)), key=lambda k: legs[k])
+    legs = [round(float(leg),2) for leg in legs[:, -3]]
+    idx = sorted(range(len(legs)), key = lambda k: legs[k])
     legs = [legs[i] for i in idx]
     filenames = [filenames[i] for i in idx]
     legs = [str(leg) + 'V' for leg in legs]
-    plot_from_npz(filenames, xl, yl, legends=legs, saveName='./EJPH/plots/greedy_tension_seed.pdf')
-os.chdir('./EJPH/plots')
-subprocess.call(['sh', './crop.sh']) #call shell script for pdfcrop
+    plot_from_npz(filenames, xl, yl, ax=ax[1])
+    fTension.legend(legs, loc='upper center', bbox_to_anchor=(0.5, 1), title="Applied voltage", ncol=len(legsl))
+
+    fTension.savefig(saveName) #save figure
+
+if PLOT_ACTION_NOISE:
+    plot_train_inference(dirTensionNoise, saveName[1])
+    plot_train_inference(dirTensionNoise + '/original', saveName[2])
+    # filenames = sorted(glob.glob(dirTensionNoise + '/*.npz'))
+    # fTension, ax = plt.subplots(2, figsize=figsize)
+    # xArr, yArr, legs = plot_results(dirTensionNoise, only_return_data=True)  # ,title=t1) #'Effect of varying tension on the learning'
+    # legs = [round(float(leg), 2) for leg in legs[:, -3]]
+    # xArrT, yArrT, legsT = sort_arr_from_legs(xArr, yArr, legs)
+    # save_show_fig(xArrT, yArrT, legs=legs, ax=ax[0])
+    #
+    # legs = np.array([legend.split('_') for legend in filenames])
+    # legs = [float(leg) for leg in legs[:, -3]]
+    # idx = sorted(range(len(legs)), key = lambda k: legs[k])
+    # legs = [legs[i] for i in idx]
+    # filenames = [filenames[i] for i in idx]
+    # legs = [str(leg) + 'V' for leg in legs]
+    # plot_from_npz(filenames, xl, yl, ax=ax[1])
+    # fTensionSeed.legend(legs, loc='upper center', bbox_to_anchor=(0.5, 1), title="Applied voltage", ncol=len(legsl))
+    #
+    # fTension.savefig(saveName[1])
 
 '''
 RAINBOW = False
@@ -688,7 +746,7 @@ if RAINBOW:
     plt.grid()
     plt.xlabel('Tension (V)')
     plt.ylabel('Normalised return')
-    # plt.title('Effect of the applied tension on the "greedy policy" reward')
+    # plt.title('Effect of the Applied voltage on the "greedy policy" reward')
 
     # for p
     plt.legend([f'{int(p1 * 100)}% of episode', f'{int(p2 * 100)}% of episode', f'{int(p3 * 100)}% of episode',

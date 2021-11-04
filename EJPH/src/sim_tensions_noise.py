@@ -78,4 +78,3 @@ for i, tension in enumerate(TENSION_RANGE):
     with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
         model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
 
-    #
