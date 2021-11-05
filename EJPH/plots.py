@@ -23,14 +23,15 @@ from bokeh.palettes import d3
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset, inset_axes
 from env_wrappers import load_results, ts2xy, load_data_from_csv
 import subprocess
-from utils import inferenceResCartpole
+from utils import inferenceResCartpole, calculate_angle
 
 PLOT_TRAINING_REWARD = True
 PLOT_EVAL_REWARD = True
 TENSION_PLOT = False
+PLOT_ACTION_NOISE = False
 TENSION_RANGE = np.array([2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12])
 SCALE = 1.2
-FONT_SIZE_LABEL = 12
+FONT_SIZE_LABEL = 14
 FONT_SIZE_AXIS = 10
 
 
@@ -62,7 +63,7 @@ EVAL_NUM_STEPS = 5000
 Timesteps = np.linspace(EVAL_NUM_STEPS, NUM_Timesteps, int(NUM_Timesteps / EVAL_NUM_STEPS))
 
 xl = 'Time step'
-yl = 'Normalised return'
+yl = 'Normalized return'
 
 logdir='./EJPH/plots'
 os.makedirs(logdir, exist_ok=True)
@@ -107,7 +108,7 @@ def save_show_fig(xArr,yArr,legs=None,title=None,saveName=None, ax=None, fig=Non
         ax.set_title(title, fontSize=FONT_SIZE_LABEL)
 
     ax.set_xlabel('Time step', fontSize=FONT_SIZE_LABEL)
-    ax.set_ylabel('Reward/step', fontSize=FONT_SIZE_LABEL)
+    ax.set_ylabel(yl, fontSize=FONT_SIZE_LABEL)
 
     if legs is not None:
         ax.legend(legs, loc='best',bbox_to_anchor=(1.01, 1))
@@ -318,7 +319,7 @@ if __name__=='__main__':
             plt.fill_between(Timesteps, meanRew2 + stdRew2, meanRew2 - stdRew2, facecolor='blue', alpha=0.2)
         plt.rcParams['font.size'] = FONT_SIZE_LABEL
         plt.xlabel('Time step')
-        plt.ylabel('Reward/step')
+        plt.ylabel(yl)
         plt.rcParams['font.size'] = FONT_SIZE_AXIS
         # plt.title('Effect of initialisation on the "greedy policy" reward from experimental state')#random
         plt.legend(['random','experimental'])
@@ -354,21 +355,7 @@ if __name__=='__main__':
 
 
     print('generated train/inf')
-    #helper fcn
-    def calculate_angle(prev_value, cos, sin, count=0):
-        '''
-        :param prev_value:
-        :param cos: cosinus
-        :param sin: sinus
-        :return:
-        '''
-        if prev_value - np.arctan2(sin, cos) > np.pi:
-            count += 1
-            return np.arctan2(sin, cos), count
-        elif np.arctan2(sin, cos) - prev_value > np.pi:
-            count -= 1
-            return np.arctan2(sin, cos), count
-        return np.arctan2(sin, cos), count
+
     if TENSION_PLOT:
         scoreArr = np.zeros_like(TENSION_RANGE)
         stdArr = np.zeros_like(TENSION_RANGE)
@@ -433,8 +420,8 @@ if __name__=='__main__':
             ax1.set_xlabel('Time step', fontSize=FONT_SIZE_LABEL)
             ax2.set_xlabel('Time step', fontSize=FONT_SIZE_LABEL)
             a[1][0].set_xlabel('Time step', fontSize=FONT_SIZE_LABEL)
-            ax2.set_ylabel('Reward/step', fontSize=FONT_SIZE_LABEL)
-            a[1][0].set_ylabel('Reward/step', fontSize=FONT_SIZE_LABEL)
+            ax2.set_ylabel(yl, fontSize=FONT_SIZE_LABEL)
+            a[1][0].set_ylabel(yl, fontSize=FONT_SIZE_LABEL)
 
             a[1][0].grid()
             figm2.savefig('./EJPH/plots/episode_rew_tension.pdf')
@@ -447,7 +434,7 @@ if __name__=='__main__':
             plt.fill_between(tensionMax, scoreArr + stdArr, scoreArr - stdArr, facecolor='red', alpha=0.5)
             plt.rcParams['font.size'] = FONT_SIZE_LABEL
             plt.xlabel('Tension (V)')
-            plt.ylabel('Reward/step')
+            plt.ylabel(yl)
             plt.title('Effect of the Applied voltage on the "greedy policy" reward', fontSize=FONT_SIZE_LABEL)
             plt.rcParams['font.size'] = FONT_SIZE_AXIS
             #plt.show()
@@ -533,7 +520,7 @@ if __name__=='__main__':
         a[1][1].boxplot(episodeArr, positions=TENSION_RANGE, patch_artist=True)
         a[1][1].grid()
 
-        a[1][1].set_ylabel('Reward/step', fontSize=FONT_SIZE_LABEL)
+        a[1][1].set_ylabel(yl, fontSize=FONT_SIZE_LABEL)
         a[1][1].set_xlabel('Applied DC motor Tension (V)', fontSize=FONT_SIZE_LABEL)
         INSET = False
         if INSET:
@@ -591,7 +578,7 @@ if __name__=='__main__':
         figT.legend(legsT, loc='upper center', bbox_to_anchor=(0.5, 1), title="Applied voltage", ncol=len(legsT))
     #shrink x axis to fit legend
     figP.tight_layout()
-    shrink = 0.05
+    shrink = 0.01
     for tax,bax in zip(aP[0], aP[1]):
         tbox = tax.get_position()
         bbox = bax.get_position()
@@ -600,7 +587,12 @@ if __name__=='__main__':
     # figT.legend(legsT, loc='upper center', bbox_to_anchor=(0.5, 1), title="Applied voltage", ncol=len(legsT))
 
 
-    def putInd(axis):
+    def putIndInside(axis):
+        '''
+        
+        :param axis: 2x2 axis to put the letters on a,b,c,d
+        :return: 
+        '''
         axis[0][0].text(coords[0], coords[1], chr(97) + ')', transform=axis[0][0].transAxes,
                         fontsize='x-large')  # font={'size' : fontSize})
         axis[0][1].text(coords[0], coords[1], chr(98) + ')', transform=axis[0][1].transAxes,
@@ -611,12 +603,12 @@ if __name__=='__main__':
                         fontsize='x-large')  # font={'size' : fontSize})
 
 
-    putInd(a)
+    putIndInside(a)
     figT.savefig('./EJPH/plots/tension_all.pdf')
     figT.show()
 
 
-    putInd(aP)
+    putIndInside(aP)
     figP.savefig('./EJPH/plots/param_analysis.pdf')
 
 
@@ -771,7 +763,6 @@ if RAINBOW:
     # plt.hlines(y=EP_LENGTH,xmin=min(TENSION_RANGE),xmax=max(TENSION_RANGE),linestyles='--')
     plt.grid()
     plt.xlabel('Tension (V)')
-    plt.ylabel('Normalised return')
     # plt.title('Effect of the Applied voltage on the "greedy policy" reward')
 
     # for p

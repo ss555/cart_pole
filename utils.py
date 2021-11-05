@@ -49,7 +49,21 @@ def _save_config(self, saved_hyperparams: Dict[str, Any]) -> None:
 
     print(f"Log path: {self.save_path}")
 
-
+#helper fcn
+def calculate_angle(prev_value, cos, sin, count=0):
+    '''
+    :param prev_value:
+    :param cos: cosinus
+    :param sin: sinus
+    :return:
+    '''
+    if prev_value - np.arctan2(sin, cos) > np.pi:
+        count += 1
+        return np.arctan2(sin, cos), count
+    elif np.arctan2(sin, cos) - prev_value > np.pi:
+        count -= 1
+        return np.arctan2(sin, cos), count
+    return np.arctan2(sin, cos), count
 def inferenceResCartpole(filename: str = '', monitorFileName: str = ''):
     '''
     :param filename: name of .npz file
