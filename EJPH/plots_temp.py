@@ -62,7 +62,7 @@ EVAL_NUM_STEPS = 5000
 Timesteps = np.linspace(EVAL_NUM_STEPS, NUM_Timesteps, int(NUM_Timesteps / EVAL_NUM_STEPS))
 
 xl = 'Time steps'
-yl = 'Normalised return'
+yl = 'Normalized return'
 
 logdir='./EJPH/plots'
 os.makedirs(logdir, exist_ok=True)
@@ -102,7 +102,7 @@ def save_show_fig(xArr,yArr,legs=None,title=None,saveName=None, ax=None, fig=Non
         ax.set_title(title, fontSize=FONT_SIZE_LABEL)
 
     ax.set_xlabel('Time steps', fontSize=FONT_SIZE_LABEL)
-    ax.set_ylabel('Normalised return', fontSize=FONT_SIZE_LABEL)
+    ax.set_ylabel('Normalized return', fontSize=FONT_SIZE_LABEL)
 
     if legs is not None:
         ax.legend(legs, loc='best',bbox_to_anchor=(1.01, 1))
@@ -313,7 +313,7 @@ if __name__=='__main__':
             plt.fill_between(Timesteps, meanRew2 + stdRew2, meanRew2 - stdRew2, facecolor='blue', alpha=0.2)
         plt.rcParams['font.size'] = FONT_SIZE_LABEL
         plt.xlabel('Time steps')
-        plt.ylabel('Normalised return')
+        plt.ylabel('Normalized return')
         plt.rcParams['font.size'] = FONT_SIZE_AXIS
         # plt.title('Effect of initialisation on the "greedy policy" reward from experimental state')#random
         plt.legend(['random','experimental'])
@@ -425,8 +425,8 @@ if __name__=='__main__':
             ax1.set_xlabel('Time steps', fontSize=FONT_SIZE_LABEL)
             ax2.set_xlabel('Time steps', fontSize=FONT_SIZE_LABEL)
             a[1][0].set_xlabel('Time steps', fontSize=FONT_SIZE_LABEL)
-            ax2.set_ylabel('Normalised return', fontSize=FONT_SIZE_LABEL)
-            a[1][0].set_ylabel('Normalised return', fontSize=FONT_SIZE_LABEL)
+            ax2.set_ylabel('Normalized return', fontSize=FONT_SIZE_LABEL)
+            a[1][0].set_ylabel('Normalized return', fontSize=FONT_SIZE_LABEL)
 
             a[1][0].grid()
             figm2.savefig('./EJPH/plots/episode_rew_tension.pdf')
@@ -439,7 +439,7 @@ if __name__=='__main__':
             plt.fill_between(tensionMax, scoreArr + stdArr, scoreArr - stdArr, facecolor='red', alpha=0.5)
             plt.rcParams['font.size'] = FONT_SIZE_LABEL
             plt.xlabel('Tension (V)')
-            plt.ylabel('Normalised return')
+            plt.ylabel('Normalized return')
             plt.title('Effect of the applied voltage on the "greedy policy" reward', fontSize=FONT_SIZE_LABEL)
             plt.rcParams['font.size'] = FONT_SIZE_AXIS
             plt.show()
@@ -526,7 +526,7 @@ if __name__=='__main__':
         a[1][1].boxplot(episodeArr, positions=TENSION_RANGE, patch_artist=True)
         a[1][1].grid()
 
-        a[1][1].set_ylabel('Normalised return', fontSize=FONT_SIZE_LABEL)
+        a[1][1].set_ylabel('Normalized return', fontSize=FONT_SIZE_LABEL)
         a[1][1].set_xlabel('Applied DC motor Tension (V)', fontSize=FONT_SIZE_LABEL)
         INSET = False
         if INSET:
@@ -681,7 +681,7 @@ if RAINBOW:
     # plt.hlines(y=EP_LENGTH,xmin=min(TENSION_RANGE),xmax=max(TENSION_RANGE),linestyles='--')
     plt.grid()
     plt.xlabel('Tension (V)')
-    plt.ylabel('Normalised return')
+    plt.ylabel('Normalized return')
     # plt.title('Effect of the applied tension on the "greedy policy" reward')
 
     # for p

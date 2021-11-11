@@ -180,8 +180,8 @@ if EVAL_TENSION_FINAL_PERF:
 
             ax1.legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
             ax2.legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
-            ax1.set_xlabel('timesteps')
-            ax2.set_xlabel('timesteps')
+            ax1.set_xlabel('Time step')
+            ax2.set_xlabel('Time step')
             ax2.set_ylabel('Rewards')
             # plt.title('Effect of the applied tension on the "greedy policy" reward')
             figm2.savefig('./EJPH/plots/episode_rew_tension.pdf')

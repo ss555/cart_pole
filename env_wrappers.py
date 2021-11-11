@@ -234,7 +234,7 @@ def ts2xy(data_frame: pd.DataFrame, x_axis: str) -> Tuple[np.ndarray, np.ndarray
 
     :param data_frame: the input data
     :param x_axis: the axis for the x and y output
-        (can be X_TIMESTEPS='timesteps', X_EPISODES='episodes' or X_WALLTIME='walltime_hrs')
+        (can be X_TIMESTEPS='Time step', X_EPISODES='episodes' or X_WALLTIME='walltime_hrs')
     :return: the x and y output
     """
 

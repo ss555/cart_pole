@@ -13,7 +13,7 @@ from generate_video_with_caption import animateFromData
 PLOT_TRAINING_REWARD = True
 PLOT_EVAL_REWARD = True
 TENSION_PLOT = True
-ANIMATE = True
+ANIMATE = False
 
 TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]
 SCALE = 1.2
@@ -102,9 +102,9 @@ if ANIMATE:
     animateFromData(saveVideoName='./EJPH/xEvolution.mp4', dotMode='end', xData=np.arange(800),yData=xAnimation, title='$x$ evolution', ylabel='$x$ [m]', fps=50)
 
 
-ax[0].set_xlabel('Timesteps', fontSize=LABEL_SIZE)
+ax[0].set_xlabel('Time step', fontSize=LABEL_SIZE)
 ax[0].set_ylabel('x [m]', fontSize=LABEL_SIZE)
-ax[1].set_xlabel('Timesteps', fontSize=LABEL_SIZE)
+ax[1].set_xlabel('Time step', fontSize=LABEL_SIZE)
 ax[1].set_ylabel('$\Theta$ [rad]', fontSize=LABEL_SIZE)
 ax[0].grid()
 ax[1].grid()

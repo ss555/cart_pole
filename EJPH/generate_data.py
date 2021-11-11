@@ -74,10 +74,8 @@ if EVAL_TENSION_FINAL_PERF:
         envEval = CartPoleRK4(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')
         filename = logdir + f'/tension-perf/tension_sim_{tension}_V_'
         if video_folder is not None:
-            env = VideoRecorderWrapper(env, video_folder=video_folder, record_video_trigger=lambda step: step == 0,
-                             video_length=STEPS_TO_TRAIN, name_prefix=filename)
-            envEval = VideoRecorderWrapper(envEval, video_folder=video_folder, record_video_trigger=lambda step: step == 0,
-                                       video_length=STEPS_TO_TRAIN, name_prefix=filename)
+            env = VideoRecorderWrapper(env, video_folder=video_folder, record_video_trigger=lambda step: step == 0, video_length=STEPS_TO_TRAIN, name_prefix=filename)
+            envEval = VideoRecorderWrapper(envEval, video_folder=video_folder, record_video_trigger=lambda step: step == 0, video_length=STEPS_TO_TRAIN, name_prefix=filename)
         env = Monitor(env, filename=filename)
         model = DQN(env=env, **hyperparams, seed=MANUAL_SEED)
         eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000, deterministic=True)

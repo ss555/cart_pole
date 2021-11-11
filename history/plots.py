@@ -35,7 +35,7 @@ NUM_TIMESTEPS = 150000
 EVAL_NUM_STEPS = 5000
 timesteps = np.linspace(EVAL_NUM_STEPS, NUM_TIMESTEPS, int(NUM_TIMESTEPS / EVAL_NUM_STEPS))
 
-xl = 'Timesteps'
+xl = 'Time step'
 yl = 'Rewards'
 
 logdir='./plots'
@@ -66,7 +66,7 @@ def save_show_fig(xArr,yArr,legs,title=None,savename=None):
         sns.lineplot(y=yArr[i]/EP_STEPS, x=xArr[i],palette=colorPalette[i])
     if title is not None:
         plt.title(title)
-    plt.xlabel('timesteps',)
+    plt.xlabel('Time step',)
     plt.ylabel('Rewards')
     plt.legend(legs, loc='best')
     plt.grid()
@@ -218,7 +218,7 @@ if __name__=='__main__':
         if fillBetween:
             plt.fill_between(timesteps,meanRew + stdRew, meanRew - stdRew, facecolor='red', alpha=0.2)
             plt.fill_between(timesteps,meanRew2 + stdRew2, meanRew2 - stdRew2, facecolor='blue', alpha=0.2)
-        plt.xlabel('timesteps')
+        plt.xlabel('Time step')
         plt.ylabel('Rewards')
         # plt.title('Effect of initialisation on the "greedy policy" reward from experimental state')#random
         plt.legend(['random','experimental'])
@@ -301,8 +301,8 @@ if __name__=='__main__':
             fig2.show()
             ax1.legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
             ax2.legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
-            ax1.set_xlabel('timesteps')
-            ax2.set_xlabel('timesteps')
+            ax1.set_xlabel('Time step')
+            ax2.set_xlabel('Time step')
             ax2.set_ylabel('Rewards')
             # plt.title('Effect of the applied tension on the "greedy policy" reward')
             figm2.savefig('./EJPH/plots/episode_rew_tension.pdf')

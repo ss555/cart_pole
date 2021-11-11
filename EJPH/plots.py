@@ -2,7 +2,6 @@
 2 modes: PLOT_TRAINING_REWARD: plots the training reward from the .csv files
 PLOT_EVAL_REWARD: plots evaluation reward from .npz files
 '''
-
 import sys
 import os
 import pickle
@@ -25,10 +24,15 @@ from env_wrappers import load_results, ts2xy, load_data_from_csv
 import subprocess
 from utils import inferenceResCartpole, calculate_angle
 
-PLOT_TRAINING_REWARD = True
-PLOT_EVAL_REWARD = True
+dqn7real = './EJPH/real-cartpole/dqn_7.1V'
+filenames = ['./EJPH/real-cartpole/dqn_7.1V/inference_results.npz', './weights/dqn50-real/pwm51/inference_results.npz']
+
+PLOT_TRAINING_REWARD = False
+PLOT_EVAL_REWARD = False
 TENSION_PLOT = False
-PLOT_ACTION_NOISE = False
+PLOT_ACTION_NOISE = True
+CROP = False
+
 TENSION_RANGE = np.array([2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12])
 SCALE = 1.2
 FONT_SIZE_LABEL = 14
@@ -97,7 +101,16 @@ legsActionTitle = "$\sigma_U/U$"
 def save_show_fig(xArr,yArr,legs=None,title=None,saveName=None, ax=None, fig=None, true_value_index=None,experimental_value_index=None):
     if ax is None:
         fig, ax = plt.subplots(figsize=(SCALE*6,SCALE*3.7125))
-    for i in range(len(xArr)):
+    #standardisize in format
+    xArr, yArr = np.array(xArr), np.array(yArr)
+    if len(xArr.shape)==1 and xArr[0].shape[0]==1:
+        xArr = xArr.reshape(1, -1)
+        yArr = yArr.reshape(1, -1)
+
+    if len(xArr)>18:
+        print('too many values to print, funct error')
+        raise IOError
+    for i in range(xArr.shape[0]):
         if i==true_value_index:
             ax.plot(xArr[i], yArr[i] / EP_STEPS, '--', color=colorPalette[i])
         elif i==experimental_value_index:
@@ -122,7 +135,11 @@ def save_show_fig(xArr,yArr,legs=None,title=None,saveName=None, ax=None, fig=Non
     except:
         print('provide saveName for this plot')
 
-
+def findInd(array,elem):
+    for i, elArr in enumerate(array):
+        if elem==elArr:
+            return i
+    return -1
 def generate_legends(legends):
     legends = np.array([legend.split('_') for legend in legends])
     return legends
@@ -138,14 +155,13 @@ figAc, axAc = plt.subplots(nrows=2, ncols=1, figsize=(SCALE*6,SCALE*2*3.7125))
 
 
 #helper fcs
-def plot_from_npz(filenames, xlabel, ylabel, legends=None, legends_title=None, title=None, plot_std=False,saveName=None, ax=None, fig=None, true_value_index=None):
+def plot_from_npz(filenames, xlabel, ylabel, legends=None, legends_title=None, title=None, plot_std=False,saveName=None, ax=None, fig=None, true_value_index=None, target = None, infExpDir = None):
     for i,filename in enumerate(filenames):
         data = np.load(filename)
         meanRew, stdRew = np.mean(data["results"], axis=1)/EP_STEPS, np.std(data["results"], axis=1, keepdims=False)/EP_STEPS
         if ax is None:
             fig, ax = plt.subplots(figsize=(SCALE*6,SCALE*3.7125))
         if i == true_value_index:
-            # ax.plot(Timesteps, meanRew, 'o-', color=colorPalette[i])
             ax.plot(Timesteps, meanRew, 'o--', fillstyle='none', color=colorPalette[i])
         else:
             ax.plot(Timesteps, meanRew, 'o--', fillstyle='none', color=colorPalette[i])
@@ -161,7 +177,6 @@ def plot_from_npz(filenames, xlabel, ylabel, legends=None, legends_title=None, t
     if legends is not None:
         if legends_title is not None:
             ax.legend(legends, bbox_to_anchor=(1.01, 1), title = legends_title)
-            # plt.setp(l.get_title(), multialignment='center')
         else:
             ax.legend(legends, bbox_to_anchor=(1.01, 1))
     if fig is not None:
@@ -198,7 +213,7 @@ if __name__=='__main__':
         #7.1V
         legsT.append(f'{float(round(dcVoltage1,2))}(experiment 1)')
         legsT.append(f'{float(round(dcVoltage1,2))}(experiment 2)')
-        xArrEx, yArrEx, _ = plot_results('./EJPH/real-cartpole/dqn_7.1V', only_return_data=True)
+        xArrEx, yArrEx, _ = plot_results(dqn7real, only_return_data=True)
 
         # xArrT.append(xArrEx[0])
         # yArrT.append(yArrEx[0])
@@ -326,35 +341,35 @@ if __name__=='__main__':
         plt.savefig('./EJPH/plots/exp-vs-rand-greedy.pdf')
         # #plt.show()
 
-    offset = 0.2
+        offset = 0.2
 
 
-    axNo[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axNo[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
-    axNo[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axNo[1].transAxes, fontsize='x-large')
-    figNo.legend(legsNo, loc='upper center', bbox_to_anchor=(0.5, 0.98), title=legsNoiseTitle, ncol=5)
-    figNo.savefig('./EJPH/plots/noise_all.pdf')
-    figNo.show()
+        axNo[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axNo[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
+        axNo[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axNo[1].transAxes, fontsize='x-large')
+        figNo.legend(legsNo, loc='upper center', bbox_to_anchor=(0.5, 0.98), title=legsNoiseTitle, ncol=5)
+        figNo.savefig('./EJPH/plots/noise_all.pdf')
+        figNo.show()
 
-    axDy[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axDy[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
-    axDy[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axDy[1].transAxes, fontsize='x-large')
-    figDy.legend(legsVisc, loc='upper center', bbox_to_anchor=(0.5, 0.96), title=legsViscTitle , ncol=5)
-    figDy.savefig('./EJPH/plots/dynamic_all.pdf')
-    figDy.show()
+        axDy[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axDy[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
+        axDy[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axDy[1].transAxes, fontsize='x-large')
+        figDy.legend(legsVisc, loc='upper center', bbox_to_anchor=(0.5, 0.96), title=legsViscTitle , ncol=5)
+        figDy.savefig('./EJPH/plots/dynamic_all.pdf')
+        figDy.show()
 
-    axSt[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axSt[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
-    axSt[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axSt[1].transAxes, fontsize='x-large')
-    figSt.legend(legsStatic, loc='upper center', bbox_to_anchor=(0.5, 0.96), title=legsStaticTitle, ncol=5)
-    figSt.savefig('./EJPH/plots/static_all.pdf')
-    figSt.show()
+        axSt[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axSt[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
+        axSt[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axSt[1].transAxes, fontsize='x-large')
+        figSt.legend(legsStatic, loc='upper center', bbox_to_anchor=(0.5, 0.96), title=legsStaticTitle, ncol=5)
+        figSt.savefig('./EJPH/plots/static_all.pdf')
+        figSt.show()
 
-    axAc[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axAc[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
-    axAc[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axAc[1].transAxes, fontsize='x-large')
-    figAc.legend(legsAc, loc='upper center', bbox_to_anchor=(0.5, 0.96), title=legsActionTitle, ncol=5)
-    figAc.savefig('./EJPH/plots/action_all.pdf')
-    figAc.show()
+        axAc[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axAc[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
+        axAc[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axAc[1].transAxes, fontsize='x-large')
+        figAc.legend(legsAc, loc='upper center', bbox_to_anchor=(0.5, 0.96), title=legsActionTitle, ncol=5)
+        figAc.savefig('./EJPH/plots/action_all.pdf')
+        figAc.show()
 
 
-    print('generated train/inf')
+        print('generated train/inf')
 
     if TENSION_PLOT:
         scoreArr = np.zeros_like(TENSION_RANGE)
@@ -446,7 +461,6 @@ if __name__=='__main__':
             )
         print('done inference on voltages')
         #indexes 12,14 are best found by theta_x_experiment.py
-        filenames = ['./EJPH/real-cartpole/dqn_7.1V/inference_results.npz', './weights/dqn50-real/pwm51/inference_results.npz']
         #old #filenames = ['./EJPH/real-cartpole/dqn_7.1V/inference_results.npz', './weights/dqn2.4V/inference_results.npz']
         if PLOT_SMALL_REAL_TENSION:
             data = np.load(filenames[1])
@@ -470,8 +484,7 @@ if __name__=='__main__':
         GENERATE_BOXPLOT_DATA=False #False when we load from pickle
         if GENERATE_BOXPLOT_DATA:
             for i, tension in enumerate(TENSION_RANGE):
-                env = CartPoleRK4(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension,
-                                     resetMode='experimental', sparseReward=False)
+                env = CartPoleRK4(Te=Te, N_STEPS=EP_STEPS, discreteActions=True, tensionMax=tension, resetMode='experimental', sparseReward=False)
                 model = DQN.load(f'./EJPH/tension-perf/tension_sim_{tension}_V__best', env=env)
                 # episode_rewards, episode_lengths = evaluate_policy_episodes(env=env,model=model,n_eval_episodes=100,episode_steps=EP_STEPS)
                 THETA_DOT_THRESHOLD = 0
@@ -550,11 +563,7 @@ if __name__=='__main__':
         # figT.legend(legsT,loc='upper center', bbox_to_anchor=(0., 1.05, 1., .102),)
 
 
-        def findInd(array,elem):
-            for i, elArr in enumerate(array):
-                if elem==elArr:
-                    return i
-            return -1
+
         # experimental inference
         # adding inference
         EXPERIMENTAL_INFERENCE=True
@@ -629,8 +638,10 @@ if diffSeed:
     filenames = [filenames[i] for i in idx]
     legs = [str(leg) + 'V' for leg in legs]
     plot_from_npz(filenames, xl, yl, legends=legs, saveName='./EJPH/plots/greedy_tension_seed.pdf')
-os.chdir('./EJPH/plots')
-subprocess.call(['sh', './crop.sh']) #call shell script for pdfcrop
+
+if CROP:
+    os.chdir('./EJPH/plots')
+    subprocess.call(['sh', './crop.sh']) #call shell script for pdfcrop
 
 
 #D subplot: apprentissage, inference, boxplot
@@ -639,9 +650,9 @@ subprocess.call(['sh', './crop.sh']) #call shell script for pdfcrop
 
 dirTensionNoise = './EJPH/tensions-noise'
 dirTensionSeed = './EJPH/tension-perf-seed'
+dirTensionVar = './EJPH/tension-7-exp'
 
-
-saveName = ['./EJPH/plots/greedy_tension_seed.pdf', './EJPH/plots/tension_noise_1.pdf', './EJPH/plots/tension_6.5-7.0.pdf']
+saveName = ['./EJPH/plots/greedy_tension_seed.pdf', './EJPH/plots/tension_noise_1.pdf', './EJPH/plots/tension_6.5-7.0.pdf', './EJPH/plots/tension_70.pdf']
 
 if diffSeed:
     filenames = sorted(glob.glob(dirTensionSeed + '/*.npz', ),key=os.path.getmtime)
@@ -649,6 +660,7 @@ if diffSeed:
     xArr, yArr, legs = plot_results(dirTensionSeed, only_return_data=True)  # ,title=t1) #'Effect of varying tension on the learning'
     legs = [float(leg) for leg in legs[:, -3]]
     xArr, yArr, legs = sort_arr_from_legs(xArr, yArr, legs)
+
     for i in range(5):
         legsl = [legs[j*5+i] for j in range(6)]
         xArrl = [xArr[j*5+i] for j in range(6)]
@@ -660,14 +672,21 @@ if diffSeed:
     fTensionSeed.legend(legsl, loc='upper center', bbox_to_anchor=(0.5, 1), title="Applied voltage", ncol=len(legsl))
     fTensionSeed.savefig(saveName[0])
 
-def plot_train_inference(dir, saveName, figsize=(10,15)):
+def plot_train_inference(dir, saveName, figsize=(10,15), legendTitle = "Applied voltage", target = None, dirExperiment = None, infExpDir = None):
     filenames = sorted(glob.glob(dir + '/*.npz'))
     fTension, ax = plt.subplots(2, figsize=figsize)
-    xArr, yArr, legs = plot_results(dir, only_return_data=True)  # ,title=t1) #'Effect of varying tension on the learning'
-    legs = [round(float(leg), 2) for leg in legs[:, -3]]
+    xArr, yArr, legs = plot_results(dir, only_return_data=True)
+    legs = np.array([round(float(leg), 2) for leg in legs[:, -3]])
     xArrT, yArrT, legsT = sort_arr_from_legs(xArr, yArr, legs)
+    if target!= None:
+        legsT = legsT[legsT==target]
+        xArrT = xArrT[legsT==target]
+        yArrT = yArrT[legsT==target]
     save_show_fig(xArrT, yArrT, ax=ax[0])
-    # save_show_fig(xArrT, yArrT, legs=legs, ax=ax[0])
+
+    if dirExperiment != None:
+        xArrEx, yArrEx, _ = plot_results(dirExperiment, only_return_data=True)
+        ax[0].plot(xArrEx[0], yArrEx[0] / EP_STEPS, color=colorPalette[np.where(TENSION_RANGE == 7.1)[0][0]], linewidth=3.0)
 
     legs = np.array([legend.split('_') for legend in filenames])
     legs = [round(float(leg),2) for leg in legs[:, -3]]
@@ -675,14 +694,24 @@ def plot_train_inference(dir, saveName, figsize=(10,15)):
     legs = [legs[i] for i in idx]
     filenames = [filenames[i] for i in idx]
     legs = [str(leg) + 'V' for leg in legs]
-    plot_from_npz(filenames, xl, yl, ax=ax[1])
-    fTension.legend(legs, loc='upper center', bbox_to_anchor=(0.5, 1), title="Applied voltage", ncol=len(legsl))
+    plot_from_npz(filenames, xl, yl, ax=ax[1], target = target)
 
-    fTension.savefig(saveName) #save figure
+    if dirExperiment != None and infExpDir!= None:
+        Timesteps7, epRew7 = inferenceResCartpole(infExpDir, monitorFileName=dirExperiment+'/monitor.csv')
+        ax[1].plot(Timesteps7, epRew7 / EP_STEPS, 'o-', color=colorPalette[findInd(TENSION_RANGE, 7.1)], linewidth=3.0)
+    legs.append('7.06 experiment')
+    fTension.legend(legs, loc='upper center', bbox_to_anchor=(0.5, 1), title=legendTitle, ncol=min(len(legs),6))
+    fTension.savefig(saveName)
 
 if PLOT_ACTION_NOISE:
-    plot_train_inference(dirTensionNoise, saveName[1])
-    plot_train_inference(dirTensionNoise + '/original', saveName[2])
+    # plot_train_inference(dirTensionNoise, saveName[1])
+    # plot_train_inference(dirTensionNoise + '/original', saveName[2])
+    plot_train_inference(dirTensionVar, saveName[3], dirExperiment = dqn7real, infExpDir=filenames[0])
+
+
+
+    # plot_train_inference(dirTensionVar, saveName[3], target=7.06, dirExperiment=dqn7real)
+
     # filenames = sorted(glob.glob(dirTensionNoise + '/*.npz'))
     # fTension, ax = plt.subplots(2, figsize=figsize)
     # xArr, yArr, legs = plot_results(dirTensionNoise, only_return_data=True)  # ,title=t1) #'Effect of varying tension on the learning'

@@ -1,4 +1,6 @@
 #from utils import linear_schedule
+path_general:
+  dqn7:
 
 dqn_cartpole_50:
     policy: 'MlpPolicy'
