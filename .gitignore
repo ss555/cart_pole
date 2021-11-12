@@ -26,3 +26,6 @@ __pycache__/
 *.png
 !./weights/*/*.zip
 *.pyc
+__pycache__/env_custom.cpython-38.pyc
+__pycache__/env_wrappers.cpython-38.pyc
+__pycache__/utils.cpython-38.pyc
