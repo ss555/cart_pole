@@ -27,9 +27,9 @@ from utils import inferenceResCartpole, calculate_angle
 dqn7real = './EJPH/real-cartpole/dqn_7.1V'
 filenames = ['./EJPH/real-cartpole/dqn_7.1V/inference_results.npz', './weights/dqn50-real/pwm51/inference_results.npz']
 
-PLOT_TRAINING_REWARD = False
-PLOT_EVAL_REWARD = False
-TENSION_PLOT = False
+PLOT_TRAINING_REWARD = True
+PLOT_EVAL_REWARD = True
+TENSION_PLOT = True
 PLOT_ACTION_NOISE = True
 CROP = False
 
@@ -327,6 +327,7 @@ if __name__=='__main__':
         sns.set_context("paper")
         sns.set_style("whitegrid")
         fillBetween=False
+        plt.show()
         plt.plot(Timesteps, meanRew, 'ro-')
         plt.plot(Timesteps, meanRew2, 'bo--')
         if fillBetween:
@@ -337,7 +338,7 @@ if __name__=='__main__':
         plt.ylabel(yl)
         plt.rcParams['font.size'] = FONT_SIZE_AXIS
         # plt.title('Effect of initialisation on the "greedy policy" reward from experimental state')#random
-        plt.legend(['random','experimental'])
+        plt.legend(['random','fixed'])
         plt.savefig('./EJPH/plots/exp-vs-rand-greedy.pdf')
         # #plt.show()
 
