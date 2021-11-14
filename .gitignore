@@ -6,6 +6,26 @@ other/
 todo/
 /sac_cartpole_tensorboard
 cart_pole
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+__pycache__/
+.vscode/settings.json
+*.csv
+*.out
+*.json
+*.html
+=======
+.vscode/
+>>>>>>> 0acee2fb98061c68734693f755e40ef5e3fc81fd
+=======
+=======
+>>>>>>> e1b581df6fdde7f02f3f63c53be43ef3288490e1
 *.zip
 *.png
 !./weights/*/*.zip
+*.pyc
+__pycache__/env_custom.cpython-38.pyc
+__pycache__/env_wrappers.cpython-38.pyc
+__pycache__/utils.cpython-38.pyc

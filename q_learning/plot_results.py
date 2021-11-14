@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 from numba import njit
 #%%
-path = Path('/home/robotfish/Project/cart_pole/q_learning')
+path = Path('/home/robotfish/Project/cart_pole/q_learning/0617_102654')
 csvfiles = list(path.glob('**/ql_*.csv'))
 # print(list(csvfiles))
 
@@ -18,7 +18,7 @@ def plotResult(file):
     fig = df.plot(y=['reward_roll', 'eps_normalized'],)
     fig.write_html(file.stem+'_plot.html')
 
-#list(map(plotResult, csvfiles))
+list(map(plotResult, csvfiles))
 
 # %%
 path = Path('/home/robotfish/Project/cart_pole/q_learning')
@@ -34,5 +34,5 @@ def plotResult(file):
     fig.show()
     fig.write_html(file.stem+'_plot.html')
 
-list(map(plotResult, csvfiles))
+#list(map(plotResult, csvfiles))
 # %%
