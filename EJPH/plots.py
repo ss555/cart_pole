@@ -27,9 +27,9 @@ from utils import inferenceResCartpole, calculate_angle
 dqn7real = './EJPH/real-cartpole/dqn_7.1V'
 filenames = ['./EJPH/real-cartpole/dqn_7.1V/inference_results.npz', './weights/dqn50-real/pwm51/inference_results.npz']
 
-PLOT_TRAINING_REWARD = True
-PLOT_EVAL_REWARD = True
-TENSION_PLOT = True
+PLOT_TRAINING_REWARD = False #True
+PLOT_EVAL_REWARD = False #True
+TENSION_PLOT = False #True
 PLOT_ACTION_NOISE = True
 CROP = False
 
