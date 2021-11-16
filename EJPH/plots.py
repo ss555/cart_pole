@@ -103,7 +103,8 @@ def save_show_fig(xArr,yArr,legs=None,title=None,saveName=None, ax=None, fig=Non
         fig, ax = plt.subplots(figsize=(SCALE*6,SCALE*3.7125))
     #standardisize in format
     xArr, yArr = np.array(xArr), np.array(yArr)
-    if len(xArr.shape)==1 and xArr[0].shape[0]==1:
+    if len(xArr.shape)==1 and type(xArr[5])==np.int64:
+    # if len(xArr.shape)==1 and xArr[0].shape[0]==1:
         xArr = xArr.reshape(1, -1)
         yArr = yArr.reshape(1, -1)
 
@@ -703,7 +704,8 @@ def plot_train_inference(dir, saveName, figsize=(10,15), legendTitle = "Applied 
 if PLOT_ACTION_NOISE:
     # plot_train_inference(dirTensionNoise, saveName[1])
     # plot_train_inference(dirTensionNoise + '/original', saveName[2])
-    plot_train_inference(dirTensionVar, './EJPH/plots/tension_706.pdf', dirExperiment = dqn7real,target=7.06, infExpDir=filenames[0])
+    target = 7.11
+    plot_train_inference(dirTensionVar, f'./EJPH/plots/tension_{target}.pdf', dirExperiment = dqn7real,target=target, infExpDir=filenames[0])
     # plot_train_inference(dirTensionVar, saveName[3], dirExperiment = dqn7real, infExpDir=filenames[0])
 
 
