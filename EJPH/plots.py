@@ -137,10 +137,13 @@ def save_show_fig(xArr,yArr,legs=None,title=None,saveName=None, ax=None, fig=Non
         print('provide saveName for this plot')
 
 def findInd(array,elem):
-    for i, elArr in enumerate(array):
-        if elem==elArr:
-            return i
-    return -1
+    try:
+        for i, elArr in enumerate(array):
+            if elem==elArr:
+                return i
+        return -1
+    except:
+        print('error occured in findInd func')
 def generate_legends(legends):
     legends = np.array([legend.split('_') for legend in legends])
     return legends
@@ -157,6 +160,10 @@ figAc, axAc = plt.subplots(nrows=2, ncols=1, figsize=(SCALE*6,SCALE*2*3.7125))
 
 #helper fcs
 def plot_from_npz(filenames, xlabel, ylabel, legends=None, legends_title=None, title=None, plot_std=False,saveName=None, ax=None, fig=None, true_value_index=None, target = None, infExpDir = None):
+    if target is not None:
+        tensionRange = np.array([name.split('_') for name in filenames])
+        tensionRange = [round(float(seg), 2) for seg in tensionRange[:, -3]]
+        filenames = [filenames[findInd(tensionRange,target)]] #trim
     for i,filename in enumerate(filenames):
         data = np.load(filename)
         meanRew, stdRew = np.mean(data["results"], axis=1)/EP_STEPS, np.std(data["results"], axis=1, keepdims=False)/EP_STEPS
@@ -677,9 +684,10 @@ def plot_train_inference(dir, saveName, figsize=(10,15), legendTitle = "Applied 
     legs = np.array([round(float(leg), 2) for leg in legs[:, -3]])
     xArrT, yArrT, legsT = sort_arr_from_legs(xArr, yArr, legs)
     if target!= None:
-        legsT = legsT[legsT==target]
-        xArrT = xArrT[legsT==target]
-        yArrT = yArrT[legsT==target]
+        index = findInd(legsT,target)
+        legsT = legsT[index]
+        xArrT = xArrT[index]
+        yArrT = yArrT[index]
     save_show_fig(xArrT, yArrT, ax=ax[0])
 
     if dirExperiment != None:
@@ -704,31 +712,14 @@ def plot_train_inference(dir, saveName, figsize=(10,15), legendTitle = "Applied 
 if PLOT_ACTION_NOISE:
     # plot_train_inference(dirTensionNoise, saveName[1])
     # plot_train_inference(dirTensionNoise + '/original', saveName[2])
-    target = 7.11
-    plot_train_inference(dirTensionVar, f'./EJPH/plots/tension_{target}.pdf', dirExperiment = dqn7real,target=target, infExpDir=filenames[0])
+    targetRange = np.arange(7.01,7.15,0.01)
+    for target in targetRange:
+        target = round(target,2)
+        plot_train_inference(dirTensionVar, f'./EJPH/plots/tension_{target}.pdf', dirExperiment = dqn7real,target=target, infExpDir=filenames[0])
     # plot_train_inference(dirTensionVar, saveName[3], dirExperiment = dqn7real, infExpDir=filenames[0])
 
 
 
-    # plot_train_inference(dirTensionVar, saveName[3], target=7.06, dirExperiment=dqn7real)
-
-    # filenames = sorted(glob.glob(dirTensionNoise + '/*.npz'))
-    # fTension, ax = plt.subplots(2, figsize=figsize)
-    # xArr, yArr, legs = plot_results(dirTensionNoise, only_return_data=True)  # ,title=t1) #'Effect of varying tension on the learning'
-    # legs = [round(float(leg), 2) for leg in legs[:, -3]]
-    # xArrT, yArrT, legsT = sort_arr_from_legs(xArr, yArr, legs)
-    # save_show_fig(xArrT, yArrT, legs=legs, ax=ax[0])
-    #
-    # legs = np.array([legend.split('_') for legend in filenames])
-    # legs = [float(leg) for leg in legs[:, -3]]
-    # idx = sorted(range(len(legs)), key = lambda k: legs[k])
-    # legs = [legs[i] for i in idx]
-    # filenames = [filenames[i] for i in idx]
-    # legs = [str(leg) + 'V' for leg in legs]
-    # plot_from_npz(filenames, xl, yl, ax=ax[1])
-    # fTensionSeed.legend(legs, loc='upper center', bbox_to_anchor=(0.5, 1), title="Applied voltage", ncol=len(legsl))
-    #
-    # fTension.savefig(saveName[1])
 
 '''
 RAINBOW = False
