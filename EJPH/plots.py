@@ -603,14 +603,10 @@ if __name__=='__main__':
         :param axis: 2x2 axis to put the letters on a,b,c,d
         :return: 
         '''
-        axis[0][0].text(coords[0], coords[1], chr(97) + ')', transform=axis[0][0].transAxes,
-                        fontsize='x-large')  # font={'size' : fontSize})
-        axis[0][1].text(coords[0], coords[1], chr(98) + ')', transform=axis[0][1].transAxes,
-                        fontsize='x-large')  # font={'size' : fontSize})#
-        axis[1][0].text(coords[0], coords[1], chr(99) + ')', transform=axis[1][0].transAxes,
-                        fontsize='x-large')  # font={'size' : fontSize})
-        axis[1][1].text(coords[0], coords[1], chr(100) + ')', transform=axis[1][1].transAxes,
-                        fontsize='x-large')  # font={'size' : fontSize})
+        axis[0][0].text(coords[0], coords[1], chr(97) + ')', transform=axis[0][0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
+        axis[0][1].text(coords[0], coords[1], chr(98) + ')', transform=axis[0][1].transAxes, fontsize='x-large')  # font={'size' : fontSize})#
+        axis[1][0].text(coords[0], coords[1], chr(99) + ')', transform=axis[1][0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
+        axis[1][1].text(coords[0], coords[1], chr(100) + ')', transform=axis[1][1].transAxes, fontsize='x-large')  # font={'size' : fontSize})
 
 
     putIndInside(a)
