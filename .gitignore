@@ -6,13 +6,12 @@ other/
 todo/
 /sac_cartpole_tensorboard
 cart_pole
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
+
 
 __pycache__/
 .vscode/settings.json
 *.csv
+!./EJPH/*/*.csv
 *.out
 *.json
 *.html
