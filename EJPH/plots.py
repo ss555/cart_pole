@@ -703,7 +703,8 @@ def plot_train_inference(dir, saveName, figsize=(10,15), legendTitle = "Applied 
 if PLOT_ACTION_NOISE:
     # plot_train_inference(dirTensionNoise, saveName[1])
     # plot_train_inference(dirTensionNoise + '/original', saveName[2])
-    plot_train_inference(dirTensionVar, saveName[3], dirExperiment = dqn7real, infExpDir=filenames[0])
+    plot_train_inference(dirTensionVar, './EJPH/plots/tension_706.pdf', dirExperiment = dqn7real,target=7.06, infExpDir=filenames[0])
+    # plot_train_inference(dirTensionVar, saveName[3], dirExperiment = dqn7real, infExpDir=filenames[0])
 
 
 
