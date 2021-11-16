@@ -3,15 +3,10 @@ rpi/
 Transfer_learning/
 logs/
 other/
-todo/
 __pycache__/
+todo/
 /sac_cartpole_tensorboard
 cart_pole
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-__pycache__/
 .vscode/settings.json
 *.csv
 *.out
