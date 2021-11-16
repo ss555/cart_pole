@@ -4,6 +4,7 @@ Transfer_learning/
 logs/
 other/
 todo/
+__pycache__/
 /sac_cartpole_tensorboard
 cart_pole
 <<<<<<< HEAD
