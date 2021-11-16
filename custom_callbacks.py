@@ -75,7 +75,7 @@ class SaveOnBestTrainingRewardCallback(BaseCallback):
     def check_save(self):
         # Retrieve training reward
         data, _ = load_data_from_csv(self.monitor_filename)
-        x, y = ts2xy(data, 'timesteps')
+        x, y = ts2xy(data, 'Time step')
         if len(x) > 0:
             # Mean training reward over the last 10 episodes
             mean_reward = np.mean(y[-10:])
@@ -124,7 +124,7 @@ def plot_results(log_folder, window_size=30, title='Learning Curve',only_return_
     plot the results or returns data from log files
     :param log_folder: (str) the save location of the results to plot
     :param title: (str) the title of the task to plot
-    """  # x, y = ts2xy(load_results(log_folder), 'walltime_hrs')#'timesteps')
+    """  # x, y = ts2xy(load_results(log_folder), 'walltime_hrs')#'Time step')
     x_varArr=[]
     y_varArr=[]
     try:
@@ -162,7 +162,7 @@ def plot_results(log_folder, window_size=30, title='Learning Curve',only_return_
         pass
     if not only_return_data:
         plt.legend(legs,loc='best')
-        plt.xlabel('timesteps')
+        plt.xlabel('Time step')
         plt.ylabel('Rewards')
         plt.title(title)
         plt.savefig(log_folder+'/plot.png')

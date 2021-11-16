@@ -54,7 +54,7 @@ NUM_TIMESTEPS = 150000
 EVAL_NUM_STEPS = 5000
 timesteps = np.linspace(EVAL_NUM_STEPS, NUM_TIMESTEPS, int(NUM_TIMESTEPS / EVAL_NUM_STEPS))
 
-xl = 'Timesteps'
+xl = 'Time step'
 yl = 'Rewards'
 
 logdir='./plots'
@@ -93,7 +93,7 @@ def save_show_fig(xArr,yArr,legs=None,title=None,saveName=None, ax=None, fig=Non
             ax.plot(xArr[i], yArr[i] / EP_STEPS, '--', color=colorPalette[i])
     if title is not None:
         ax.set_title(title)
-    ax.set_xlabel('timesteps',)
+    ax.set_xlabel('Time step',)
     ax.set_ylabel('Rewards')
     if legs is not None:
         ax.legend(legs, loc='best',bbox_to_anchor=(1.01, 1))
@@ -305,7 +305,7 @@ if __name__=='__main__':
         if fillBetween:
             plt.fill_between(timesteps,meanRew + stdRew, meanRew - stdRew, facecolor='red', alpha=0.2)
             plt.fill_between(timesteps,meanRew2 + stdRew2, meanRew2 - stdRew2, facecolor='blue', alpha=0.2)
-        plt.xlabel('timesteps')
+        plt.xlabel('Time step')
         plt.ylabel('Rewards')
         # plt.title('Effect of initialisation on the "greedy policy" reward from experimental state')#random
         plt.legend(['random','experimental'])
@@ -419,9 +419,9 @@ if __name__=='__main__':
             ax1.legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
             ax2.legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
             # a[1][0].legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
-            ax1.set_xlabel('timesteps')
-            ax2.set_xlabel('timesteps')
-            a[1][0].set_xlabel('timesteps')
+            ax1.set_xlabel('Time step')
+            ax2.set_xlabel('Time step')
+            a[1][0].set_xlabel('Time step')
             ax2.set_ylabel('Rewards')
             a[1][0].set_ylabel('Rewards')
             a[1][0].grid()

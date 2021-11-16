@@ -11,7 +11,7 @@ from datetime import datetime
 ############################################
 
     
-log = "exp_bin10_alpha_decay_"
+log = "tensionMax-7.1_exp_bin10_alpha_0.01"
 
 now = datetime.now()
 dt_string = now.strftime("%m%d_%H%M%S")

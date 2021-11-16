@@ -34,7 +34,7 @@ def save_show_fig(xArr,yArr,legs,title=None,savename=None):
         sns.lineplot(y=yArr[i], x=xArr[i],palette=colorPalette[i])
     if title is not None:
         plt.title(title)
-    plt.xlabel('timesteps',)
+    plt.xlabel('Time step',)
     plt.ylabel('Rewards')
     plt.legend(legs, loc='best')
     try:
@@ -141,7 +141,7 @@ if PLOT_EVAL_REWARD:
     EVAL_NUM_STEPS = 5000
     timesteps = np.linspace(EVAL_NUM_STEPS, NUM_TIMESTEPS, int(NUM_TIMESTEPS / EVAL_NUM_STEPS))
 
-    xl  ='Timesteps'
+    xl  ='Time step'
     yl  ='Rewards'
 
     filenames = sorted(glob.glob(dirTension + '/*.npz'))
@@ -201,7 +201,7 @@ if PLOT_EVAL_REWARD:
     if fillBetween:
         plt.fill_between(timesteps,meanRew + stdRew, meanRew - stdRew, facecolor='red', alpha=0.2)
         plt.fill_between(timesteps,meanRew2 + stdRew2, meanRew2 - stdRew2, facecolor='blue', alpha=0.2)
-    plt.xlabel('timesteps')
+    plt.xlabel('Time step')
     plt.ylabel('Rewards')
     # plt.title('Effect of initialisation on the "greedy policy" reward from experimental state')#random
     plt.legend(['random','experimental'])
