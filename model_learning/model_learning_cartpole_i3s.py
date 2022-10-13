@@ -1,4 +1,7 @@
 # Environment
+import os
+import sys
+sys.path.append(os.path.abspath('./..'))
 import gym
 import torch
 import torch.nn as nn
@@ -15,7 +18,7 @@ from IPython import display as ipythondisplay
 from pyvirtualdisplay import Display
 from gym.wrappers import Monitor
 import base64
-import os
+
 import math
 import pickle
 # IO

@@ -660,8 +660,7 @@ class CartPoleNNs(CartPole):
     '''
     class to simulate cartpole as neural network (requires torch NN model)
     '''
-    def __init__(self,
-                 models):  # 0.1
+    def __init__(self, models):  # 0.1
         super(CartPole, self).__init__()
         self.models = models
 
