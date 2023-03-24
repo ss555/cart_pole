@@ -2,14 +2,5 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/DDQN/per" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/Transfer_learning/Starbucks_Capstone_Project" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/cart_pole" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/inverted-pendulum" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/offline_filter_comparison/rl-baselines3-zoo" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/per" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/rl-baselines3-zoo" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/zoo/cart_pole" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/zoo/test" vcs="Git" />
   </component>
 </project>

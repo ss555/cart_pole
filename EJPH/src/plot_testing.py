@@ -1,6 +1,7 @@
 import os
 import matplotlib.pyplot as plt
 import numpy as np
+import sys
 sys.path.append(os.path.abspath('./'))
 sys.path.append(os.path.abspath('./..'))
 import glob
@@ -105,8 +106,8 @@ if PLOT_EPISODE_REWARD:
     fig2.show()
     ax1.legend([str(t) + 'V' for t in TENSION_RANGE], loc='upper right')
     ax2.legend([str(t) + 'V' for t in TENSION_RANGE], loc='upper right')
-    ax1.set_xlabel('timesteps')
-    ax2.set_xlabel('timesteps')
+    ax1.set_xlabel('Time step')
+    ax2.set_xlabel('Time step')
     ax2.set_ylabel('Rewards')
     # plt.title('Effect of the applied tension on the "greedy policy" reward')
     figm2.savefig('./EJPH/plots/episode_seed_rew_tension.pdf')

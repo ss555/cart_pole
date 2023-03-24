@@ -9,7 +9,7 @@ from utils import linear_schedule, plot
 from custom_callbacks import plot_results
 from env_wrappers import Monitor
 # from stable_baselines3.common.monitor import Monitor
-from stable_baselines3 import DQN, SAC
+from stable_baselines3 import DQN, SAC, PPO
 from env_custom import CartPoleRK4
 from utils import read_hyperparameters
 from pathlib import Path
@@ -18,27 +18,24 @@ from custom_callbacks import EvalCustomCallback, EvalThetaDotMetric, moving_aver
 from matplotlib import rcParams, pyplot as plt
 import plotly.express as px
 from bokeh.palettes import d3
+from distutils.dir_util import copy_tree
+from env_wrappers import VideoRecorderWrapper
+
+#TODO use subprocess to parallelise sim
 STEPS_TO_TRAIN = 150000
 EP_STEPS = 800
 Te = 0.05
-MANUAL_SEED = 0
+MANUAL_SEED = 1
+video_folder = None
 # simulation results
-'''
-f_a=-20.75180095541654,  # -21.30359185798466,
-f_b=1.059719258572224,  # 1.1088617953891196,
-f_c=-1.166390864012042,  # -0.902272006611719,
-f_d=-0.09727843708918459,  # 0.0393516077401241, #0.0,#
-wAngular=4.881653071189049,
-kPendViscous=0.07035332644615992,  
-'''
 #Done episode reward for seed 0,5 + inference
 DYNAMIC_FRICTION_SIM = False  # True
 STATIC_FRICTION_SIM = False
-encNoiseVarSim = True
-ACTION_NOISE_SIM = True
-RESET_EFFECT = True  # True#False
-EVAL_TENSION_FINAL_PERF = False  # evaluate final PERFORMANCE of a cartpole for different voltages
-SEED_TRAIN = True
+encNoiseVarSim = False
+ACTION_NOISE_SIM = False #False
+RESET_EFFECT = False  # True#False
+EVAL_TENSION_FINAL_PERF = True  # evaluate final PERFORMANCE of a cartpole for different voltages
+SEED_TRAIN = False
 # other
 PLOT_FINAL_PERFORMANCE_STD = False  # False#
 qLearningVsDQN = False  # compare q-learn and dqn
@@ -47,19 +44,15 @@ logdir = './EJPH/'
 hyperparams = read_hyperparameters('dqn_cartpole_50')
 
 # DONE temps d’apprentissage et note en fonction du coefficient de friction statique 4 valeurs du coefficient:Ksc,virt= 0,0.1∗Ksc,manip,Ksc,manip,10∗Ksc,manipDiscussion
-STATIC_FRICTION_CART = -1.166390864012042
+STATIC_FRICTION_CART = 1.166390864012042
 # STATIC_FRICTION_ARR = np.array([200]) * STATIC_FRICTION_CART #150 not working
-STATIC_FRICTION_ARR = np.array([0, 0.1, 1, 10, 20]) * STATIC_FRICTION_CART
+STATIC_FRICTION_ARR = np.array([0, 0.1, 1, 10]) * STATIC_FRICTION_CART
 
 # DONE temps d’apprentissage et note en fonction de l’amplitude du controle
+# TENSION_RANGE = np.arange(6.5,7.1,0.1)#
 TENSION_RANGE = [2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12]#
+# TENSION_RANGE = [4.7]#
 
-# f_a = -20.75180095541654,  # -21.30359185798466,
-# f_b = 1.059719258572224,  # 1.1088617953891196,
-# f_c = -1.166390864012042,  # -0.902272006611719,
-# f_d = -0.09727843708918459,  # 0.0393516077401241, #0.0,#
-# wAngular = 4.881653071189049,
-# kPendViscous = 0.07035332644615992,  # 0.0,#
 # DONE temps  d’apprentissage  et  note  en  fonction  du  coefficient  de frottement dynamique
 DYNAMIC_FRICTION_PENDULUM = 0.07035332644615992
 DYNAMIC_FRICTION_ARR = np.array([0, 0.1, 1, 10]) * DYNAMIC_FRICTION_PENDULUM
@@ -80,6 +73,9 @@ if EVAL_TENSION_FINAL_PERF:
         env = CartPoleRK4(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')
         envEval = CartPoleRK4(Te=Te, N_STEPS=EP_STEPS, tensionMax=tension, resetMode='experimental')
         filename = logdir + f'/tension-perf/tension_sim_{tension}_V_'
+        if video_folder is not None:
+            env = VideoRecorderWrapper(env, video_folder=video_folder, record_video_trigger=lambda step: step == 0, video_length=STEPS_TO_TRAIN, name_prefix=filename)
+            envEval = VideoRecorderWrapper(envEval, video_folder=video_folder, record_video_trigger=lambda step: step == 0, video_length=STEPS_TO_TRAIN, name_prefix=filename)
         env = Monitor(env, filename=filename)
         model = DQN(env=env, **hyperparams, seed=MANUAL_SEED)
         eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000, deterministic=True)
@@ -177,8 +173,8 @@ if ACTION_NOISE_SIM:#Action noise in % for standart deviation
     Path(savePath).mkdir(exist_ok=True)
     for forceStd in FORCE_STD_ARR:
         filename = savePath+f'/force_std%_{forceStd}_'
-        env0 = CartPoleRK4(Te=Te, N_STEPS=EP_STEPS, resetMode='experimental',sparseReward=False, forceStd=forceStd)
-        envEval = CartPoleRK4(Te=Te, N_STEPS=EP_STEPS, resetMode='experimental',sparseReward=False, forceStd=forceStd)
+        env0 = CartPoleRK4(Te=Te, integrator='rk4', N_STEPS=EP_STEPS, resetMode='experimental',sparseReward=False, forceStd=forceStd)
+        envEval = CartPoleRK4(Te=Te, integrator='rk4', N_STEPS=EP_STEPS, resetMode='experimental',sparseReward=False, forceStd=forceStd)
         env = Monitor(env0, filename=logdir + f'action-noise/actionStd%_{forceStd}_')
         eval_callback = EvalThetaDotMetric(envEval, log_path=filename, eval_freq=5000)
         model = DQN(env=env, **hyperparams, seed=MANUAL_SEED)
@@ -274,3 +270,5 @@ if EVAL_TENSION_FINAL_PERF_seed:
             model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
         # scoreArr[i] = eval_callback.best_mean_reward # eval_callback.evaluations_results
     plot_results(saveFolder, paperMode=True)
+
+copy_tree('./EJPH','./../EJPH-backup')

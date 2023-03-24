@@ -12,7 +12,7 @@ from time import time
 import iir_filter
 import json
 from matplotlib import pyplot as plt
-
+from utils import rungekutta4
 # PWM 180
 [A, B, C, D] = [-21.30359185798466, 1.1088617953891196, -0.902272006611719, -0.03935160774012411]  # 20ms#(-7.794018686563599, 0.37538450501353504, -0.4891760779740128, -0.002568958116514183)
 wAngular = 4.85658326956131
@@ -40,21 +40,22 @@ class CartPoleDiscrete(gym.Env):
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second': 50
     }
+
     def __init__(self,
                  Te=0.05,
                  discreteActions=True,
                  resetMode='experimental',
                  Mcart=0.5,
                  Mpole=0.075,
-                 length=0.416,
-                 f_a=-21.30359185798466,
-                 f_b=1.1088617953891196,
-                 f_c=-0.902272006611719,
-                 f_d=-0.0393516077401241,
-                 wAngular=4.85658326956131,
-                 kPendViscous=0.11963736650935591,  # 0.0,#
-                 integrator="semi-euler",
-                 tensionMax=12,  # 8.4706
+                 length=0.411488843930847,
+                 f_a=20.75180095541654,  # -21.30359185798466,
+                 f_b=1.059719258572224,  # 1.1088617953891196,
+                 f_c=1.166390864012042,  # -0.902272006611719,
+                 f_d=0.09727843708918459,  # 0.0393516077401241, #0.0,#
+                 wAngular=4.881653071189049,
+                 kPendViscous=0.07035332644615992,  # 0.0,#
+                 integrator='ode',
+                 tensionMax=12,  # 7.0588235294117645,  # 150PWM
                  FILTER=False,
                  n=1,  # 2,5
                  Kp=0,
@@ -74,7 +75,7 @@ class CartPoleDiscrete(gym.Env):
         :param discreteActions: to use discrete Actions("True" to use with DQN) or continous ("False" to use with SAC)
         :param resetMode: experimental, goal , random or random_theta_thetaDot
         :param length: longeur du pendule
-        :param f_a: viscous friction of motor Force= f_a*Speed+f_b*Vmotor+f_c*np.sign(Speed)+f_d (look report for more details)
+        :param f_a: viscous friction of motor Force=f_a*Speed+f_b*Vmotor+f_c*np.sign(Speed)+f_d (look report for more details)
         :param f_b: coefficient of proportionality for the motor Tension
         :param f_c: static friction for the motor movement which comprises friction of motor,reductor and cart
         :param f_d: assymmetry coefficient in the motor movement
@@ -103,9 +104,8 @@ class CartPoleDiscrete(gym.Env):
         self.masspoleIni = Mpole
         self.total_mass = (self.masspoleIni + self.masscart)
         self.length = length  # center of mass
-        # self.polemass_length = (self.masspole * self.length)
         self.tau = Te  # seconds between state updates
-        self.kinematics_integrator = integrator  # 'rk'#
+        self.kinematics_integrator = integrator  # 'rk'# 'scipy'
         self.theta_threshold_radians = math.pi
         self.x_threshold = x_threshold
         # FOR DATA
@@ -126,7 +126,6 @@ class CartPoleDiscrete(gym.Env):
         self.seed(seed)
         self.viewer = None
         self.state = None
-
         self.wAngularIni = wAngular  # 4.488 #T=1.4285, w=
         self.reward = None
         self.resetMode = resetMode
@@ -145,19 +144,15 @@ class CartPoleDiscrete(gym.Env):
         self.thetaDotReset = thetaDotReset
         self.thetaReset = thetaReset
         self.THETA_DOT_LIMIT = THETA_DOT_LIMIT
+        self.total_count = 0  # how many steps from the start of initialisation
         self.episodeNum = 0
-        self.total_count = 0
         if self.FILTER:
             self.iirTheta_dot = iir_filter.IIR_filter(signal.butter(4, 0.9, 'lowpass', output='sos'))  # 2nd param 0.3
+            self.iirX_dot = iir_filter.IIR_filter(signal.butter(4, 0.5, 'lowpass', output='sos'))
 
     def seed(self, seed=5):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
-
-    def _calculate_force(self, action):
-        f = self.masscart * (self.fa * self.state[1] + self.fb * self.tensionMax * action[0] + self.fc * np.sign(
-            self.state[1]) + self.fd)  # PWM 180 : 7.437548494321268
-        return f
 
     def step(self, action):
         [x, x_dot, costheta, sintheta, theta_dot] = self.state
@@ -174,32 +169,22 @@ class CartPoleDiscrete(gym.Env):
             pass
         self.wAngularUsed = np.random.normal(self.wAngularIni, self.wAngularStd, 1)[0]
         self.masspole = np.random.normal(self.masspoleIni, self.masspoleStd, 1)[0]
-        self.polemass_length = (self.masspole * self.length)
-        if self.kinematics_integrator == 'semi-euler':
-            for i in range(self.n):
-                force = self._calculate_force(action)
-                if self.forceStd != 0:
-                    force += np.random.normal(0, scale=self.forceStd * abs(force) / 100)
-                xacc = (
-                                   force + self.masspole * theta_dot ** 2 * self.length * sintheta + self.masspole * self.g * sintheta * costheta) / (
-                                   self.masscart + self.masspole * sintheta ** 2)
-                thetaacc = -self.wAngularUsed ** 2 * sintheta - xacc / self.length * costheta - theta_dot * self.kPendViscous
-                x_dot += self.tau / self.n * xacc
-                x += x_dot * self.tau / self.n
-                theta_dot += thetaacc * self.tau / self.n
-                theta = math.atan2(sintheta, costheta)
-                theta += theta_dot * self.tau / self.n
-                costheta = np.cos(theta)
-                sintheta = np.sin(theta)
-        else:
-            [x, x_dot, theta, theta_dot] = odeint(self.pend, [x, x_dot, math.atan2(sintheta, costheta), theta_dot],
-                                                  [0, 0.05],
+        if self.kinematics_integrator == 'ode':
+            [x, x_dot, theta, theta_dot] = odeint(self.pendulum_dynamics,
+                                                  y0=[x, x_dot, math.atan2(sintheta, costheta), theta_dot], t=[0, 0.05],
                                                   args=(action, self.fa, self.fb, self.fc))[-1, :]
+        else:
+            [x, x_dot, theta, theta_dot] = rungekutta4(self.pendulum_dynamics,
+                                                       y0=[x, x_dot, math.atan2(sintheta, costheta), theta_dot],
+                                                       t=[0, 0.05],
+                                                       args=(action, self.fa, self.fb, self.fc))[-1, :]
+
         # adding process noise
         if self.Kp != 0:
             theta_dot = np.random.normal(theta_dot, self.Kp / self.tau, 1)[0]
             x_dot = np.random.normal(x_dot, 6e-3 * self.Kp / self.tau, 1)[0]
             theta = np.random.normal(theta, self.Kp, 1)[0]
+            x = np.random.normal(x, 6e-3 * self.Kp, 1)[0]
         costheta = np.cos(theta)
         sintheta = np.sin(theta)
         self.state = np.array([x, x_dot, np.cos(theta), np.sin(theta), theta_dot], dtype=np.float32)
@@ -213,46 +198,46 @@ class CartPoleDiscrete(gym.Env):
         cost = reward_fnCos(x, costheta, sintheta=sintheta, theta_dot=theta_dot, sparse=self.sparseReward)
         if x == -self.x_threshold or x == self.x_threshold:
             cost = cost - self.MAX_STEPS_PER_EPISODE / 2
-        # adding noise on observed variables (on x is negligible)
+        # adding noise on observed variables (on x is negligible?)
         if self.Km != 0:
             theta_dot = np.random.normal(theta_dot, self.Km / self.tau, 1)[0]
             x_dot = np.random.normal(x_dot, 6e-3 * self.Km / self.tau, 1)[0]
             theta = np.random.normal(theta, self.Km, 1)[0]
+            x = np.random.normal(x, 6e-3 * self.Km, 1)[0]
         # # # filtering
         if self.FILTER:
             x_dot = self.iirX_dot.filter(x_dot)
             theta_dot = self.iirTheta_dot.filter(theta_dot)
         return np.array([x, x_dot, np.cos(theta), np.sin(theta), theta_dot], dtype=np.float32), cost, done, {}
 
-    def pend(self, state, t, action, fa, fb, fc):
+    def pendulum_dynamics(self, state, t, action, fa, fb, fc):
         [x, x_dot, theta, theta_dot] = state
-        dqdt = np.zeros_like(state)
         costheta, sintheta = [np.cos(theta), np.sin(theta)]
-        dqdt[0] = state[1]
-        force = self._calculate_force(action)  # 0.44*(fa*x_dot+fb*self.tensionMax*action[0]+fc*np.sign(x_dot))
-        # TODO force?
-        dqdt[1] = (force  # self.masscart*(fa*x_dot+fb*8.47*action[0]+fc*np.sign(x_dot))#force
-                   + self.masspole * self.g * sintheta * costheta - self.masspole * theta_dot ** 2 * sintheta * self.length) \
-                  / (self.masscart + self.masspole * sintheta ** 2)
-        dqdt[3] = self.g / self.length * sintheta + dqdt[1] / self.length * costheta - theta_dot * kPendViscous
-        dqdt[2] = state[3]
-        return dqdt
+        action = np.array(action).reshape(1)[0]  # make in standard format
+        fdry = -self.fc * np.tanh(1000 * x_dot)
+        force = self.masscart * (-self.fa * x_dot + fdry)
 
-    def reset(self, costheta=1, sintheta=0, xIni=0.0, x_ini_speed=0.0, theta_ini_speed=0.0):
-        self.episodeNum+=1
+        if action != 0:
+            force += self.masscart * (-self.fd + self.fb * (self.tensionMax * action))
+        if self.forceStd != 0:
+            force += np.random.normal(0, scale=self.forceStd * abs(force) / 100)
+        xacc = (
+                           force + self.masspole * theta_dot ** 2 * self.length * sintheta + self.masspole * self.g * sintheta * costheta) / (
+                       self.masscart + self.masspole * sintheta ** 2)
+        thetaacc = -self.wAngularUsed ** 2 * sintheta - xacc / self.length * costheta - theta_dot * self.kPendViscous
+        return np.array([x_dot, xacc, theta_dot, thetaacc])
+
+    def reset(self, costheta=None, sintheta=None, xIni=None, x_ini_speed=None, theta_ini_speed=None):
+        self.episodeNum += 1
         self.total_count += self.COUNTER
         if self.FILTER:
-            # self.iirX_dot=iir_filter.IIR_filter(signal.butter(4, 0.5, 'lowpass', output='sos'))
+            self.iirX_dot.reset()
             self.iirTheta_dot.reset()
-        self.COUNTER = 0
 
+        self.COUNTER = 0
         if self.resetMode == 'experimental':
             self.state = np.zeros(shape=(5,))
-            self.state[0] = xIni
-            self.state[1] = x_ini_speed
-            self.state[2] = costheta
-            self.state[3] = sintheta
-            self.state[4] = theta_ini_speed
+            self.state[2] = 1
         elif self.resetMode == 'goal':
             self.state = np.zeros(shape=(5,))
             self.state[2] = -1
@@ -266,8 +251,10 @@ class CartPoleDiscrete(gym.Env):
             self.state[2] = np.cos(theta)
             self.state[3] = np.sin(theta)
         elif self.resetMode == 'random_theta_thetaDot':
+            self.state = np.zeros(shape=(5,))
             theta = self.np_random.uniform(-math.pi / 18, math.pi / 18)
-            self.state = [xIni, x_ini_speed, np.cos(theta), np.sin(theta), self.np_random.uniform(low=-0.05, high=0.05)]
+            self.state[2] = np.cos(theta)
+            self.state[3] = np.sin(theta)
         else:
             print('not defined, choose from experimental/goal/random')
         if self.thetaDotReset is not None:
@@ -275,7 +262,17 @@ class CartPoleDiscrete(gym.Env):
         if self.thetaReset is not None:
             self.state[3] = np.cos(self.thetaReset)
             self.state[4] = np.sin(self.thetaReset)
-        # print('reset state:{}'.format(self.state))
+        if xIni is not None:
+            self.state[0] = xIni
+        if x_ini_speed is not None:
+            self.state[1] = x_ini_speed
+        if costheta is not None:
+            self.state[2] = costheta
+        if sintheta is not None:
+            self.state[3] = sintheta
+        if theta_ini_speed is not None:
+            self.state[4] = theta_ini_speed
+            # print('reset state:{}'.format(self.state))
         return np.array(self.state)
 
     def rescale_angle(self, theta):
@@ -295,7 +292,6 @@ class CartPoleDiscrete(gym.Env):
 
         if self.viewer is None:
             from gym.envs.classic_control import rendering
-
             self.viewer = rendering.Viewer(screen_width, screen_height)
             self.track = rendering.Line((0, carty), (screen_width, carty))
             self.track.set_color(0, 0, 0)
@@ -319,6 +315,7 @@ class CartPoleDiscrete(gym.Env):
             self.axle.set_color(.5, .5, .8)
             self.viewer.add_geom(self.axle)
 
+        text = f'physical time: {round((self.COUNTER + self.total_count) * self.tau, 1)} seconds, episode: {self.episodeNum}'
 
         if self.state is None: return None
 
@@ -327,9 +324,8 @@ class CartPoleDiscrete(gym.Env):
         cartx = x[0] * scale + screen_width / 2.0  # MIDDLE OF CART
         self.carttrans.set_translation(cartx, carty)
         self.poletrans.set_rotation(theta + np.pi)
-        text=f'physical time: {round((self.COUNTER+self.total_count)*self.tau,1)} seconds, episode: {self.episodeNum}'
 
-        return self.viewer.render(return_rgb_array= mode == 'rgb_array',text_to_show=text)
+        return self.viewer.render(return_rgb_array=mode == 'rgb_array', text_to_show=text)
 
     def close(self):
         if self.viewer:

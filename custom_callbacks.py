@@ -1,4 +1,6 @@
 import csv
+import sys
+
 from stable_baselines3.common.callbacks import BaseCallback
 from tqdm.auto import tqdm
 import os
@@ -73,7 +75,7 @@ class SaveOnBestTrainingRewardCallback(BaseCallback):
     def check_save(self):
         # Retrieve training reward
         data, _ = load_data_from_csv(self.monitor_filename)
-        x, y = ts2xy(data, 'timesteps')
+        x, y = ts2xy(data, 'Time step')
         if len(x) > 0:
             # Mean training reward over the last 10 episodes
             mean_reward = np.mean(y[-10:])
@@ -112,16 +114,24 @@ def moving_average(values, window):
     weights = np.repeat(1.0, window) / window
     return np.convolve(values, weights, 'valid')
 
-
+# def return_data_time(log_folder, window_size=30, title='Learning Curve',only_return_data=False, paperMode=False):
+#     x_varArr, y_varArr=plot_results(log_folder,window_size,only_return_data=True)
+#     y_varArr=[]
+#     t_Arr=[]
+#     return x_varArr, y_varArr, t_Arr#TO
 def plot_results(log_folder, window_size=30, title='Learning Curve',only_return_data=False, paperMode=False):
     """
     plot the results or returns data from log files
     :param log_folder: (str) the save location of the results to plot
     :param title: (str) the title of the task to plot
-    """  # x, y = ts2xy(load_results(log_folder), 'walltime_hrs')#'timesteps')
+    """  # x, y = ts2xy(load_results(log_folder), 'walltime_hrs')#'Time step')
     x_varArr=[]
     y_varArr=[]
-    data_frame, legends = load_results(log_folder)
+    try:
+        data_frame, legends = load_results(log_folder)
+    except:
+        print(f'error occured treating folder : {log_folder}')
+        sys.exit(0)
     for data in data_frame:
         # Convert to hours
         x_var = np.cumsum(data.l.values)
@@ -138,11 +148,6 @@ def plot_results(log_folder, window_size=30, title='Learning Curve',only_return_
                 sns.set_context("paper")
                 sns.set_style("whitegrid")
             else:
-                # plot params
-                # plt.rcParams['font.family'] = "serif"
-                # plt.rcParams['font.serif'] = 'Georgia'
-                # plt.rcParams['font.size'] = 10
-                # plt.rcParams['mathtext.fontset'] = 'stix'
                 plt.rcParams["figure.dpi"] = 100
 
         x_varArr.append(x_var)
@@ -157,7 +162,7 @@ def plot_results(log_folder, window_size=30, title='Learning Curve',only_return_
         pass
     if not only_return_data:
         plt.legend(legs,loc='best')
-        plt.xlabel('timesteps')
+        plt.xlabel('Time step')
         plt.ylabel('Rewards')
         plt.title(title)
         plt.savefig(log_folder+'/plot.png')
