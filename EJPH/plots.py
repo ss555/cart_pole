@@ -700,6 +700,7 @@ def plot_train_inference(dir, saveName, figsize=(10,15), legendTitle = "Applied 
     fTension.legend(legs, loc='upper center', bbox_to_anchor=(0.5, 1), title=legendTitle, ncol=min(len(legs),6))
     fTension.savefig(saveName)
 
+# gray
 if PLOT_ACTION_NOISE:
     # plot_train_inference(dirTensionNoise, saveName[1])
     # plot_train_inference(dirTensionNoise + '/original', saveName[2])

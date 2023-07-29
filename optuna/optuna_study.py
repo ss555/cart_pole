@@ -23,7 +23,7 @@ N_EVALUATIONS = 4
 N_TIMESTEPS = int(6e4)
 EVAL_FREQ = int(N_TIMESTEPS / N_EVALUATIONS)
 N_EVAL_EPISODES = 3
-#TIMEOUT = int(60 * 15)  # 15 minutes in study.optimize
+
 
 def sample_sac_params(trial: optuna.Trial) -> Dict[str, Any]:
     """

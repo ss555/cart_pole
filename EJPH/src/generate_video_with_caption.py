@@ -1,3 +1,6 @@
+'''
+animate function is used to create an animated video of a matplotlib.
+'''
 import sys
 import os
 sys.path.append(os.path.abspath('./')) #add subfolders in path
@@ -84,8 +87,7 @@ def animateFromData(saveVideoName, xData, yData, axisColor='k', xlabel='Time ste
     Dot, = axIn.plot([], [], 'o', color=colorPalette[colorArray[k]])
     lineIn.append(line)
     dataDot.append(Dot)
-  myAnimation = FuncAnimation(figIn,
-                              animate_wrapper(xData, yData, lineIn = lineIn, dataDot = dataDot, ax = axIn, fig = figIn,
+  myAnimation = FuncAnimation(figIn, animate_wrapper(xData, yData, lineIn = lineIn, dataDot = dataDot, ax = axIn, fig = figIn,
                                               colorArray=colorArray, dotMode = dotMode),
                               frames=np.arange(1, yData.shape[-1]+1), interval=100000)
 
