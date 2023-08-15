@@ -26,7 +26,7 @@ plt.rcParams['figure.dpi'] = 100
 colorPalette = d3['Category20'][20]
 # set labels outside
 coords = [-0.15, 0.9]
-fontSize = 24
+fontsize = 24
 logdir='./plots'
 STEPS_TO_TRAIN=100000
 EP_STEPS = 800
@@ -102,14 +102,14 @@ if ANIMATE:
     animateFromData(saveVideoName='./EJPH/xEvolution.mp4', dotMode='end', xData=np.arange(800),yData=xAnimation, title='$x$ evolution', ylabel='$x$ [m]', fps=50)
 
 
-ax[0].set_xlabel('Time step', fontSize=LABEL_SIZE)
-ax[0].set_ylabel('x [m]', fontSize=LABEL_SIZE)
-ax[1].set_xlabel('Time step', fontSize=LABEL_SIZE)
-ax[1].set_ylabel('$\Theta$ [rad]', fontSize=LABEL_SIZE)
+ax[0].set_xlabel('Time step', fontsize=LABEL_SIZE)
+ax[0].set_ylabel('x [m]', fontsize=LABEL_SIZE)
+ax[1].set_xlabel('Time step', fontsize=LABEL_SIZE)
+ax[1].set_ylabel('$\Theta$ [rad]', fontsize=LABEL_SIZE)
 ax[0].grid()
 ax[1].grid()
 
-ax[0].text(coords[0], coords[1], chr(97) + ')', transform=ax[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
+ax[0].text(coords[0], coords[1], chr(97) + ')', transform=ax[0].transAxes, fontsize='x-large')  # font={'size' : fontsize})
 ax[1].text(coords[0], coords[1], chr(98) + ')', transform=ax[1].transAxes, fontsize='x-large')
 fig.legend(legsT, loc='upper center', bbox_to_anchor=(0.5, 0.95), title="Applied tension", ncol=len(legsT))
 # fig.tight_layout()

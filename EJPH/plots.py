@@ -59,7 +59,7 @@ plt.rcParams["figure.dpi"] = 100
 colorPalette = d3['Category20'][20]
 # set labels outside
 coords = [0.05, 0.95]
-fontSize = 24
+fontsize = 24
 
 
 NUM_Timesteps = 150000
@@ -101,16 +101,19 @@ legsActionTitle = "$\sigma_U/U$"
 def save_show_fig(xArr,yArr,legs=None,title=None,saveName=None, ax=None, fig=None, true_value_index=None,experimental_value_index=None):
     if ax is None:
         fig, ax = plt.subplots(figsize=(SCALE*6,SCALE*3.7125))
-    #standardisize in format
-    xArr, yArr = np.array(xArr), np.array(yArr)
-    if len(xArr.shape)==1 and xArr[0].shape[0]==1:
-        xArr = xArr.reshape(1, -1)
-        yArr = yArr.reshape(1, -1)
+    try:
+        #standardisize in format
+        xArr, yArr = np.array(xArr), np.array(yArr)
+        if len(xArr.shape)==1 and xArr[0].shape[0]==1:
+            xArr = xArr.reshape(1, -1)
+            yArr = yArr.reshape(1, -1)
+    except:
+        print('could not standardise in format')
 
     if len(xArr)>18:
         print('too many values to print, funct error')
         raise IOError
-    for i in range(xArr.shape[0]):
+    for i in range(len(xArr)):
         if i==true_value_index:
             ax.plot(xArr[i], yArr[i] / EP_STEPS, '--', color=colorPalette[i])
         elif i==experimental_value_index:
@@ -118,10 +121,10 @@ def save_show_fig(xArr,yArr,legs=None,title=None,saveName=None, ax=None, fig=Non
         else:
             ax.plot(xArr[i], yArr[i] / EP_STEPS, '--', color=colorPalette[i])
     if title is not None:
-        ax.set_title(title, fontSize=FONT_SIZE_LABEL)
+        ax.set_title(title, fontsize=FONT_SIZE_LABEL)
 
-    ax.set_xlabel('Time step', fontSize=FONT_SIZE_LABEL)
-    ax.set_ylabel(yl, fontSize=FONT_SIZE_LABEL)
+    ax.set_xlabel('Time step', fontsize=FONT_SIZE_LABEL)
+    ax.set_ylabel(yl, fontsize=FONT_SIZE_LABEL)
 
     if legs is not None:
         ax.legend(legs, loc='best',bbox_to_anchor=(1.01, 1))
@@ -168,12 +171,12 @@ def plot_from_npz(filenames, xlabel, ylabel, legends=None, legends_title=None, t
         if plot_std:
             plt.fill_between(Timesteps, meanRew + stdRew, meanRew - stdRew, alpha=0.2)
 
-    ax.set_xlabel(xlabel, fontSize=FONT_SIZE_LABEL)
-    ax.set_ylabel(ylabel, fontSize=FONT_SIZE_LABEL)
+    ax.set_xlabel(xlabel, fontsize=FONT_SIZE_LABEL)
+    ax.set_ylabel(ylabel, fontsize=FONT_SIZE_LABEL)
 
     ax.grid()
     if title is not None:
-        ax.set_title(title, fontSize=FONT_SIZE_LABEL)
+        ax.set_title(title, fontsize=FONT_SIZE_LABEL)
     if legends is not None:
         if legends_title is not None:
             ax.legend(legends, bbox_to_anchor=(1.01, 1), title = legends_title)
@@ -345,25 +348,25 @@ if __name__=='__main__':
         offset = 0.2
 
 
-        axNo[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axNo[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
+        axNo[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axNo[0].transAxes, fontsize='x-large')  # font={'size' : fontsize})
         axNo[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axNo[1].transAxes, fontsize='x-large')
         figNo.legend(legsNo, loc='upper center', bbox_to_anchor=(0.5, 0.98), title=legsNoiseTitle, ncol=5)
         figNo.savefig('./EJPH/plots/noise_all.pdf')
         figNo.show()
 
-        axDy[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axDy[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
+        axDy[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axDy[0].transAxes, fontsize='x-large')  # font={'size' : fontsize})
         axDy[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axDy[1].transAxes, fontsize='x-large')
         figDy.legend(legsVisc, loc='upper center', bbox_to_anchor=(0.5, 0.96), title=legsViscTitle , ncol=5)
         figDy.savefig('./EJPH/plots/dynamic_all.pdf')
         figDy.show()
 
-        axSt[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axSt[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
+        axSt[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axSt[0].transAxes, fontsize='x-large')  # font={'size' : fontsize})
         axSt[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axSt[1].transAxes, fontsize='x-large')
         figSt.legend(legsStatic, loc='upper center', bbox_to_anchor=(0.5, 0.96), title=legsStaticTitle, ncol=5)
         figSt.savefig('./EJPH/plots/static_all.pdf')
         figSt.show()
 
-        axAc[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axAc[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
+        axAc[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axAc[0].transAxes, fontsize='x-large')  # font={'size' : fontsize})
         axAc[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axAc[1].transAxes, fontsize='x-large')
         figAc.legend(legsAc, loc='upper center', bbox_to_anchor=(0.5, 0.96), title=legsActionTitle, ncol=5)
         figAc.savefig('./EJPH/plots/action_all.pdf')
@@ -433,11 +436,11 @@ if __name__=='__main__':
             ax2.legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
             # a[1][0].legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
 
-            ax1.set_xlabel('Time step', fontSize=FONT_SIZE_LABEL)
-            ax2.set_xlabel('Time step', fontSize=FONT_SIZE_LABEL)
-            a[1][0].set_xlabel('Time step', fontSize=FONT_SIZE_LABEL)
-            ax2.set_ylabel(yl, fontSize=FONT_SIZE_LABEL)
-            a[1][0].set_ylabel(yl, fontSize=FONT_SIZE_LABEL)
+            ax1.set_xlabel('Time step', fontsize=FONT_SIZE_LABEL)
+            ax2.set_xlabel('Time step', fontsize=FONT_SIZE_LABEL)
+            a[1][0].set_xlabel('Time step', fontsize=FONT_SIZE_LABEL)
+            ax2.set_ylabel(yl, fontsize=FONT_SIZE_LABEL)
+            a[1][0].set_ylabel(yl, fontsize=FONT_SIZE_LABEL)
 
             a[1][0].grid()
             figm2.savefig('./EJPH/plots/episode_rew_tension.pdf')
@@ -451,7 +454,7 @@ if __name__=='__main__':
             plt.rcParams['font.size'] = FONT_SIZE_LABEL
             plt.xlabel('Tension (V)')
             plt.ylabel(yl)
-            plt.title('Effect of the Applied voltage on the "greedy policy" reward', fontSize=FONT_SIZE_LABEL)
+            plt.title('Effect of the Applied voltage on the "greedy policy" reward', fontsize=FONT_SIZE_LABEL)
             plt.rcParams['font.size'] = FONT_SIZE_AXIS
             #plt.show()
             np.savez(
@@ -526,29 +529,24 @@ if __name__=='__main__':
                 os.makedirs('./EJPH/data/',exist_ok=True)
                 with open('./EJPH/data/boxplot.pickle', 'wb') as f:
                     pickle.dump(episodeArr, f)
-                    # episodeArr = pickle.load(f)
+
         else:
             with open('./EJPH/data/boxplot.pickle', 'rb') as f:
                 # pickle.dump(episodeArr, f)
                 episodeArr=pickle.load(f)
         a[1][1].boxplot(episodeArr, positions=TENSION_RANGE, patch_artist=True)
         a[1][1].grid()
-
-        a[1][1].set_ylabel(yl, fontSize=FONT_SIZE_LABEL)
-        a[1][1].set_xlabel('Applied DC motor Tension (V)', fontSize=FONT_SIZE_LABEL)
+        a[1][1].set_ylabel(yl, fontsize=FONT_SIZE_LABEL)
+        a[1][1].set_xlabel('Applied DC motor Tension (V)', fontsize=FONT_SIZE_LABEL)
         INSET = False
         if INSET:
             axins = inset_axes(a[1][1], width="60%", height="80%", loc='lower right', borderpad=2)  # ,bbox_to_anchor=())
             axins.boxplot(episodeArr[2:], positions=TENSION_RANGE[2:], patch_artist=True)
-
             x1, x2, y1, y2 = 4, 12.2, 0.99, 1.0
             axins.set_xlim(x1, x2)
             axins.set_ylim(y1, y2)
             axins.grid()
-            # plt.setp(axins.get_yticklabels(), visible=False)
-            # plt.setp(axins.get_xticklabels(), visible=False)
             mark_inset(a[1][1], axins, loc1=3, loc2=4,visible=True, edgecolor='red')
-
 
         #ANOTHER WAY FOR INSET
         # ax_new = a[1][1].add_axes([0.35, 0.2, 0.5, 0.5])
@@ -562,9 +560,6 @@ if __name__=='__main__':
         # figT.legend(legsT,bbox_to_anchor=(1, -0.25, 1., .102),title="Voltage",
         #            ncol=8, mode="expand", borderaxespad=0.)
         # figT.legend(legsT,loc='upper center', bbox_to_anchor=(0., 1.05, 1., .102),)
-
-
-
         # experimental inference
         # adding inference
         EXPERIMENTAL_INFERENCE=True
@@ -603,10 +598,10 @@ if __name__=='__main__':
         :param axis: 2x2 axis to put the letters on a,b,c,d
         :return: 
         '''
-        axis[0][0].text(coords[0], coords[1], chr(97) + ')', transform=axis[0][0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
-        axis[0][1].text(coords[0], coords[1], chr(98) + ')', transform=axis[0][1].transAxes, fontsize='x-large')  # font={'size' : fontSize})#
-        axis[1][0].text(coords[0], coords[1], chr(99) + ')', transform=axis[1][0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
-        axis[1][1].text(coords[0], coords[1], chr(100) + ')', transform=axis[1][1].transAxes, fontsize='x-large')  # font={'size' : fontSize})
+        axis[0][0].text(coords[0], coords[1], chr(97) + ')', transform=axis[0][0].transAxes, fontsize='x-large')  # font={'size' : fontsize})
+        axis[0][1].text(coords[0], coords[1], chr(98) + ')', transform=axis[0][1].transAxes, fontsize='x-large')  # font={'size' : fontsize})#
+        axis[1][0].text(coords[0], coords[1], chr(99) + ')', transform=axis[1][0].transAxes, fontsize='x-large')  # font={'size' : fontsize})
+        axis[1][1].text(coords[0], coords[1], chr(100) + ')', transform=axis[1][1].transAxes, fontsize='x-large')  # font={'size' : fontsize})
 
 
     putIndInside(a)

@@ -152,7 +152,7 @@ def plot_results(log_folder, window_size=30, title='Learning Curve',only_return_
 
         x_varArr.append(x_var)
         y_varArr.append(y_var)
-
+    # try:
     legends = np.array([legend.split('_') for legend in legends])
     legs=[]
     try:

@@ -5,7 +5,7 @@ sys.path.append(os.path.abspath('./..'))
 import torch
 import numpy as np
 from stable_baselines3 import SAC
-from env_custom import CartPoleButter#, CartPoleCosSinTension #CartPoleCosSinT_10
+from env_custom import CartPoleRK4,CartPoleButter#, CartPoleCosSinTension #CartPoleCosSinT_10
 from custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
 from stable_baselines3.common.monitor import Monitor
@@ -16,26 +16,18 @@ from utils import read_hyperparameters
 from custom_callbacks import plot_results
 from utils import linear_schedule, plot
 from stable_baselines3.common.noise import NormalActionNoise
-NORMALISE=False
+from copy import deepcopy
 logdir='./logs/sac/'
-
 Te=0.05
+EP_STEPS=800
+# forceStd=
 hyperparams = read_hyperparameters('sac_cartpole_50')
 
-env = CartPoleButter(Te=Te, discreteActions=False, sparseReward=False, tensionMax=12, n=3)#integrator='rk4')#
+env = CartPoleRK4(Te=Te, integrator='rk4', N_STEPS=EP_STEPS, resetMode='experimental', sparseReward=False,discreteActions=False)
 env0 = Monitor(env, logdir)
 ## Automatically normalize the input features and reward
 env=DummyVecEnv([lambda:env0])
-if NORMALISE:
-	env = VecNormalize.load('envNorm.pkl', env)
-	# env=VecNormalize(env1, norm_obs=True, norm_reward=True, clip_obs=10000, clip_reward=10000)
-	env.training = True
-	envEval=env
-	envEval.training=False
-	envEval.norm_reward=True
-	# envEval=VecNormalize(env1, norm_obs=True, norm_reward=False, clip_obs=10000, clip_reward=10000)
-else:
-	envEval=env
+envEval=deepcopy(env)
 
 # model=SAC.load(logdir + "cartpole.pkl",env=env)
 
@@ -84,12 +76,6 @@ if __name__ == '__main__':
 		with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
 			model.learn(total_timesteps=STEPS_TO_TRAIN, log_interval=100,
 						callback=[cus_callback, eval_callback])#TODO callbackSave triggered at the end of every N episode, callbackSave])
-			if NORMALISE:
-				#WHEN NORMALISING
-				env.save('envNorm.pkl')
-				env.training = False
-				# reward normalization is not needed at test time
-				env.norm_reward = False
 			plot_results(logdir)
 		# Don't forget to save the VecNormalize statistics when saving the agent
 		log_dir = "./tmp/"

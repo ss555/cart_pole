@@ -32,9 +32,9 @@ video_folder = None
 DYNAMIC_FRICTION_SIM = False  # True
 STATIC_FRICTION_SIM = False
 encNoiseVarSim = False
-ACTION_NOISE_SIM = False #False
+ACTION_NOISE_SIM = True #False
 RESET_EFFECT = False  # True#False
-EVAL_TENSION_FINAL_PERF = True  # evaluate final PERFORMANCE of a cartpole for different voltages
+EVAL_TENSION_FINAL_PERF = False  # evaluate final PERFORMANCE of a cartpole for different voltages
 SEED_TRAIN = False
 # other
 PLOT_FINAL_PERFORMANCE_STD = False  # False#

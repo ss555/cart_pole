@@ -54,7 +54,7 @@ plt.rcParams["figure.dpi"] = 100
 colorPalette = d3['Category20'][20]
 # set labels outside
 coords = [0.05, 0.95]
-fontSize = 24
+fontsize = 24
 
 
 NUM_Timesteps = 150000
@@ -99,10 +99,10 @@ def save_show_fig(xArr,yArr,legs=None,title=None,saveName=None, ax=None, fig=Non
         else:
             ax.plot(xArr[i], yArr[i] / EP_STEPS, '--', color=colorPalette[i])
     if title is not None:
-        ax.set_title(title, fontSize=FONT_SIZE_LABEL)
+        ax.set_title(title, fontsize=FONT_SIZE_LABEL)
 
-    ax.set_xlabel('Time steps', fontSize=FONT_SIZE_LABEL)
-    ax.set_ylabel('Normalized return', fontSize=FONT_SIZE_LABEL)
+    ax.set_xlabel('Time steps', fontsize=FONT_SIZE_LABEL)
+    ax.set_ylabel('Normalized return', fontsize=FONT_SIZE_LABEL)
 
     if legs is not None:
         ax.legend(legs, loc='best',bbox_to_anchor=(1.01, 1))
@@ -147,12 +147,12 @@ def plot_from_npz(filenames, xlabel, ylabel, legends=None, title=None, plot_std=
 
 
 
-    ax.set_xlabel(xlabel, fontSize=FONT_SIZE_LABEL)
-    ax.set_ylabel(ylabel, fontSize=FONT_SIZE_LABEL)
+    ax.set_xlabel(xlabel, fontsize=FONT_SIZE_LABEL)
+    ax.set_ylabel(ylabel, fontsize=FONT_SIZE_LABEL)
 
     ax.grid()
     if title is not None:
-        ax.set_title(title, fontSize=FONT_SIZE_LABEL)
+        ax.set_title(title, fontsize=FONT_SIZE_LABEL)
     if legends is not None:
         ax.legend(legends,bbox_to_anchor=(1.01, 1))
     if fig is not None:
@@ -320,25 +320,25 @@ if __name__=='__main__':
         plt.savefig('./EJPH/plots/exp-vs-rand-greedy.pdf')
         plt.show()
     offset = 0.2
-    axNo[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axNo[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
+    axNo[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axNo[0].transAxes, fontsize='x-large')  # font={'size' : fontsize})
     axNo[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axNo[1].transAxes, fontsize='x-large')
     figNo.legend(legsNo, loc='upper center', bbox_to_anchor=(0.5, 0.98), title="Noise $\sigma_\Theta$ [$rad$]", ncol=5)
     figNo.savefig('./EJPH/plots/noise_all.pdf')
     figNo.show()
 
-    axDy[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axDy[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
+    axDy[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axDy[0].transAxes, fontsize='x-large')  # font={'size' : fontsize})
     axDy[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axDy[1].transAxes, fontsize='x-large')
     figDy.legend(legsVisc, loc='upper center', bbox_to_anchor=(0.5, 0.96), title="Viscous friction [$N*s*rad^{-1}$]", ncol=5)
     figDy.savefig('./EJPH/plots/dynamic_all.pdf')
     figDy.show()
 
-    axSt[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axSt[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
+    axSt[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axSt[0].transAxes, fontsize='x-large')  # font={'size' : fontsize})
     axSt[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axSt[1].transAxes, fontsize='x-large')
     figSt.legend(legsStatic, loc='upper center', bbox_to_anchor=(0.5, 0.96), title="Static friction [$N*kg^{-1}$]", ncol=5)
     figSt.savefig('./EJPH/plots/static_all.pdf')
     figSt.show()
 
-    axAc[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axAc[0].transAxes, fontsize='x-large')  # font={'size' : fontSize})
+    axAc[0].text(coords[0] - offset, coords[1], chr(97) + ')', transform=axAc[0].transAxes, fontsize='x-large')  # font={'size' : fontsize})
     axAc[1].text(coords[0] - offset, coords[1], chr(98) + ')', transform=axAc[1].transAxes, fontsize='x-large')
     figAc.legend(legsAc, loc='upper center', bbox_to_anchor=(0.5, 0.96), title="Action noise std [%]", ncol=5)
     figAc.savefig('./EJPH/plots/action_all.pdf')
@@ -422,11 +422,11 @@ if __name__=='__main__':
             ax2.legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
             # a[1][0].legend([str(t)+'V' for t in TENSION_RANGE], loc='upper right')
 
-            ax1.set_xlabel('Time steps', fontSize=FONT_SIZE_LABEL)
-            ax2.set_xlabel('Time steps', fontSize=FONT_SIZE_LABEL)
-            a[1][0].set_xlabel('Time steps', fontSize=FONT_SIZE_LABEL)
-            ax2.set_ylabel('Normalized return', fontSize=FONT_SIZE_LABEL)
-            a[1][0].set_ylabel('Normalized return', fontSize=FONT_SIZE_LABEL)
+            ax1.set_xlabel('Time steps', fontsize=FONT_SIZE_LABEL)
+            ax2.set_xlabel('Time steps', fontsize=FONT_SIZE_LABEL)
+            a[1][0].set_xlabel('Time steps', fontsize=FONT_SIZE_LABEL)
+            ax2.set_ylabel('Normalized return', fontsize=FONT_SIZE_LABEL)
+            a[1][0].set_ylabel('Normalized return', fontsize=FONT_SIZE_LABEL)
 
             a[1][0].grid()
             figm2.savefig('./EJPH/plots/episode_rew_tension.pdf')
@@ -440,7 +440,7 @@ if __name__=='__main__':
             plt.rcParams['font.size'] = FONT_SIZE_LABEL
             plt.xlabel('Tension (V)')
             plt.ylabel('Normalized return')
-            plt.title('Effect of the applied voltage on the "greedy policy" reward', fontSize=FONT_SIZE_LABEL)
+            plt.title('Effect of the applied voltage on the "greedy policy" reward', fontsize=FONT_SIZE_LABEL)
             plt.rcParams['font.size'] = FONT_SIZE_AXIS
             plt.show()
             np.savez(
@@ -526,8 +526,8 @@ if __name__=='__main__':
         a[1][1].boxplot(episodeArr, positions=TENSION_RANGE, patch_artist=True)
         a[1][1].grid()
 
-        a[1][1].set_ylabel('Normalized return', fontSize=FONT_SIZE_LABEL)
-        a[1][1].set_xlabel('Applied DC motor Tension (V)', fontSize=FONT_SIZE_LABEL)
+        a[1][1].set_ylabel('Normalized return', fontsize=FONT_SIZE_LABEL)
+        a[1][1].set_xlabel('Applied DC motor Tension (V)', fontsize=FONT_SIZE_LABEL)
         INSET = False
         if INSET:
             axins = inset_axes(a[1][1], width="60%", height="80%", loc='lower right', borderpad=2)  # ,bbox_to_anchor=())
@@ -586,10 +586,10 @@ if __name__=='__main__':
 
 
 
-        a[0][0].text(coords[0], coords[1], chr(97) + ')', transform=a[0][0].transAxes, fontsize='x-large')#font={'size' : fontSize})
-        a[0][1].text(coords[0], coords[1], chr(98) + ')', transform=a[0][1].transAxes, fontsize='x-large')#font={'size' : fontSize})#
-        a[1][0].text(coords[0], coords[1], chr(99) + ')', transform=a[1][0].transAxes, fontsize='x-large')#font={'size' : fontSize})
-        a[1][1].text(coords[0], coords[1], chr(100) + ')', transform=a[1][1].transAxes, fontsize='x-large')#font={'size' : fontSize})
+        a[0][0].text(coords[0], coords[1], chr(97) + ')', transform=a[0][0].transAxes, fontsize='x-large')#font={'size' : fontsize})
+        a[0][1].text(coords[0], coords[1], chr(98) + ')', transform=a[0][1].transAxes, fontsize='x-large')#font={'size' : fontsize})#
+        a[1][0].text(coords[0], coords[1], chr(99) + ')', transform=a[1][0].transAxes, fontsize='x-large')#font={'size' : fontsize})
+        a[1][1].text(coords[0], coords[1], chr(100) + ')', transform=a[1][1].transAxes, fontsize='x-large')#font={'size' : fontsize})
         figT.savefig('./EJPH/plots/tension_all.pdf')
         figT.show()
 
