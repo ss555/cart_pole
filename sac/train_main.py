@@ -26,7 +26,7 @@ hyperparams = read_hyperparameters('sac_cartpole_50')
 env = CartPoleRK4(Te=Te, integrator='rk4', N_STEPS=EP_STEPS, resetMode='experimental', sparseReward=False,discreteActions=False)
 env0 = Monitor(env, logdir)
 ## Automatically normalize the input features and reward
-env=DummyVecEnv([lambda:env0])
+# env=DummyVecEnv([lambda:env0])
 envEval=deepcopy(env)
 
 # model=SAC.load(logdir + "cartpole.pkl",env=env)
@@ -64,18 +64,18 @@ if __name__ == '__main__':
 		torch.manual_seed(manual_seed)
 		np.random.seed(manual_seed)
 		# ##sde
-		# model = SAC(MlpPolicy, env=env, learning_rate=linear_schedule(1e-3), buffer_size=300000,
-  		# 		batch_size= 1024, ent_coef= 'auto', gamma= 0.9999, tau=0.02, train_freq= 64,  gradient_steps= 64,learning_starts= 10000,#target_update_interval=64,
-  		# 		use_sde= True, policy_kwargs= dict(log_std_init=-3, net_arch=[256,256,64]))#dict(pi=[256, 256], qf=[256, 256])))
+		model = SAC(MlpPolicy, env=env, learning_rate=linear_schedule(1e-3), buffer_size=300000,
+  				batch_size= 1024, ent_coef= 'auto', gamma= 0.9999, tau=0.02, train_freq= 64,  gradient_steps= 64,learning_starts= 10000,#target_update_interval=64,
+  				use_sde= True, policy_kwargs= dict(log_std_init=-3, net_arch=[256,256,64]))#dict(pi=[256, 256], qf=[256, 256])))
 
 		# model = SAC.load_replay_buffer('./sac_swingup_simulation.pkl')
-		model = SAC(env=env,**hyperparams)
+		# model = SAC(env=env,**hyperparams)
+		# model = SAC('MlpPolicy', env=env)
 		# model = SAC.load('./weights/sac50/best_model_sim.zip',env=env)
 	try:
 		# model for pendulum starting from bottom
 		with ProgressBarManager(STEPS_TO_TRAIN) as cus_callback:
-			model.learn(total_timesteps=STEPS_TO_TRAIN, log_interval=100,
-						callback=[cus_callback, eval_callback])#TODO callbackSave triggered at the end of every N episode, callbackSave])
+			model.learn(total_timesteps=STEPS_TO_TRAIN, log_interval=100, callback=[cus_callback, eval_callback])#TODO callbackSave triggered at the end of every N episode, callbackSave])
 			plot_results(logdir)
 		# Don't forget to save the VecNormalize statistics when saving the agent
 		log_dir = "./tmp/"
@@ -91,4 +91,3 @@ if __name__ == '__main__':
 	finally:
 		model.save(logdir + "cartpole.pkl")
 		model.save_replay_buffer("sac_swingup_simulation.pkl")
-

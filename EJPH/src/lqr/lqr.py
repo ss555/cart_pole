@@ -1,3 +1,6 @@
+'''
+help info: underactuated mit continuous_vs_discrete_time.ipynb
+'''
 #!/usr/bin/env python3
 from pendule_pi import PendulePyClient
 import math
