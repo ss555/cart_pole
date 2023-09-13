@@ -11,7 +11,7 @@ from stable_baselines3 import DQN,SAC
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
 from custom_callbacks import EvalCustomCallback
 from custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback
-from env_custom import CartPoleButterHistory, CartPoleButter,CartPoleDiscreteHistory#,CartPoleContinous,CartPoleDiscreteHistory#,CartPoleDiscreteButter2
+from env_custom import CartPoleButter,CartPoleDiscreteHistory#,CartPoleContinous,CartPoleDiscreteHistory#,CartPoleDiscreteButter2
 import argparse
 
 Te=0.02

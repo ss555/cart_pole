@@ -19,9 +19,22 @@ dqn_cartpole_50:
   policy_kwargs : 'dict(net_arch=[256, 256])'
 
 
+ppo_disc_cartpole_50:
+  batch_size: 256
+  n_steps: 2048
+  gamma: 0.95
+  learning_rate: 0.0017441575896794122
+  ent_coef: 2.648124946833989e-08
+  clip_range: 0.4
+  n_epochs: 20
+  gae_lambda: 0.9
+  max_grad_norm: 1
+  vf_coef: 0.35162514640215287
+  policy_kwargs: dict(net_arch=[dict(pi=[64, 64], vf=[64, 64])], activation_fn = nn.Tanh)
+#  policy_kwargs: "dict(net_arch=[400, 300])" #"dict(net_arch=[dict(pi=[64, 64], vf=[64, 64])], activation_fn = nn.Tanh)"
 
-sac_cartpole_50:
-  policy: 'MlpPolicy'
+
+sac_cartpole_50_old:
   learning_rate: !!float 1e-3
   buffer_size: 300000
   batch_size: 1024
@@ -34,17 +47,28 @@ sac_cartpole_50:
   use_sde: True
   policy_kwargs: "dict(log_std_init=-0.965524, net_arch=[400, 300])"
 
+ppo_cont_cartpole_50:
+    batch_size: 8
+    n_steps: 2048
+    gamma: 0.98
+    learning_rate: 0.00025554081976389713
+    ent_coef: 0.0773218455356342
+    clip_range: 0.1
+    n_epochs: 20
+    gae_lambda: 0.8
+    max_grad_norm: 0.7
+    vf_coef: 0.6962479584331134
+    policy_kwargs: dict(net_arch=[dict(pi=[64, 64], vf=[64, 64])], activation_fn = nn.Tanh)
 
-#    policy: 'MlpPolicy'
-#    gamma: 0.98
-#    learning_rate: 0.001292297868387387
-#    batch_size: 2048
-#    buffer_size: 10000
-#    learning_starts: 0
-#    train_freq : [1, "episode"]
-#    tau: 0.02
-#    policy_kwargs: "dict(log_std_init=-0.9655242596737095,net_arch=[400,300],use_sde=True)"
-
+sac_cartpole_50:
+    gamma: 0.99
+    learning_rate: 0.003
+    batch_size: 2048
+    buffer_size: 100000
+    learning_starts: 10000
+    train_freq: 1
+    tau: 0.05
+    policy_kwargs: "dict(log_std_init=-0.6980270891911781, net_arch=[256,256])"
 
 #use_sed: True
 sac_cartpole_50test:

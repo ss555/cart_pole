@@ -14,7 +14,7 @@ from stable_baselines3.common.vec_env import VecEnv
 import seaborn as sns
 from env_wrappers import load_results, load_data_from_csv
 from bokeh.palettes import d3
-
+from torch import nn
 
 def rungekutta4(f, y0, t, args=()):
     '''
@@ -115,25 +115,47 @@ def evaluate_policy_episodes(
         lengthArr[i] = episodeLength
     return episodeRewArr, lengthArr
 
-def read_hyperparameters(name, path="parameters.yml",additional_params=None):
+def read_hyperparameters(name, path="parameters.yml", apply_linear_schedule = False, **additional_params):
     with open(path, "r") as f:
         hyperparams_dict = yaml.safe_load(f)
         hyperparams = hyperparams_dict[name]
         if "train_freq" in hyperparams and isinstance(hyperparams["train_freq"], list):
             hyperparams["train_freq"] = tuple(hyperparams["train_freq"])
             print('parameters loaded')
-
-        if "n_timesteps" in hyperparams:
-            del hyperparams["n_timesteps"]
+        del_items = ["n_timesteps",'n_envs','policy']
+        for key in del_items:
+            if key in hyperparams:
+                del hyperparams[key]
         # Convert to python object if needed
-        try:
+        try: #policy parameters
             if isinstance(hyperparams["policy_kwargs"], str):
                 hyperparams["policy_kwargs"] = eval(hyperparams["policy_kwargs"])
-        except:
-            pass
+        except Exception as e:
+            print(e)
+        for key in hyperparams.keys():
+            if 'lin_' in str(hyperparams[key]):
+                hyperparams[key] = linear_schedule(float(hyperparams[key].split("_")[-1]))
         # Overwrite hyperparams if needed
         # hyperparams.update(self.custom_hyperparams)
     return hyperparams
+
+# def read_hyperparameters(name, path="parameters.yml",additional_params=None):
+#     with open(path, "r") as f:
+#         hyperparams_dict = yaml.safe_load(f)
+#         hyperparams = hyperparams_dict[name]
+#         if "train_freq" in hyperparams and isinstance(hyperparams["train_freq"], list):
+#             hyperparams["train_freq"] = tuple(hyperparams["train_freq"])
+#             print('parameters loaded')
+#
+#         if "n_timesteps" in hyperparams:
+#             del hyperparams["n_timesteps"]
+#         # Convert to python object if needed
+#         try:
+#             if isinstance(hyperparams["policy_kwargs"], str):
+#                 hyperparams["policy_kwargs"] = eval(hyperparams["policy_kwargs"])
+#         except:
+#             pass
+#     return hyperparams
 
 def linear_schedule(initial_value: float) -> Callable[[float], float]:
     '''
@@ -143,6 +165,7 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
     def func(progress_remaining: float) -> float:
         return progress_remaining * initial_value
     return func
+
 def plot(observations = [],timeArr=[], actArr=[], save=True,plotlyUse=False,PLOT_TIME_DIFF=True,savePath='./tmp/',paperMode=False):
     '''
     :param observations: experience in form of N,5 observations=np.array(observations)
