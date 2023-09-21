@@ -34,8 +34,8 @@ def preprocess_data(fileData,plot=False, fitTensionMin=None,fitTensionMax=None):
     aArr=[]
     vArr=[]
     uArr=[]
-    pwmStart=int(min(abs(fileData[:,0]))) if fitTensionMin==None else fitTensionMin
-    pwmEnd=int(max(fileData[:,0])) if fitTensionMax==None else fitTensionMax
+    pwmStart=int(min(abs(fileData[:,0]))) if fitTensionMinis None else fitTensionMin
+    pwmEnd=int(max(fileData[:,0])) if fitTensionMaxis None else fitTensionMax
     for i in range(pwmStart,pwmEnd+10,10):
         try:
             localData=fileData[fileData[:,0]==i,:]

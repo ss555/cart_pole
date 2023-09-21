@@ -1,8 +1,13 @@
 # Cart Pole
 The article: [PLOS ONE](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0280071)
 
+![pendulum](misc/fig3.png)
+
 DQN, PPO, SAC for real/simulated cart-pole problem.
 The parameters are optimized using Optuna library.
+
+Simulation based on real-setup parameters and model.
+![pendulum](misc/virtual-env.png)
 
 *To generate the simulation of different parameters*
 ```bibtex

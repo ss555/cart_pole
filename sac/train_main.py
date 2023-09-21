@@ -5,7 +5,7 @@ sys.path.append(os.path.abspath('./..'))
 import torch
 import numpy as np
 from stable_baselines3 import SAC
-from env_custom import CartPoleRK4,CartPoleButter#, CartPoleCosSinTension #CartPoleCosSinT_10
+from src.env_custom import CartPoleRK4,CartPoleButter#, CartPoleCosSinTension #CartPoleCosSinT_10
 from custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
 from stable_baselines3.common.monitor import Monitor

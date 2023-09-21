@@ -50,8 +50,8 @@ def preprocess_data(fileData,plot=False,weightedStartRegression=0,weight=10, fit
     ##PWM time(s) position(x)
     res=np.zeros_like(fileData)
     weightedRes=np.zeros_like(fileData)
-    pwmStart=int(min(abs(fileData[:,0]))) if fitTensionMin==None else fitTensionMin
-    pwmEnd=int(max(fileData[:,0])) if fitTensionMax==None else fitTensionMax
+    pwmStart=int(min(abs(fileData[:,0]))) if fitTensionMinis None else fitTensionMin
+    pwmEnd=int(max(fileData[:,0])) if fitTensionMaxis None else fitTensionMax
     cStart=0
     filter=False
     fc = 4

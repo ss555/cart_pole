@@ -8,7 +8,7 @@ from matplotlib import rcParams, pyplot as plt
 from custom_callbacks import plot_results
 import plotly.express as px
 from bokeh.palettes import d3
-from env_wrappers import load_results, ts2xy, load_data_from_csv
+from src.env_wrappers import load_results, ts2xy, load_data_from_csv
 from generate_video_with_caption import animateFromData
 PLOT_TRAINING_REWARD = True
 PLOT_EVAL_REWARD = True

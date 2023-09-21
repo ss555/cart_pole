@@ -13,24 +13,23 @@ import glob
 import seaborn as sns
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3 import DQN, SAC
-from env_custom import CartPoleRK4
-from custom_callbacks import EvalCustomCallback, EvalThetaDotMetric, moving_average
+from src.env_custom import CartPoleRK4
+from src.custom_callbacks import EvalCustomCallback, EvalThetaDotMetric, moving_average,plot_results
 from matplotlib import rcParams, pyplot as plt
-from custom_callbacks import plot_results
 import plotly.express as px
 from bokeh.palettes import d3
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset, inset_axes
-from env_wrappers import load_results, ts2xy, load_data_from_csv
+from src.env_wrappers import load_results, ts2xy, load_data_from_csv
 import subprocess
-from utils import inferenceResCartpole, calculate_angle
+from src.utils import inferenceResCartpole, calculate_angle
 
 dqn7real = './EJPH/real-cartpole/dqn_7.1V'
 filenames = ['./EJPH/real-cartpole/dqn_7.1V/inference_results.npz', './weights/dqn50-real/pwm51/inference_results.npz']
 
 PLOT_TRAINING_REWARD = False #True
 PLOT_EVAL_REWARD = False #True
-TENSION_PLOT = False #True
-PLOT_ACTION_NOISE = True
+TENSION_PLOT = True #True
+PLOT_ACTION_NOISE = False
 CROP = False
 
 TENSION_RANGE = np.array([2.4, 3.5, 4.7, 5.9, 7.1, 8.2, 9.4, 12])

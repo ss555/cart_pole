@@ -5,21 +5,19 @@ import time
 import subprocess
 sys.path.append(os.path.abspath('./'))
 sys.path.append(os.path.abspath('./..'))
-from utils import linear_schedule, plot
-from custom_callbacks import plot_results
-from env_wrappers import Monitor
+from src.utils import linear_schedule, plot, read_hyperparameters
+from src.env_wrappers import Monitor
 # from stable_baselines3.common.monitor import Monitor
 from stable_baselines3 import DQN, SAC, PPO
-from env_custom import CartPoleRK4
-from utils import read_hyperparameters
+from src.env_custom import CartPoleRK4
 from pathlib import Path
-from custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
-from custom_callbacks import EvalCustomCallback, EvalThetaDotMetric, moving_average
+from src.custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback, plot_results
+from src.custom_callbacks import EvalCustomCallback, EvalThetaDotMetric, moving_average
 from matplotlib import rcParams, pyplot as plt
 import plotly.express as px
 from bokeh.palettes import d3
 from distutils.dir_util import copy_tree
-from env_wrappers import VideoRecorderWrapper
+from src.env_wrappers import VideoRecorderWrapper
 
 #TODO use subprocess to parallelise sim
 STEPS_TO_TRAIN = 150000
@@ -198,11 +196,6 @@ if SEED_TRAIN:#basic model with default parameters
             model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
     plot_results(logdir + 'seeds')
 
-#TODO 5.9V optuna params for 12V;
-
-
-# DONE standard deviation of xas a function of the control amplitude in steadystate
-# DONE standard deviation of θas a function of the control amplitude in steadystate
 if PLOT_FINAL_PERFORMANCE_STD:
     Te = 0.05
     RENDER = False

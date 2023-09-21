@@ -4,10 +4,10 @@ import pickle as pkl
 from typing import Any, Dict
 import os
 import sys
-
 sys.path.append(os.path.abspath('./..'))
+sys.path.append(os.path.abspath('./../src'))
 sys.path.append(os.path.abspath('./'))
-from env_custom import CartPoleButter
+from src.env_custom import CartPoleButter
 import gym
 import torch
 import torch.nn as nn
@@ -17,7 +17,7 @@ import optuna
 from optuna.pruners import MedianPruner
 from optuna.samplers import TPESampler
 from optuna.visualization import plot_optimization_history, plot_param_importances
-from custom_callbacks import EvalThetaDotMetric,EvalX_ThetaMetric
+from src.custom_callbacks import EvalThetaDotMetric,EvalX_ThetaMetric
 import time
 from pathlib import Path
 logdir='./optuna/'

@@ -14,14 +14,14 @@ import glob
 import seaborn as sns
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3 import DQN, SAC
-from env_custom import CartPoleRK4
-from custom_callbacks import EvalCustomCallback, EvalThetaDotMetric, moving_average
+from src.env_custom import CartPoleRK4
+from src.custom_callbacks import EvalCustomCallback, EvalThetaDotMetric, moving_average
 from matplotlib import rcParams, pyplot as plt
 from custom_callbacks import plot_results
 import plotly.express as px
 from bokeh.palettes import d3
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset, inset_axes
-from env_wrappers import load_results, ts2xy, load_data_from_csv
+from src.env_wrappers import load_results, ts2xy, load_data_from_csv
 import subprocess
 from utils import inferenceResCartpole
 

@@ -17,14 +17,14 @@ import gym
 import cartpole
 sys.path.append(os.path.abspath('./'))
 from stable_baselines3 import DQN
-from env_custom import CartPoleRK4 #,CartPoleContinous,CartPoleDiscreteHistory#,CartPoleDiscreteButter2
+from src.env_custom import CartPoleRK4 #,CartPoleContinous,CartPoleDiscreteHistory#,CartPoleDiscreteButter2
 import argparse
 from utils import read_hyperparameters, evaluate_policy_episodes
 from pathlib import Path
 from gym.wrappers.monitoring.video_recorder import VideoRecorder
 from stable_baselines3.common.callbacks import CheckpointCallback
 from glob import glob
-from env_wrappers import VideoRecorderWrapper
+from src.env_wrappers import VideoRecorderWrapper
 # os.system("Xvfb :1 -screen 0 1024x768x24 &")
 # os.environ['DISPLAY'] = ':1'
 #FOLDER DIRS

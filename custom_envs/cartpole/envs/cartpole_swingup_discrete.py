@@ -12,7 +12,7 @@ from time import time
 import iir_filter
 import json
 from matplotlib import pyplot as plt
-from utils import rungekutta4
+from src.utils import rungekutta4
 # PWM 180
 [A, B, C, D] = [-21.30359185798466, 1.1088617953891196, -0.902272006611719, -0.03935160774012411]  # 20ms#(-7.794018686563599, 0.37538450501353504, -0.4891760779740128, -0.002568958116514183)
 wAngular = 4.85658326956131

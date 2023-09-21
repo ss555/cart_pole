@@ -8,14 +8,14 @@ sys.path.append(os.path.abspath('./..'))
 sys.path.append(os.path.abspath('./../..'))
 from utils import linear_schedule, plot
 from custom_callbacks import plot_results
-from env_wrappers import Monitor
+from src.env_wrappers import Monitor
 # from stable_baselines3.common.monitor import Monitor
 from stable_baselines3 import DQN, SAC
-from env_custom import CartPoleRK4
+from src.env_custom import CartPoleRK4
 from utils import read_hyperparameters
 from pathlib import Path
 from custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
-from custom_callbacks import EvalCustomCallback, EvalThetaDotMetric, moving_average
+from src.custom_callbacks import EvalCustomCallback, EvalThetaDotMetric, moving_average
 
 #TODO use subprocess to parallelise sim
 STEPS_TO_TRAIN = 150000
