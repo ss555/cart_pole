@@ -11,7 +11,7 @@ import plotly.express as px
 sys.path.append(os.path.abspath('./'))
 
 
-def parce_csv(absPath,PLOT=False,fitTensionMin=None,fitTensionMax=None):
+def parce_csv(absPath, PLOT=False, fitTensionMin=None,fitTensionMax=None):
     data    = np.zeros(shape=(3,))
     namesRaw=glob.glob(absPath+'/*.csv')
     namesRaw.sort()
@@ -21,6 +21,7 @@ def parce_csv(absPath,PLOT=False,fitTensionMin=None,fitTensionMax=None):
         processedData, dt =preprocess_data(fileData[:,:].T, plot=PLOT, fitTensionMin=fitTensionMin, fitTensionMax=fitTensionMax)
         data=np.vstack((data, processedData))
     return data[1:,:],dt
+
 def preprocess_data(fileData,plot=False, fitTensionMin=None,fitTensionMax=None):
     '''
 
@@ -34,8 +35,8 @@ def preprocess_data(fileData,plot=False, fitTensionMin=None,fitTensionMax=None):
     aArr=[]
     vArr=[]
     uArr=[]
-    pwmStart=int(min(abs(fileData[:,0]))) if fitTensionMinis None else fitTensionMin
-    pwmEnd=int(max(fileData[:,0])) if fitTensionMaxis None else fitTensionMax
+    pwmStart=int(min(abs(fileData[:,0]))) if fitTensionMin == None else fitTensionMin
+    pwmEnd=int(max(fileData[:,0])) if fitTensionMax == None else fitTensionMax
     for i in range(pwmStart,pwmEnd+10,10):
         try:
             localData=fileData[fileData[:,0]==i,:]

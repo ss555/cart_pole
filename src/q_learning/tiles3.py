@@ -65,7 +65,7 @@ class IHT:
 def hashcoords(coordinates, m, readonly=False):
     if type(m)==IHT: return m.getindex(tuple(coordinates), readonly)
     if type(m)==int: return basehash(tuple(coordinates)) % m
-    if mis None: return coordinates
+    if m==None: return coordinates
 
 from math import floor, log
 from itertools import zip_longest
