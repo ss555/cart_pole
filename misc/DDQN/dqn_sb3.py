@@ -1,17 +1,17 @@
 import sys
 import os
 sys.path.append(os.path.abspath('/'))
-from utils import linear_schedule
-from custom_callbacks import plot_results
+from src.utils import linear_schedule
+from src.custom_callbacks import plot_results
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 from stable_baselines3 import DQN
 # from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
-from custom_callbacks import EvalCustomCallback
-from custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
-from env_custom import CartPoleButter, CartPoleRK4
+from src.custom_callbacks import EvalCustomCallback
+from src.custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
+from src.env_custom import CartPoleButter, CartPoleRK4
 import argparse
-from utils import read_hyperparameters
+from src.utils import read_hyperparameters
 from pathlib import Path
 
 Te=0.05

@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 import pandas as pd
 import sys
 import os
-from env_custom import CartPoleDiscreteButter,CartPoleDiscrete
+from src.env_custom import CartPoleDiscreteButter,CartPoleDiscrete
 sys.path.append(os.path.abspath('./motor_identification/test_filtering'))
 sys.path.append(os.path.abspath('./../..'))
 sys.path.append(os.path.abspath('~/1-THESE/4-sample_code/1-DDPG/12-STABLE3/motor_identification/test_filtering'))

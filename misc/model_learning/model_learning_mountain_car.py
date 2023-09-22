@@ -21,7 +21,7 @@ import math
 from pathlib import Path
 from gym import spaces
 from stable_baselines3 import SAC
-from utils import read_hyperparameters
+from src.utils import read_hyperparameters
 
 transition = namedtuple('transition',['state','action','next_state'])
 
@@ -168,7 +168,7 @@ def predict_traj(state, actions, model, action_repeat=1):
             n_s.append(state)
     return torch.stack(n_s, dim=0)
 
-from custom_callbacks import ProgressBarManager, EvalCustomCallback
+from src.custom_callbacks import ProgressBarManager, EvalCustomCallback
 def train_agent(dynamics_model):
     virtual_env = vir_env(dynamics_model)
     eval_env = gym.make("MountainCarContinuous-v0")

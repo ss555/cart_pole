@@ -6,15 +6,15 @@ import torch
 import numpy as np
 from stable_baselines3 import SAC
 from src.env_custom import CartPoleRK4,CartPoleButter#, CartPoleCosSinTension #CartPoleCosSinT_10
-from custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
+from src.custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 import argparse
 from typing import Callable
-from utils import read_hyperparameters
-from custom_callbacks import plot_results
-from utils import linear_schedule, plot
+from src.utils import read_hyperparameters
+from src.custom_callbacks import plot_results
+from src.utils import linear_schedule, plot
 from stable_baselines3.common.noise import NormalActionNoise
 from copy import deepcopy
 logdir='./logs/sac/'

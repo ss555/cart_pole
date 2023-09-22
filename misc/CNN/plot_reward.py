@@ -1,4 +1,4 @@
-from custom_callbacks import plot_results
+from src.custom_callbacks import plot_results
 import os
 import sys
 sys.path.append(os.path.abspath('/'))

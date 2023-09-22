@@ -4,16 +4,16 @@ STEPS_TO_TRAIN=150000
 logdir='./logs/other_algo/actions3/'
 from sb3_contrib import QRDQN
 sys.path.append(os.path.abspath('/'))
-from utils import linear_schedule
-from custom_callbacks import plot_results
+from src.utils import linear_schedule
+from src.custom_callbacks import plot_results
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 from stable_baselines3.dqn import MlpPolicy
 from stable_baselines3 import DQN
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
-from custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback
+from src.custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback
 # print(os.path.abspath('./'))
-from env_custom import CartPoleDiscreteButter#,CartPoleDiscrete5,CartPoleCosSinTensionD,CartPoleCosSinTensionD3,
+from src.env_custom import CartPoleDiscreteButter#,CartPoleDiscrete5,CartPoleCosSinTensionD,CartPoleCosSinTensionD3,
 callbackSave = SaveOnBestTrainingRewardCallback(check_freq=1000, log_dir=logdir)
 # env = CartPoleCosSinTensionD3(Te=0.05,randomReset=True)
 env = CartPoleDiscreteButter(Te=0.05,randomReset=True)#,integrator='rk')

@@ -8,7 +8,7 @@ sys.path.append(os.path.abspath('/'))
 
 from stable_baselines3 import DQN
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
-from env_custom import CartPoleImage
+from src.env_custom import CartPoleImage
 
 class CustomCNN(BaseFeaturesExtractor):
     """
@@ -46,7 +46,7 @@ policy_kwargs = dict(
     features_extractor_kwargs=dict(features_dim=128),
 )
 # from parameters import dqn_sim50
-from utils import read_hyperparameters
+from src.utils import read_hyperparameters
 from stable_baselines3.common.atari_wrappers import AtariWrapper
 
 

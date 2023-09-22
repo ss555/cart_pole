@@ -11,7 +11,7 @@ obsArr = np.array(pd.read_csv("obs.csv"))
 timeArr=np.array(pd.read_csv("time.csv"))
 actArr=np.array(pd.read_csv("actArr.csv"))
 print(os.path.abspath('./motor_identification/test_filtering'))
-from utils import plot
+from src.utils import plot
 obsArr=np.array(obsArr)
 dt=np.mean(np.diff(timeArr.squeeze(axis=1)))
 length =0.4611167818372032
@@ -58,7 +58,7 @@ timeArr=timeArr.squeeze(axis=1)
 # sys.path.append(os.path.abspath('./'))
 # sys.path.append(os.path.abspath('./motor_identification/test_filtering'))
 # print(os.path.abspath('./motor_identification/test_filtering'))
-# from utils import plot
+# from src.utils import plot
 # dt = 0.05
 # # 50ms
 # fc = 4

@@ -5,9 +5,9 @@ sys.path.append(os.path.abspath('/'))
 sys.path.append(os.path.abspath('..'))
 sys.path.append(os.path.abspath('../../tmp'))
 from matplotlib import rcParams, pyplot as plt
-from custom_callbacks import plot_results
+from src.custom_callbacks import plot_results
 from src.env_wrappers import load_results, ts2xy, load_data_from_csv
-from utils import calculate_angle
+from src.utils import calculate_angle
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes,mark_inset,inset_axes
 #plot params
 fontsize=20

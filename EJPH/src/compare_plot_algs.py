@@ -5,21 +5,21 @@ import time
 import subprocess
 sys.path.append(os.path.abspath('./'))
 sys.path.append(os.path.abspath('./..'))
-from utils import linear_schedule, plot
-from custom_callbacks import plot_results
-from env_wrappers import Monitor
+from src.utils import linear_schedule, plot
+from src.custom_callbacks import plot_results
+from src.env_wrappers import Monitor
 # from stable_baselines3.common.monitor import Monitor
 from stable_baselines3 import DQN, DDQN, SAC, PPO
-from env_custom import CartPoleRK4
-from utils import read_hyperparameters
+from src.env_custom import CartPoleRK4
+from src.utils import read_hyperparameters
 from pathlib import Path
-from custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
-from custom_callbacks import EvalCustomCallback, EvalThetaDotMetric, moving_average
+from src.custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
+from src.custom_callbacks import EvalCustomCallback, EvalThetaDotMetric, moving_average
 from matplotlib import rcParams, pyplot as plt
 import plotly.express as px
 from bokeh.palettes import d3
 from distutils.dir_util import copy_tree
-from env_wrappers import VideoRecorderWrapper
+from src.env_wrappers import VideoRecorderWrapper
 from glob import glob
 import pandas as pd
 from rlutils.utils import config_paper,moving_average,load_results

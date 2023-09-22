@@ -15,9 +15,9 @@ from pathlib import Path
 from gym import spaces
 from gym.utils import seeding
 from stable_baselines3 import SAC, DQN
-from utils import read_hyperparameters
-from env_custom import CartPoleButter, CartPoleNN, CartPoleNNs
-from custom_callbacks import ProgressBarManager, EvalCustomCallback
+from src.utils import read_hyperparameters
+from src.env_custom import CartPoleButter, CartPoleNN, CartPoleNNs
+from src.custom_callbacks import ProgressBarManager, EvalCustomCallback
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 # device = torch.device('cpu')
 device = torch.device("cuda:0" if torch.cuda.is_available() else 'cpu')

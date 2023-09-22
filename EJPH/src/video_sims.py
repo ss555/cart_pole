@@ -19,7 +19,7 @@ sys.path.append(os.path.abspath('./'))
 from stable_baselines3 import DQN
 from src.env_custom import CartPoleRK4 #,CartPoleContinous,CartPoleDiscreteHistory#,CartPoleDiscreteButter2
 import argparse
-from utils import read_hyperparameters, evaluate_policy_episodes
+from src.utils import read_hyperparameters, evaluate_policy_episodes
 from pathlib import Path
 from gym.wrappers.monitoring.video_recorder import VideoRecorder
 from stable_baselines3.common.callbacks import CheckpointCallback

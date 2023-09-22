@@ -3,15 +3,15 @@ import gym
 import numpy as np
 from stable_baselines3.sac.policies import MlpPolicy
 from stable_baselines3 import SAC
-from env_custom import CartPoleButter
-from custom_callbacks import ProgressBarManager
+from src.env_custom import CartPoleButter
+from src.custom_callbacks import ProgressBarManager
 from stable_baselines3.common.callbacks import EvalCallback
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 import argparse
 import math
 import time
 from matplotlib import pyplot as plt
-from utils import plot, plot_line
+from src.utils import plot, plot_line
 import numpy as np
 Te = 2e-2
 env = CartPoleButter(Te, resetMode='experimental',discreteActions=False)

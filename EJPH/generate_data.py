@@ -5,14 +5,14 @@ import time
 import subprocess
 sys.path.append(os.path.abspath('./'))
 sys.path.append(os.path.abspath('./..'))
-from src.utils import linear_schedule, plot, read_hyperparameters
+from src.utils import linear_schedule, plot
 from src.env_wrappers import Monitor
 # from stable_baselines3.common.monitor import Monitor
 from stable_baselines3 import DQN, SAC, PPO
 from src.env_custom import CartPoleRK4
+from src.utils import read_hyperparameters
 from pathlib import Path
-from src.custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback, plot_results
-from src.custom_callbacks import EvalCustomCallback, EvalThetaDotMetric, moving_average
+from src.custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback, EvalCustomCallback, EvalThetaDotMetric, moving_average, plot_results
 from matplotlib import rcParams, pyplot as plt
 import plotly.express as px
 from bokeh.palettes import d3
@@ -30,9 +30,9 @@ video_folder = None
 DYNAMIC_FRICTION_SIM = False  # True
 STATIC_FRICTION_SIM = False
 encNoiseVarSim = False
-ACTION_NOISE_SIM = True #False
+ACTION_NOISE_SIM = False #False
 RESET_EFFECT = False  # True#False
-EVAL_TENSION_FINAL_PERF = False  # evaluate final PERFORMANCE of a cartpole for different voltages
+EVAL_TENSION_FINAL_PERF = True  # evaluate final PERFORMANCE of a cartpole for different voltages
 SEED_TRAIN = False
 # other
 PLOT_FINAL_PERFORMANCE_STD = False  # False#
@@ -196,6 +196,11 @@ if SEED_TRAIN:#basic model with default parameters
             model.learn(total_timesteps=STEPS_TO_TRAIN, callback=[cus_callback, eval_callback])
     plot_results(logdir + 'seeds')
 
+#TODO 5.9V optuna params for 12V;
+
+
+# DONE standard deviation of xas a function of the control amplitude in steadystate
+# DONE standard deviation of θas a function of the control amplitude in steadystate
 if PLOT_FINAL_PERFORMANCE_STD:
     Te = 0.05
     RENDER = False

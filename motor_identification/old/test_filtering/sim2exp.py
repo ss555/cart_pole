@@ -9,7 +9,7 @@ from scipy import signal
 import pandas as pd
 import matplotlib.pyplot as plt
 import plotly.express as px
-from env_custom import CartPoleDiscrete
+from src.env_custom import CartPoleDiscrete
 
 print(os.path.abspath('./'))
 [f_a,f_b,f_c,f_d]=[-20, 0.9, -0.6, -0.09352431017546964] #-0.09352431017546964/0.9/12*255=2.2

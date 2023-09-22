@@ -2,16 +2,16 @@
 import torch
 import numpy as np
 from stable_baselines3 import SAC
-from env_custom import CartPole#, CartPoleCosSinTension #CartPoleCosSinT_10
-from custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
+from src.env_custom import CartPole#, CartPoleCosSinTension #CartPoleCosSinT_10
+from src.custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 import argparse
 from typing import Callable
-from custom_callbacks import plot_results
-from custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback
-from utils import read_hyperparameters
+from src.custom_callbacks import plot_results
+from src.custom_callbacks import ProgressBarManager,SaveOnBestTrainingRewardCallback
+from src.utils import read_hyperparameters
 
 NORMALISE=False
 EP_STEPS = 800#*2
@@ -67,7 +67,7 @@ if __name__ == '__main__':
 		np.random.seed(manual_seed)
 		# ##sde
 		# from parameters import sac_cartpole_20
-		from utils import read_hyperparameters
+		from src.utils import read_hyperparameters
 		hyperparams = read_hyperparameters('sac_cartpole_20')
 		# from parameters import dqn_sim50
 		model = SAC(env=env, **hyperparams, seed=MANUAL_SEED)

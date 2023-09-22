@@ -5,7 +5,7 @@ sys.path.append(os.path.abspath('./'))
 sys.path.append(os.path.abspath('./..'))
 sys.path.append(os.path.abspath('./../..'))
 from matplotlib import rcParams, pyplot as plt
-from custom_callbacks import plot_results
+from src.custom_callbacks import plot_results
 import plotly.express as px
 from bokeh.palettes import d3
 from src.env_wrappers import load_results, ts2xy, load_data_from_csv

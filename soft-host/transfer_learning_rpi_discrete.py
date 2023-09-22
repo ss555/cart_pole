@@ -2,15 +2,15 @@ from tcp_envV2 import CartPoleCosSinRpiDiscrete3
 from stable_baselines3.dqn import MlpPolicy
 from stable_baselines3 import DQN
 from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback, StopTrainingOnRewardThreshold
-from utils import linear_schedule, plot
+from src.utils import linear_schedule, plot
 from stable_baselines3.common.monitor import Monitor
-from custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
+from src.custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
 import socket
 import time
 LOAD_MODEL_PATH=None#"./logs/best_model"
 LOAD_BUFFER_PATH=None#"dqn_pi_swingup_bufferN"
 import numpy as np
-from custom_callbacks import plot_results
+from src.custom_callbacks import plot_results
 HOST = '169.254.161.71'#'255.255.0.0'#wifiHot #'127.0.0.1'  # Standard loopback interface address (localhost)
 PORT = 65432
 logdir='./logs/dqn/'

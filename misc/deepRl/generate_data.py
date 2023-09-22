@@ -5,16 +5,16 @@ import time
 
 sys.path.append(os.path.abspath('/'))
 sys.path.append(os.path.abspath('../tmp'))
-from utils import plot
-from custom_callbacks import plot_results
+from src.utils import plot
+from src.custom_callbacks import plot_results
 from src.env_wrappers import Monitor
 # from stable_baselines3.common.monitor import Monitor
 from stable_baselines3 import DQN
 from src.env_custom import CartPoleRK4
-from utils import read_hyperparameters
+from src.utils import read_hyperparameters
 from pathlib import Path
-from custom_callbacks import ProgressBarManager
-from custom_callbacks import EvalCustomCallback, EvalThetaDotMetric
+from src.custom_callbacks import ProgressBarManager
+from src.custom_callbacks import EvalCustomCallback, EvalThetaDotMetric
 from distutils.dir_util import copy_tree
 from src.env_wrappers import VideoRecorderWrapper
 

@@ -1,12 +1,12 @@
 #tensorboard --logdir ./sac_cartpole_tensorboard/
 from stable_baselines3.dqn import MlpPolicy
 from stable_baselines3 import DQN
-from env_custom import CartPoleButter#,CartPoleDiscreteHistory #CartPoleCosSinTensionD,CartPoleCosSinTensionD3,
+from src.env_custom import CartPoleButter#,CartPoleDiscreteHistory #CartPoleCosSinTensionD,CartPoleCosSinTensionD3,
 from sb3_contrib import QRDQN
 import time
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 from matplotlib import pyplot as plt
-from utils import plot, plot_line
+from src.utils import plot, plot_line
 import numpy as np
 Te = 5e-2
 #CartPoleCosSinHistory() #CartPoleCusBottom()CartPoleCosSin() #

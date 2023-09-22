@@ -8,7 +8,7 @@ import plotly.express as px
 sys.path.append(os.path.abspath('./'))
 sys.path.append(os.path.abspath('./motor_identification/test_filtering'))
 print(os.path.abspath('./motor_identification/test_filtering'))
-from utils import plot
+from src.utils import plot
 dt = 0.05
 # 50ms
 fc = 4

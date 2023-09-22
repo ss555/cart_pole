@@ -3,17 +3,17 @@ import os
 STEPS_TO_TRAIN = 300000
 logdir = './logs/'
 sys.path.append(os.path.abspath('/'))
-from utils import linear_schedule
-from custom_callbacks import plot_results
+from src.utils import linear_schedule
+from src.custom_callbacks import plot_results
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 from stable_baselines3.dqn import MlpPolicy
 # from stable_baselines3.sac import MlpPolicy
 from stable_baselines3 import DQN, SAC
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
-from custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
+from src.custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
 # print(os.path.abspath('./'))
-from env_custom import CartPoleDiscrete, CartPoleButter  # ,CartPoleContinous,CartPoleDiscreteHistory#,CartPoleDiscreteButter2
+from src.env_custom import CartPoleDiscrete, CartPoleButter  # ,CartPoleContinous,CartPoleDiscreteHistory#,CartPoleDiscreteButter2
 import argparse
 from stable_baselines3 import HER, DDPG, DQN, SAC, TD3
 env = CartPoleButter(Te=0.05, discreteActions=True, resetMode='experimental',

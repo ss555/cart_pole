@@ -6,15 +6,15 @@ import subprocess
 sys.path.append(os.path.abspath('./'))
 sys.path.append(os.path.abspath('./..'))
 sys.path.append(os.path.abspath('./../..'))
-from utils import linear_schedule, plot
-from custom_callbacks import plot_results
+from src.utils import linear_schedule, plot
+from src.custom_callbacks import plot_results
 from src.env_wrappers import Monitor
 # from stable_baselines3.common.monitor import Monitor
 from stable_baselines3 import DQN, SAC
 from src.env_custom import CartPoleRK4
-from utils import read_hyperparameters
+from src.utils import read_hyperparameters
 from pathlib import Path
-from custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
+from src.custom_callbacks import ProgressBarManager, SaveOnBestTrainingRewardCallback
 from src.custom_callbacks import EvalCustomCallback, EvalThetaDotMetric, moving_average
 from matplotlib import rcParams, pyplot as plt
 import plotly.express as px

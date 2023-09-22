@@ -2,7 +2,7 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, FFMpegWriter
-from custom_callbacks import plot_results
+from src.custom_callbacks import plot_results
 
 if __name__ == '__main__':
 

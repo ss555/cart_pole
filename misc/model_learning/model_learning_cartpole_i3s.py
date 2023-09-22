@@ -23,9 +23,9 @@ from pathlib import Path
 from gym import spaces
 from gym.utils import seeding
 from stable_baselines3 import SAC, DQN
-from utils import read_hyperparameters
-from env_custom import CartPoleButter, CartPoleNN
-from custom_callbacks import ProgressBarManager, EvalCustomCallback
+from src.utils import read_hyperparameters
+from src.env_custom import CartPoleButter, CartPoleNN
+from src.custom_callbacks import ProgressBarManager, EvalCustomCallback
 transition = namedtuple('transition',['state','action','next_state'])
 
 def collect_transitions(env, size=1000, action_repeat=2):

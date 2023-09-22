@@ -9,11 +9,11 @@ import numpy as np
 sys.path.append(os.path.abspath('/'))
 sys.path.append(os.path.abspath('../tmp'))
 import glob
-from custom_callbacks import moving_average
+from src.custom_callbacks import moving_average
 from matplotlib import pyplot as plt
-from custom_callbacks import plot_results
+from src.custom_callbacks import plot_results
 import subprocess
-from utils import inferenceResCartpole, HandlerColormap,label_legend_save_2,putIndInside_2_2
+from src.utils import inferenceResCartpole, HandlerColormap,label_legend_save_2,putIndInside_2_2
 import matplotlib.ticker as mtick
 from matplotlib.patches import Rectangle
 

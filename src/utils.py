@@ -12,7 +12,7 @@ from collections import OrderedDict
 from stable_baselines3.common.vec_env import VecEnv
 # Import seaborn
 import seaborn as sns
-from env_wrappers import load_results, load_data_from_csv
+from src.env_wrappers import load_results, load_data_from_csv
 from bokeh.palettes import d3
 
 
@@ -115,10 +115,11 @@ def evaluate_policy_episodes(
         lengthArr[i] = episodeLength
     return episodeRewArr, lengthArr
 
-def read_hyperparameters(name, path="parameters.yml",additional_params=None):
+def read_hyperparameters(name, path="./src/parameters.yml",additional_params=None):
     with open(path, "r") as f:
         hyperparams_dict = yaml.safe_load(f)
         hyperparams = hyperparams_dict[name]
+
         if "train_freq" in hyperparams and isinstance(hyperparams["train_freq"], list):
             hyperparams["train_freq"] = tuple(hyperparams["train_freq"])
             print('parameters loaded')

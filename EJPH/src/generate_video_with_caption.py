@@ -9,8 +9,8 @@ sys.path.append(os.path.abspath('./../..'))
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, FFMpegWriter
-from custom_callbacks import plot_results
-from utils import inferenceResCartpole
+from src.custom_callbacks import plot_results
+from src.utils import inferenceResCartpole
 from bokeh.palettes import d3
 
 colorPalette = d3['Category20'][20]
