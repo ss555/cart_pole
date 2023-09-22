@@ -34,11 +34,12 @@ video_folder = None
 # simulation results
 tr_plot=False
 inf_plot=True
-logdir='/media/sardor/b/12-STABLE3/EJPH/comapre/'
+logdir='./EJPH/comapre/'
+fig, ax = plt.subplots(1,2,figsize=(14,5))
 if tr_plot:
     '''plot moving average of monitor.csv'''
     filedirs=os.listdir(logdir)
-    fig,ax=plt.subplots()
+    # fig,ax=plt.subplots()
     for filedir in filedirs:
         if 'discr_sim' in filedir:
             print(filedir)
@@ -50,34 +51,39 @@ if tr_plot:
             except:
                 print(f'error occured treating folder : {filedir}')
                 sys.exit(0)
-            ax.plot(moving_average(df['r'],window=100),label=filedir.split('/')[-2].split('_')[-1])
+            ax[0].plot(moving_average(df['r'],window=100),label=filedir.split('/')[-2].split('_')[-1])
 
-    ax.legend()
-    plt.savefig(os.path.join(logdir,'discr_sim_tr.png'))
-    plt.show()
+    ax[0].legend()
+    # plt.savefig(os.path.join(logdir,'discr_sim_tr.png'))
+    # plt.show()
 
 if inf_plot:
     '''plot moving average of inference'''
     filedirs=os.listdir(logdir)
-    fig,ax=plt.subplots()
+
     # fig1,ax1=plt.subplots()
     # fig2,ax2=plt.subplots()
     for filedir in filedirs:
-        if 'cont_sim' in filedir:
-        # if 'discr_sim' in filedir:
-            print(filedir)
-            filedir=os.path.join(logdir,filedir)
-            filedir=os.path.join(filedir,'*.npz')
-            filedir=glob(filedir)
-            print(filedir)
-            for file in filedir:
-                print(file)
-                data=np.load(file)
-                ax.plot(data['timesteps'],np.mean(data['results'],axis=-1)/800,label=file.split('/')[-2].split('_')[-1])
-    ax.legend()
-    # ax.set_title('inference reward')
-    ax.set_ylim(-0.4,1)
-    ax.set_xlabel('time steps')
-    ax.set_ylabel('inference reward')
-    plt.savefig(os.path.join(logdir,f'inf_sim_inf{filedir}.pdf'))
+        for a,inf in zip(ax,['discr_sim','cont_sim']):
+            if inf in filedir:
+                print(filedir)
+                filedir=os.path.join(logdir,filedir)
+                filedir=os.path.join(filedir,'*.npz')
+                filedir=glob(filedir)
+                print(filedir)
+                for file in filedir:
+                    print(file)
+                    data=np.load(file)
+                    a.plot(data['timesteps'],np.mean(data['results'],axis=-1)/800,label=file.split('/')[-2].split('_')[2])
+    for a in ax:
+        a.legend()
+        # a.set_title('inference reward')
+        a.set_ylim(-0.4,1)
+        a.set_xlabel('time steps')
+        a.set_ylabel('inference reward')
+
+    ax[0].text(-0.1, 1.05, 'a)', transform=ax[0].transAxes, fontweight='bold', va='top', ha='right')
+    ax[1].text(-0.1, 1.05, 'b)', transform=ax[1].transAxes, fontweight='bold', va='top', ha='right')
+
+    plt.savefig(os.path.join(logdir,f'inf_sim_inf_cont.pdf'))
     plt.show()
