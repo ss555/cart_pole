@@ -21,7 +21,6 @@ __pycache__/
 *.jpg
 .vscode/
 *.zip
-*.png
 !./weights/*/*.zip
 *.pyc
 __pycache__/env_custom.cpython-38.pyc

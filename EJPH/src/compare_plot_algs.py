@@ -60,7 +60,6 @@ if tr_plot:
 if inf_plot:
     '''plot moving average of inference'''
     filedirs=os.listdir(logdir)
-
     # fig1,ax1=plt.subplots()
     # fig2,ax2=plt.subplots()
     for filedir in filedirs:
